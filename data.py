@@ -5,6 +5,8 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.schema import Index
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import session as sessionlib
 
 import datetime
 
@@ -22,10 +24,29 @@ class Team(Base):
 
 class Player(Base):
     __tablename__ = 'players'
+    __table_args__ = (
+        UniqueConstraint('fname', 'lname', 'comment',
+                         name='cst_players_fname_lname_comment'),
+        )
 
     id = Column(Integer, primary_key=True)
     fname = Column(String, nullable=False)
     lname = Column(String, nullable=False)
+    comment = Column(String)
+
+    @classmethod
+    def get_or_create(cls, session, fname, lname, comment):
+        try:
+            return session.query(Player).filter(Player.fname == fname). \
+                filter(Player.lname == lname). \
+                filter(Player.comment == comment).one()
+        except NoResultFound:
+            player = Player()
+            player.fname = fname
+            player.lname = lname
+            player.comment = comment
+            session.add(player)
+            return player
 
 class Match(Base):
     __tablename__ = 'matches'
@@ -41,6 +62,10 @@ class Match(Base):
 
     team_a = relationship(Team, primaryjoin="Team.id == Match.team_a_id")
     team_b = relationship(Team, primaryjoin="Team.id == Match.team_b_id")
+
+    def get_player_team(self, player):
+        return sessionlib.object_session(self).query(PlayerMatch).filter(PlayerMatch.match == self). \
+            filter(PlayerMatch.player == player).one().team
 
 class PlayerMatch(Base):
     __tablename__ = 'player_matches'
@@ -94,6 +119,7 @@ class Event(Base):
     blue_team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
     phase_id = Column(Integer, ForeignKey(AdvantagePhase.id, onupdate="CASCADE", ondelete="CASCADE"))
 
+    match = relationship(Match)
     team = relationship(Team, primaryjoin="Team.id == Event.team_id")
     player_a = relationship(Player, primaryjoin="Player.id == Event.player_a_id")
     player_b = relationship(Player, primaryjoin="Player.id == Event.player_b_id")
@@ -123,6 +149,22 @@ class Event(Base):
         for x in mustnt_none:
             if x is None:
                 return False
+
+        if self.type == Event.EV_TYPE_SWAP:
+            if set([self.red_team, self.blue_team]) != set([self.match.team_a, self.match.team_b]):
+                return False
+        elif self.type == Event.EV_TYPE_CHANGE:
+            if self.match.get_player_team(self.player_a) != self.team or self.match.get_player_team(self.player_b) != self.team:
+                return False
+            if self.team not in [self.match.team_a, self.match.team_b]:
+                return False
+        elif self.type == Event.EV_TYPE_GOAL or self.type == Event.EV_TYPE_GOAL_UNDO:
+            if self.team not in [self.match.team_a, self.match.team_b]:
+                return False
+        elif self.type == Event.EV_TYPE_ADVANTAGE_PHASE:
+            if self.phase.match != self.match:
+                return False
+
         return True
 
 if __name__ == '__main__':
@@ -133,12 +175,14 @@ if __name__ == '__main__':
     t1.name = 'Matematici'
     t2 = Team()
     t2.name = 'Fisici'
+    session.add(t1)
+    session.add(t2)
 
-    m = Match()
-    m.team_a = t1
-    m.team_b = t2
-    m.sched_begin = datetime.datetime.now()
-    m.sched_end = datetime.datetime.now()
+    # m = Match()
+    # m.team_a = t1
+    # m.team_b = t2
+    # m.sched_begin = datetime.datetime.now()
+    # m.sched_end = datetime.datetime.now()
+    # session.add(m)
 
-    session.add(m)
     session.commit()
