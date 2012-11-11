@@ -6,18 +6,42 @@ import re
 import datetime
 import codecs
 
-from data import Session, Team, Player, Match, PlayerMatch, Event
+from data import Session, Team, Player, Match, PlayerMatch, Event, Base
 
 line_re = re.compile("^\\[([0-9]*)\\] ([A-Z_]*) \\(([^)]*)\\)$")
 
-def import_from_2010():
-
+def destroy_all():
     session = Session()
-    first_team = session.query(Team).filter(Team.name == "Matematici").one()
-    second_team = session.query(Team).filter(Team.name == "Fisici").one()
+    Base.metadata.drop_all()
+    session.commit()
 
+def create_teams():
+    session = Session()
+    Base.metadata.create_all()
+    session.commit()
+    t1 = Team()
+    t1.name = 'Matematici'
+    t2 = Team()
+    t2.name = 'Fisici'
+    session.add(t1)
+    session.add(t2)
+    session.commit()
+
+def import_from_2010():
+    session = Session()
     match = Match()
     match.name = "24 ore 2010"
+    import_log(match, session, '2010/log-finale.txt')
+
+def import_from_2011():
+    session = Session()
+    match = Match()
+    match.name = "24 ore 2011"
+    import_log(match, session, '2011/log-seconda-24h.txt')
+
+def import_log(match, session, logfile):
+    first_team = session.query(Team).filter(Team.name == "Matematici").one()
+    second_team = session.query(Team).filter(Team.name == "Fisici").one()
 
     events = []
     first_players = set()
@@ -27,7 +51,11 @@ def import_from_2010():
 	if not p in goalPerPlayer:
             goalPerPlayer[p] = 0
             timePerPlayer[p] = 0
-        fname, lname = p.split(' ', 1)
+        try:
+            fname, lname = p.split(' ', 1)
+        except ValueError:
+            fname = p
+            lname = ''
         player = Player.get_or_create(session, fname, lname, None)
         return player
 
@@ -46,7 +74,7 @@ def import_from_2010():
         return players, (p1, p2)
 
     log = dict()
-    for line in codecs.open('2010/log-finale.txt', encoding='utf-8'):
+    for line in codecs.open(logfile, encoding='utf-8'):
 	if line.startswith("#"):
             continue
 	match_ = line_re.match(line)
@@ -250,4 +278,7 @@ def import_from_2010():
     session.commit()
 
 if __name__ == '__main__':
+    destroy_all()
+    create_teams()
     import_from_2010()
+    import_from_2011()
