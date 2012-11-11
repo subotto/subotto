@@ -1,0 +1,144 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.schema import Index
+
+import datetime
+
+#with open('passwd') as fpasswd:
+#    db = create_engine('mysql://giovanni:%s@localhost/Rete' % (fpasswd.read()), echo=False)
+db = create_engine('sqlite:///subotto.sqlite', echo=True)
+Session = sessionmaker(db)
+Base = declarative_base(db)
+
+class Team(Base):
+    __tablename__ = 'teams'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+
+class Player(Base):
+    __tablename__ = 'players'
+
+    id = Column(Integer, primary_key=True)
+    fname = Column(String, nullable=False)
+    lname = Column(String, nullable=False)
+
+class Match(Base):
+    __tablename__ = 'matches'
+
+    id = Column(Integer, primary_key=True)
+    sched_begin = Column(DateTime, nullable=False)
+    sched_end = Column(DateTime, nullable=False)
+    begin = Column(DateTime)
+    end = Column(DateTime)
+    name = Column(String)
+    team_a_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    team_b_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+
+    team_a = relationship(Team, primaryjoin="Team.id == Match.team_a_id")
+    team_b = relationship(Team, primaryjoin="Team.id == Match.team_b_id")
+
+class PlayerMatch(Base):
+    __tablename__ = 'player_matches'
+    __table_args__ = (
+        UniqueConstraint('player_id', 'match_id',
+                         name='cst_player_matches_player_id_match_id'),
+        )
+
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+
+    player = relationship(Player)
+    match = relationship(Match)
+    team = relationship(Team)
+
+class AdvantagePhase(Base):
+    __tablename__ = 'adantage_phases'
+
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    start_sec = Column(Integer, nullable=False)
+    advantage = Column(Integer, nullable=False)
+
+    match = relationship(Match)
+
+class Event(Base):
+    __tablename__ = 'events'
+    __table_args__ = (
+        UniqueConstraint('timestamp', 'match_id',
+                         name='cst_events_timestamp_match_id'),
+        Index('ix_events_match_id_timestamp',
+              'match_id', 'timestamp'),
+        )
+
+    EV_TYPE_SWAP = 'swap'
+    EV_TYPE_CHANGE = 'change'
+    EV_TYPE_GOAL = 'goal'
+    EV_TYPE_GOAL_UNDO = 'goal_undo'
+    EV_TYPE_ADVANTAGE_PHASE = 'advantage_phase'
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, nullable=False, index=True)
+    match_id = Column(Integer, ForeignKey(Match.id), nullable=False)
+    type = Column(String, nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
+    player_a_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
+    player_b_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
+    red_team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
+    blue_team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
+    phase_id = Column(Integer, ForeignKey(AdvantagePhase.id, onupdate="CASCADE", ondelete="CASCADE"))
+
+    team = relationship(Team, primaryjoin="Team.id == Event.team_id")
+    player_a = relationship(Player, primaryjoin="Player.id == Event.player_a_id")
+    player_b = relationship(Player, primaryjoin="Player.id == Event.player_b_id")
+    red_team = relationship(Team, primaryjoin="Team.id == Event.red_team_id")
+    blue_team = relationship(Team, primaryjoin="Team.id == Event.blue_team_id")
+    phase = relationship(AdvantagePhase)
+
+    def check_type(self):
+        must_none = []
+        mustnt_none = []
+        if self.type == Event.EV_TYPE_SWAP:
+            mustnt_none = [self.red_team, self.blue_team]
+            must_none = [self.team, self.player_a, self.player_b, self.phase]
+        elif self.type == Event.EV_TYPE_CHANGE:
+            mustnt_none = [self.team, self.player_a, self.player_b]
+            must_none = [self.red_team, self.blue_team, self.phase]
+        elif self.type == Event.EV_TYPE_GOAL or self.type == Event.EV_TYPE_GOAL_UNDO:
+            mustnt_none = [self.team]
+            must_none = [self.player_a, self.player_b, self.red_team, self.blue_team, self.phase]
+        elif self.type == Event.EV_TYPE_ADVANTAGE_PHASE:
+            mustnt_none = [self.phase]
+            must_none = [self.team, self.player_a, self.player_b, self.red_team, self.blue_team]
+
+        for x in must_none:
+            if x is not None:
+                return False
+        for x in mustnt_none:
+            if x is None:
+                return False
+        return True
+
+if __name__ == '__main__':
+    session = Session()
+    Base.metadata.create_all(db)
+
+    t1 = Team()
+    t1.name = 'Matematici'
+    t2 = Team()
+    t2.name = 'Fisici'
+
+    m = Match()
+    m.team_a = t1
+    m.team_b = t2
+    m.sched_begin = datetime.datetime.now()
+    m.sched_end = datetime.datetime.now()
+
+    session.add(m)
+    session.commit()
