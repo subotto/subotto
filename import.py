@@ -121,6 +121,7 @@ def import_log(match, session, logfile):
             ev.match = match
             ev.timestamp = datetime.datetime.fromtimestamp(float(time) / 1000)
             ev.type = Event.EV_TYPE_SWAP
+            ev.source = Event.EV_SOURCE_MANUAL
             ev.red_team = first_team if not swapped else second_team
             ev.blue_team = second_team if not swapped else first_team
             events.append(ev)
@@ -152,6 +153,7 @@ def import_log(match, session, logfile):
             ev.match = match
             ev.timestamp = datetime.datetime.fromtimestamp(float(time) / 1000)
             ev.type = Event.EV_TYPE_CHANGE
+            ev.source = Event.EV_SOURCE_MANUAL
             ev.team = first_team
             ev.player_a = p1
             ev.player_b = p2
@@ -172,6 +174,7 @@ def import_log(match, session, logfile):
             ev.match = match
             ev.timestamp = datetime.datetime.fromtimestamp(float(time) / 1000)
             ev.type = Event.EV_TYPE_CHANGE
+            ev.source = Event.EV_SOURCE_MANUAL
             ev.team = second_team
             ev.player_a = p1
             ev.player_b = p2
@@ -195,6 +198,7 @@ def import_log(match, session, logfile):
             ev.match = match
             ev.timestamp = match.begin
             ev.type = Event.EV_TYPE_SWAP
+            ev.source = Event.EV_SOURCE_MANUAL
             ev.red_team = first_team
             ev.blue_team = second_team
             events.append(ev)
@@ -229,6 +233,7 @@ def import_log(match, session, logfile):
                 ev.type = Event.EV_TYPE_GOAL
             else:
                 ev.type = Event.EV_TYPE_GOAL_UNDO
+            ev.source = Event.EV_SOURCE_MANUAL
             if swapped:
                 first = not first
             if first:

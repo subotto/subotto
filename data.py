@@ -108,10 +108,17 @@ class Event(Base):
     EV_TYPE_GOAL_UNDO = 'goal_undo'
     EV_TYPE_ADVANTAGE_PHASE = 'advantage_phase'
 
+    EV_SOURCE_MANUAL = 'manual'
+    EV_SOURCE_CELL_RED_PLAIN = 'cell_red_plain'
+    EV_SOURCE_CELL_BLUE_PLAIN = 'cell_blue_plain'
+    EV_SOURCE_CELL_RED_SUPER = 'cell_red_super'
+    EV_SOURCE_CELL_BLUE_SUPER = 'cell_blue_super'
+
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     match_id = Column(Integer, ForeignKey(Match.id), nullable=False)
     type = Column(String, nullable=False, index=True)
+    source = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
     player_a_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
     player_b_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
