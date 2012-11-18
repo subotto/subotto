@@ -10,9 +10,9 @@ from sqlalchemy.orm import session as sessionlib
 
 import datetime
 
-#with open('passwd') as fpasswd:
-#    db = create_engine('mysql://giovanni:%s@localhost/Rete' % (fpasswd.read()), echo=False)
-db = create_engine('sqlite:///subotto.sqlite', echo=True)
+with open('passwd') as fpasswd:
+    db = create_engine('postgresql://subotto:%s@roma.uz.sns.it/subotto_new' % (fpasswd.read().strip()), echo=True)
+#db = create_engine('sqlite:///subotto.sqlite', echo=True)
 Session = sessionmaker(db)
 Base = declarative_base(db)
 
@@ -21,6 +21,35 @@ class Team(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
+
+NAME_MAP = {('Fabrizio', 'bianchi'): ('Fabrizio', 'Bianchi', None),
+            ('Giulio', 'bresciani'): ('Giulio', 'Bresciani', None),
+            ('Viglaa', ''): ('Federico', 'Vigolo', None),
+            ('Vigolo', ''): ('Federico', 'Vigolo', None),
+            ('Mattia', 'Carlo Sormani'): ('Mattia Carlo', 'Sormani', None),
+            ('Giacomo', 'de Palma'): ('Giacomo', 'De Palma', None),
+            ('Giacomo', 'del Nin'): ('Giacomo', 'Del Nin', None),
+            ('Brian', 'De Palma'): ('Giacomo', 'De Palma', None),
+            ('Brian', 'de Palma'): ('Giacomo', 'De Palma', None),
+            ('martina', 'bottacchiari'): ('Martina', 'Bottacchiari', None),
+            ('Roberto', 'Daluisio'): ('Roberto', 'Daluiso', None),
+            ('Antonio', 'Decapua'): ('Antonio', 'De Capua', None),
+            ('Maria', 'Coombo'): ('Maria', 'Colombo', None),
+            ('Federico', 'Fabbiano'): ('Federico', 'Fabiano', None),
+            ('Davide', 'Lomardo'): ('Davide', 'Lombardo', None),
+            ('Silvia', 'di Vincenzo'): ('Silvia', 'Di Vincenzo', None),
+            ('Gennady', 'Ultratsev'): ('Gennady', 'Uraltsev', None),
+            ('Federico', 'Lobianco'): ('Federico', 'Lo Bianco', None),
+            ('Simone', 'Dimarino'): ('Simone', 'Di Marino', None),
+
+            # Dubbi
+            ('Matteo', 'Ruggiero'): ('Matteo', 'Ruggero', None),
+            ('Alessandro', ''): ('Alessandro', 'Cobbe', None),
+            ('Mauro', ''): ('Mauro', '??', None),
+            ('', ''): ('??', '??', None),
+            ('', '*AltroMat'): ('??', '?? Fisico', None),
+            ('', '*AltroFis'): ('??', '?? Matematico', None),
+            }
 
 class Player(Base):
     __tablename__ = 'players'
@@ -36,6 +65,15 @@ class Player(Base):
 
     @classmethod
     def get_or_create(cls, session, fname, lname, comment):
+
+        # Reduce names to a canonical (and correct) orthography
+        fname = fname.strip()
+        lname = lname.strip()
+        comment = comment.strip() if comment is not None else None
+
+        if (fname, lname) in NAME_MAP:
+            fname, lname, comment = NAME_MAP[(fname, lname)]
+
         try:
             return session.query(Player).filter(Player.fname == fname). \
                 filter(Player.lname == lname). \
@@ -149,6 +187,8 @@ class Event(Base):
         elif self.type == Event.EV_TYPE_ADVANTAGE_PHASE:
             mustnt_none = [self.phase]
             must_none = [self.team, self.player_a, self.player_b, self.red_team, self.blue_team]
+        else:
+            return False
 
         for x in must_none:
             if x is not None:

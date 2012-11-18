@@ -7,6 +7,7 @@ import datetime
 import codecs
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base
+from old_data import Session as OldSession, Team as OldTeam, Player as OldPlayer, Event as OldEvent
 
 line_re = re.compile("^\\[([0-9]*)\\] ([A-Z_]*) \\(([^)]*)\\)$")
 
@@ -38,6 +39,80 @@ def import_from_2011():
     match = Match()
     match.name = "24 ore 2011"
     import_log(match, session, '2011/log-seconda-24h.txt')
+
+def import_from_2012():
+    old_session = OldSession()
+    session = Session()
+
+    # Match and teams
+    match = Match()
+    match.name = "24 ore 2012"
+    first_team = session.query(Team).filter(Team.name == "Matematici").one()
+    second_team = session.query(Team).filter(Team.name == "Fisici").one()
+    match.team_a = first_team
+    match.team_b = second_team
+
+    # Team mapping
+    _team_map = {}
+    old_first_team = old_session.query(OldTeam).filter(OldTeam.name == "Matematici").one()
+    old_second_team = old_session.query(OldTeam).filter(OldTeam.name == "Fisici").one()
+    _team_map[old_first_team.id] = first_team
+    _team_map[old_second_team.id] = second_team
+    team_map = lambda x: _team_map[x.id]
+
+    # Player mapping
+    _player_map = {}
+    player_matches = []
+    for old_player in old_session.query(OldPlayer).all():
+        player = Player.get_or_create(session, old_player.fname, old_player.lname, None)
+        _player_map[old_player.id] = player
+        player_match = PlayerMatch()
+        player_match.player = player
+        player_match.match = match
+        player_match.team = team_map(old_player.team)
+        player_matches.append(player_match)
+    player_map = lambda x: _player_map[x.id]
+
+    # Events
+    events = []
+    for old_event in old_session.query(OldEvent).all():
+        if old_event.type == 'sched_begin':
+            match.sched_begin = old_event.timestamp
+        elif old_event.type == 'begin':
+            match.begin = old_event.timestamp
+        elif old_event.type == 'sched_end':
+            match.sched_end = old_event.timestamp
+        elif old_event.type  == 'end':
+            match.end = old_event.timestamp
+        else:
+            event = Event()
+            event.match = match
+            event.timestamp = old_event.timestamp
+            event.source = Event.EV_SOURCE_MANUAL
+            event.type = old_event.type
+            if old_event.type in [Event.EV_TYPE_GOAL, Event.EV_TYPE_GOAL_UNDO]:
+                event.team = _team_map[int(old_event.param)]
+            elif old_event.type == Event.EV_TYPE_SWAP:
+                old_red_team_id, old_blue_team_id = map(int, old_event.param.split(','))
+                event.red_team = _team_map[old_red_team_id]
+                event.blue_team = _team_map[old_blue_team_id]
+            elif old_event.type == Event.EV_TYPE_CHANGE:
+                old_team_id, old_player_a_id, old_player_b_id = map(int, old_event.param.split(','))
+                event.team = _team_map[old_team_id]
+                event.player_a = _player_map[old_player_a_id]
+                event.player_b = _player_map[old_player_b_id]
+            else:
+                assert(False, "Command not supported")
+            events.append(event)
+
+    session.add(match)
+    session.add_all(player_matches)
+    for ev in events:
+        session.add(ev)
+        assert(ev.check_type())
+    session.flush()
+    old_session.rollback()
+    session.commit()
 
 def import_log(match, session, logfile):
     first_team = session.query(Team).filter(Team.name == "Matematici").one()
@@ -287,3 +362,4 @@ if __name__ == '__main__':
     create_teams()
     import_from_2010()
     import_from_2011()
+    import_from_2012()
