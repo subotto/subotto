@@ -79,6 +79,11 @@ class Statistics:
     def new_player_match(self, player_match):
         print "> Received new player match: %r" % (player_match)
 
+    def render_template(self, basename, kwargs):
+        template = Template(filename=os.path.join('templates', '%s.mako' % (basename)), output_encoding='utf-8')
+        with codecs.open(os.path.join(self.target_dir, '%s.html' % (basename)), 'w', encoding='utf-8') as fout:
+            fout.write(template.render(**kwargs))
+
     def regenerate(self):
         print "> Regeneration"
 
@@ -103,12 +108,9 @@ class Statistics:
         except OSError:
             pass
 
-        # Generate base.html
-        template = Template(filename='templates/base.mako', output_encoding='utf-8')
-        with codecs.open(os.path.join(self.target_dir, 'base.html'), 'w', encoding='utf-8') as fout:
-            fout.write(template.render_unicode(**kwargs))
-
-        # Generate graph.png
+        # Render templates
+        for basename in ["base"]:
+            self.render_template(basename, kwargs)
 
 def listen_match(match_id, target_dir):
 
