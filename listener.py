@@ -109,7 +109,7 @@ class Statistics:
             pass
 
         # Render templates
-        for basename in ["base", "time", "score" ]:
+        for basename in ["base", "time", "score", "general_stats", "projection" ]:
             self.render_template(basename, kwargs)
 
 def listen_match(match_id, target_dir):
