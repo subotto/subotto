@@ -34,7 +34,6 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     match = Match()
     match.sched_begin = convert_time(orig_match.sched_begin)
     match.sched_end = convert_time(orig_match.sched_end)
-    match.begin = convert_time(orig_match.begin)
     match.name = "Replay of \"%s\"" % (orig_match.name)
     match.team_a = orig_match.team_a
     match.team_b = orig_match.team_b
@@ -74,6 +73,10 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     print "> Waiting initial %f seconds..." % (initial_wait)
     time.sleep(initial_wait)
 
+    # Set begin
+    match.begin = convert_time(orig_match.begin)
+    session.commit()
+
     # Replay events
     for wait_secs, orig_ev in events:
         print "> Waiting %f seconds..." % (wait_secs)
@@ -94,6 +97,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
         ev.check_type()
         session.commit()
 
+    # Set end
     match.end = convert_time(orig_match.end)
     session.commit()
 
