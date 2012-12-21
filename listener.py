@@ -20,7 +20,7 @@ def format_time(total_seconds):
     total_seconds = total_seconds / 60
     minutes = total_seconds % 60
     hours = total_seconds / 60
-    return "%d:%02d:%02d" % (hours, minutes, seconds)
+    return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 def format_player(player):
     return "%s %s" % (player.fname, player.lname)
@@ -109,7 +109,7 @@ class Statistics:
             pass
 
         # Render templates
-        for basename in ["base"]:
+        for basename in ["base", "time", "score" ]:
             self.render_template(basename, kwargs)
 
 def listen_match(match_id, target_dir):
