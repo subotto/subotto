@@ -335,7 +335,6 @@ def import_log(match, session, logfile):
 
     # Player association
     for player in first_players:
-        print >> sys.stderr, player.lname
         playermatch = PlayerMatch()
         playermatch.match = match
         playermatch.player = player
@@ -343,7 +342,6 @@ def import_log(match, session, logfile):
         session.add(playermatch)
         session.flush()
     for player in second_players:
-        print >> sys.stderr, player.lname
         playermatch = PlayerMatch()
         playermatch.match = match
         playermatch.player = player

@@ -159,7 +159,7 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, nullable=False, index=True)
-    match_id = Column(Integer, ForeignKey(Match.id), nullable=False, onupdate="CASCADE", ondelete="CASCADE")
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     type = Column(String, nullable=False, index=True)
     source = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
