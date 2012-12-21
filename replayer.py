@@ -24,6 +24,11 @@ def replay_match(orig_match_id, mult=1.0):
 
     # Prepare the event list (they're already sorted by SQLAlchemy)
     events = map(lambda x: (max(x.timestamp - orig_start_time, datetime.timedelta(0)).total_seconds(), x), orig_match.events)
+    ref_time = 0.0
+    for i in xrange(len(events)):
+        delta = events[i][0] - ref_time
+        ref_time = events[i][0]
+        events[i] = (delta, events[i][1])
 
     # Replicate the original match
     match = Match()
