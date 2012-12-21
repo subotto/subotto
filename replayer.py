@@ -66,7 +66,7 @@ def replay_match(orig_match_id, mult=1.0):
     # Replay events
     for wait_secs, orig_ev in events:
         print "> Waiting %f seconds..." % (wait_secs)
-        time.sleep(wait_secs)
+        time.sleep(wait_secs / mult)
         ev = Event()
         ev.timestamp = convert_time(orig_ev.timestamp)
         ev.match = match
@@ -84,4 +84,4 @@ def replay_match(orig_match_id, mult=1.0):
         session.commit()
 
 if __name__ == '__main__':
-    replay_match(3)
+    replay_match(3, 10.0)
