@@ -9,7 +9,7 @@ import time
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 
-def replay_match(orig_match_id, mult=1.0):
+def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     session = Session()
 
@@ -69,8 +69,10 @@ def replay_match(orig_match_id, mult=1.0):
     session.flush()
     session.commit()
 
-    # Print match ID
-    print "Feeding match with ID %d" % (match.id)
+    # Print match ID and start wait
+    print "> Feeding match with ID %d" % (match.id)
+    print "> Waiting initial %f seconds..." % (initial_wait)
+    time.sleep(initial_wait)
 
     # Replay events
     for wait_secs, orig_ev in events:
@@ -96,4 +98,8 @@ def replay_match(orig_match_id, mult=1.0):
     session.commit()
 
 if __name__ == '__main__':
-    replay_match(3, 10.0)
+    match_id, mult, initial_wait = sys.argv[1:]
+    match_id = int(match_id)
+    mult = float(mult)
+    initial_wait = float(initial_wait)
+    replay_match(match_id, mult, initial_wait)
