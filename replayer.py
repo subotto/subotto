@@ -80,6 +80,7 @@ def replay_match(orig_match_id, mult=1.0):
         ev.phase = orig_ev.phase
         print "> Pushing event of type %s and timestamp %s" % (ev.type, ev.timestamp)
         session.add(ev)
+        ev.check_type()
         session.commit()
 
 if __name__ == '__main__':
