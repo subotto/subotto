@@ -82,7 +82,7 @@ class Statistics:
     def render_template(self, basename, kwargs):
         template = Template(filename=os.path.join('templates', '%s.mako' % (basename)), output_encoding='utf-8')
         with codecs.open(os.path.join(self.target_dir, '%s.html' % (basename)), 'w', encoding='utf-8') as fout:
-            fout.write(template.render(**kwargs))
+            fout.write(template.render_unicode(**kwargs))
 
     def regenerate(self):
         print "> Regeneration"
