@@ -3,7 +3,7 @@
 
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.schema import Index
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import session as sessionlib
@@ -11,7 +11,7 @@ from sqlalchemy.orm import session as sessionlib
 import datetime
 
 with open('passwd') as fpasswd:
-    db = create_engine('postgresql://subotto:%s@roma.uz.sns.it/subotto_new' % (fpasswd.read().strip()), echo=True)
+    db = create_engine('postgresql://subotto:%s@roma.uz.sns.it/subotto_new' % (fpasswd.read().strip()), echo=False)
 #db = create_engine('sqlite:///subotto.sqlite', echo=True)
 Session = sessionmaker(db)
 Base = declarative_base(db)
@@ -169,7 +169,8 @@ class Event(Base):
     blue_team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
     phase_id = Column(Integer, ForeignKey(AdvantagePhase.id, onupdate="CASCADE", ondelete="CASCADE"))
 
-    match = relationship(Match)
+    match = relationship(Match,
+                         backref=backref("events", order_by=[timestamp]))
     team = relationship(Team, primaryjoin="Team.id == Event.team_id")
     player_a = relationship(Player, primaryjoin="Player.id == Event.player_a_id")
     player_b = relationship(Player, primaryjoin="Player.id == Event.player_b_id")
