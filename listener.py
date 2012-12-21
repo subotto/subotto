@@ -23,6 +23,9 @@ class Statistics:
     def new_player_match(self, player_match):
         print "> Received new player match: %r" % (player_match)
 
+    def regenerate(self):
+        pass
+
 def listen_match(match_id):
 
     session = Session()
@@ -42,6 +45,7 @@ def listen_match(match_id):
             for event in session.query(Event).filter(Event.match == match).filter(Event.id > last_event_id):
                 stats.new_event(event)
                 last_event_id = event.id
+            stats.regenerate()
 
             time.sleep(SLEEP_TIME)
 
