@@ -68,6 +68,9 @@ def replay_match(orig_match_id, mult=1.0):
     session.flush()
     session.commit()
 
+    # Print match ID
+    print "Feeding match with ID %d" % (match.id)
+
     # Replay events
     for wait_secs, orig_ev in events:
         print "> Waiting %f seconds..." % (wait_secs)
