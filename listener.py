@@ -42,9 +42,10 @@ def compute_linear_projection(score, target, elapsed, begin):
 
 class Statistics:
 
-    def __init__(self, match, old_matches):
+    def __init__(self, match, old_matches, target_dir):
         self.match = match
         self.old_matches = old_matches
+        self.target_dir = target_dir
 
         self.score = [0, 0]
         self.players = [None, None]
@@ -98,24 +99,24 @@ class Statistics:
 
         # Generate stats dir
         try:
-            os.mkdir('stats')
+            os.mkdir(self.target_dir)
         except OSError:
             pass
 
         # Generate base.html
         template = Template(filename='templates/base.mako', output_encoding='utf-8')
-        with codecs.open('stats/base.html', 'w', encoding='utf-8') as fout:
+        with codecs.open(os.path.join(self.target_dir, 'base.html'), 'w', encoding='utf-8') as fout:
             fout.write(template.render_unicode(**kwargs))
 
         # Generate graph.png
 
-def listen_match(match_id):
+def listen_match(match_id, target_dir):
 
     session = Session()
 
     match = session.query(Match).filter(Match.id == match_id).one()
     old_matches = session.query(Match).filter(Match.id <= 3).all()
-    stats = Statistics(match, old_matches)
+    stats = Statistics(match, old_matches, target_dir)
     last_event_id = 0
     last_player_match_id = 0
 
@@ -136,4 +137,4 @@ def listen_match(match_id):
         pass
 
 if __name__ == '__main__':
-    listen_match(int(sys.argv[1]))
+    listen_match(int(sys.argv[1]), sys.argv[2])
