@@ -9,6 +9,9 @@ import time
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 
+def multiply_timedelta(mult, td):
+    return datetime.timedelta(seconds=mult * td.total_seconds())
+
 def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     session = Session()
@@ -18,9 +21,10 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     orig_start_time = orig_match.begin
 
     # Prepare the time conversion function
-    start_time = datetime.datetime.now()
+    now = datetime.datetime.now()
+    start_time = now + datetime.timedelta(seconds=initial_wait)
     def convert_time(time):
-        return start_time + (time - orig_start_time)
+        return start_time + multiply_timedelta(1.0 / mult, time - orig_start_time)
 
     # Prepare the event list (they're already sorted by SQLAlchemy)
     events = map(lambda x: (max(x.timestamp - orig_start_time, datetime.timedelta(0)).total_seconds(), x), orig_match.events)
@@ -32,8 +36,8 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     # Replicate the original match
     match = Match()
-    match.sched_begin = convert_time(orig_match.sched_begin)
-    match.sched_end = convert_time(orig_match.sched_end)
+    match.sched_begin = now + datetime.timedelta(seconds=0.5 * initial_wait)
+    match.sched_end = now + datetime.timedelta(seconds=0.5 * initial_wait) + multiply_timedelta(1.0 / mult, orig_match.sched_end - orig_match.sched_begin)
     match.name = "Replay of \"%s\"" % (orig_match.name)
     match.team_a = orig_match.team_a
     match.team_b = orig_match.team_b
@@ -74,7 +78,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     time.sleep(initial_wait)
 
     # Set begin
-    match.begin = convert_time(orig_match.begin)
+    match.begin = start_time
     session.commit()
 
     # Replay events
