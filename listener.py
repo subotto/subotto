@@ -15,6 +15,19 @@ from data import Session, Team, Player, Match, PlayerMatch, Event, Base, Advanta
 SLEEP_TIME = 0.5
 INTERESTING_SCORES = [42, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
+def communicate_status(begin, phase, end):
+	if begin is None:
+		return "before"
+	
+	elif end is not None:
+		return "ended"
+	
+	elif phase is None:
+		return "running"
+	
+	else:
+		return "advantage"
+
 def format_time(total_seconds):
     seconds = total_seconds % 60
     total_seconds = total_seconds / 60
@@ -37,8 +50,30 @@ def compute_interesting_score(score):
     return INTERESTING_SCORES[idx]
 
 def compute_linear_projection(score, target, elapsed, begin):
+	# TODO: sistemare le divisioni per 0
+	# TODO: la proiezione lineare non funziona... debuggare!
     ratio = score / elapsed
     return begin + datetime.timedelta(seconds=float(target-score)/ratio)
+
+def format_remaining_time(total_seconds, end, length, phase):
+	if end is not None:
+		return "<td colspan=\"2\">La partita &egrave; terminata</td>"
+	
+	elif phase is None:
+		return "<td>Tempo rimanente:</td><td>"+format_time(length - total_seconds)+"</td>"
+	
+	else:
+		return "<td colspan=\"2\">Vantaggi (ai %d)</td>" % phase.advantage
+
+def format_countdown(sched_begin):
+	time_diff = (sched_begin - datetime.datetime.now()).total_seconds()
+	
+	if time_diff < 0:
+		return "La partita dovrebbe iniziare a momenti!"
+	
+	else:
+		return "Conto alla rovescia: "+format_time( time_diff )
+
 
 class Statistics:
 
@@ -50,6 +85,8 @@ class Statistics:
         self.score = [0, 0]
         self.players = [None, None]
         self.partial = [0, 0]
+        
+        self.current_phase = None
 
     def detect_team(self, team):
         if team == self.match.team_a:
@@ -75,6 +112,9 @@ class Statistics:
             self.score[i] -= 1
             if self.partial[i] > 0:
                 self.partial[i] -= 1
+        
+        elif event.type == Event.EV_TYPE_ADVANTAGE_PHASE:
+        	self.current_phase = event.phase
 
     def new_player_match(self, player_match):
         print "> Received new player match: %r" % (player_match)
@@ -89,18 +129,25 @@ class Statistics:
 
         # Prepare mako arguments
         kwargs = {}
+        kwargs['sched_begin'] = self.match.sched_begin
         kwargs['begin'] = self.match.begin
-        kwargs['elapsed'] = (datetime.datetime.now() - self.match.begin).total_seconds()
+        kwargs['end'] = self.match.end
+        if self.match.begin is not None:
+        	kwargs['elapsed'] = (datetime.datetime.now() - self.match.begin).total_seconds()
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
         kwargs['score'] = self.score
         kwargs['partial'] = self.partial
         kwargs['players'] = self.players
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
+        kwargs['phase'] = self.current_phase
+        kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
         kwargs['format_player'] = format_player
         kwargs['remount_index'] = remount_index
         kwargs['compute_interesting_score'] = compute_interesting_score
         kwargs['compute_linear_projection'] = compute_linear_projection
+        kwargs['format_remaining_time'] = format_remaining_time
+        kwargs['format_countdown'] = format_countdown
 
         # Generate stats dir
         try:
@@ -109,8 +156,18 @@ class Statistics:
             pass
 
         # Render templates
-        for basename in ["base", "time", "score", "general_stats", "projection" ]:
-            self.render_template(basename, kwargs)
+        templates = [ "time", "score", "general_stats", "projection", "fake" ]
+        if self.match.begin is None:
+        	templates = [ "fake", "countdown" ]
+        
+        print "BEGIN: %r" % self.match.begin
+        
+        for basename in templates:
+            try:
+                self.render_template(basename, kwargs)
+            except Exception:
+                print "> Exception when rendering %s" % (basename)
+                raise
 
 def listen_match(match_id, target_dir):
 

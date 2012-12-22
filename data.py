@@ -134,7 +134,8 @@ class AdvantagePhase(Base):
     start_sec = Column(Integer, nullable=False)
     advantage = Column(Integer, nullable=False)
 
-    match = relationship(Match)
+    match = relationship(Match,
+                         backref=backref("phases"))
 
 class Event(Base):
     __tablename__ = 'events'
