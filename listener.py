@@ -50,7 +50,7 @@ def compute_interesting_score(score):
     return INTERESTING_SCORES[idx]
 
 def compute_linear_projection(score, target, elapsed, begin):
-	# TODO: sistemare le divisioni per 0
+	# TODO: evitare le divisioni per 0
 	# TODO: la proiezione lineare non funziona... debuggare!
     ratio = score / elapsed
     return begin + datetime.timedelta(seconds=float(target-score)/ratio)
@@ -87,6 +87,14 @@ class Statistics:
         self.partial = [0, 0]
         
         self.current_phase = None
+        
+        self.totalgoals = None	# Map from player.id to the total number of goals ever
+        self.numgoals = None	# Map from player.id to the number of goals in this 24-hours tournament
+        self.totaltime = None	# Map from player.id to the total number of seconds played ever
+        self.gametime = None	# Map from player.id to the number of seconds played in this 24-hours tournament
+        self.participations = None	# Map from player.id to the number of 24-hours played
+        
+        
 
     def detect_team(self, team):
         if team == self.match.team_a:
@@ -174,7 +182,8 @@ def listen_match(match_id, target_dir):
     session = Session()
 
     match = session.query(Match).filter(Match.id == match_id).one()
-    old_matches = session.query(Match).filter(Match.id <= 3).all()
+    old_matches = session.query(Match).filter(Match.id <= 3).all()	# TODO: immagino che un giorno la condizione Match.id <= 3 vada tolta...
+    players = session.query(Player).all()
     stats = Statistics(match, old_matches, target_dir)
     last_event_id = 0
     last_player_match_id = 0
