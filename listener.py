@@ -72,12 +72,12 @@ def format_countdown(sched_begin):
 		return "La partita dovrebbe iniziare a momenti!"
 	
 	else:
-		return "Conto alla rovescia: "+format_time( time_diff )
+		return "Tempo mancante all'inizio della 24 ore: "+format_time( time_diff )
 
 
 class Statistics:
 
-    def __init__(self, match, old_matches, target_dir):
+    def __init__(self, match, old_matches, players, target_dir):
         self.match = match
         self.old_matches = old_matches
         self.target_dir = target_dir
@@ -94,6 +94,7 @@ class Statistics:
         self.gametime = None	# Map from player.id to the number of seconds played in this 24-hours tournament
         self.participations = None	# Map from player.id to the number of 24-hours played
         
+        #TODO: aggiornare tutte queste informazioni...
         
 
     def detect_team(self, team):
@@ -184,7 +185,7 @@ def listen_match(match_id, target_dir):
     match = session.query(Match).filter(Match.id == match_id).one()
     old_matches = session.query(Match).filter(Match.id <= 3).all()	# TODO: immagino che un giorno la condizione Match.id <= 3 vada tolta...
     players = session.query(Player).all()
-    stats = Statistics(match, old_matches, target_dir)
+    stats = Statistics(match, old_matches, players, target_dir)
     last_event_id = 0
     last_player_match_id = 0
 
