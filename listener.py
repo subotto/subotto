@@ -55,6 +55,13 @@ def compute_linear_projection(score, target, elapsed, begin):
     ratio = score / elapsed
     return begin + datetime.timedelta(seconds=float(target-score)/ratio)
 
+def format_elapsed_time(elapsed, begin, end):
+	if end is None:
+		return format_time((int)elapsed)
+	else:
+		duration = (end - begin).total_seconds()
+		return format_time((int)duration)
+
 def format_remaining_time(total_seconds, end, length, phase):
 	if end is not None:
 		return "<td colspan=\"2\">La partita &egrave; terminata</td>"
@@ -170,6 +177,7 @@ class Statistics:
         	templates = [ "fake", "countdown" ]
         
         print "BEGIN: %r" % self.match.begin
+        print "END: %r" % self.match.end
         
         for basename in templates:
             try:
