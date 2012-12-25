@@ -162,7 +162,7 @@ class Statistics:
         kwargs['remount_index'] = remount_index
         kwargs['compute_interesting_score'] = compute_interesting_score
         kwargs['compute_linear_projection'] = compute_linear_projection
-	kwargs['format_elapsed_time'] = format_elapsed_time
+        kwargs['format_elapsed_time'] = format_elapsed_time
         kwargs['format_remaining_time'] = format_remaining_time
         kwargs['format_countdown'] = format_countdown
 
