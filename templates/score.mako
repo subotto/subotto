@@ -10,11 +10,11 @@
 </tr>
 
 <tr>
- <td>${format_player(players[0][0])}
-<br />${format_player(players[0][1])}
+ <td>${format_player(current_players[0][0])}
+<br />${format_player(current_players[0][1])}
 </td>
- <td>${format_player(players[1][0])}
-<br />${format_player(players[1][1])}
+ <td>${format_player(current_players[1][0])}
+<br />${format_player(current_players[1][1])}
 </td>
 </tr>
 

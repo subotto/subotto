@@ -84,13 +84,13 @@ def format_countdown(sched_begin):
 
 class Statistics:
 
-    def __init__(self, match, old_matches, players, target_dir):
+    def __init__(self, match, old_matches, players, player_matches, target_dir):
         self.match = match
         self.old_matches = old_matches
         self.target_dir = target_dir
 
         self.score = [0, 0]
-        self.players = [None, None]
+        self.current_players = [None, None]
         self.partial = [0, 0]
         
         self.current_phase = None
@@ -116,7 +116,7 @@ class Statistics:
         if event.type == Event.EV_TYPE_CHANGE:
             i = self.detect_team(event.team)
             self.partial = [0, 0]
-            self.players[i] = [event.player_a, event.player_b]
+            self.current_players[i] = [event.player_a, event.player_b]
 
         elif event.type == Event.EV_TYPE_GOAL:
             i = self.detect_team(event.team)
@@ -153,7 +153,7 @@ class Statistics:
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
         kwargs['score'] = self.score
         kwargs['partial'] = self.partial
-        kwargs['players'] = self.players
+        kwargs['current_players'] = self.current_players
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
         kwargs['phase'] = self.current_phase
         kwargs['communicate_status'] = communicate_status
@@ -194,7 +194,10 @@ def listen_match(match_id, target_dir):
     match = session.query(Match).filter(Match.id == match_id).one()
     old_matches = session.query(Match).filter(Match.id <= 3).all()	# TODO: immagino che un giorno la condizione Match.id <= 3 vada tolta...
     players = session.query(Player).all()
-    stats = Statistics(match, old_matches, players, target_dir)
+    player_matches = session.query(PlayerMatch).filter(PlayerMatch.match <= 3).all() # TODO: anche qui bisognerà togliere la condizione match <= 3
+    # TODO: probabilmente userò solo il numero di match di ogni giocatore, per cui si può economizzare la query (basta un count)
+    
+    stats = Statistics(match, old_matches, players, player_matches target_dir)
     last_event_id = 0
     last_player_match_id = 0
 
