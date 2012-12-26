@@ -108,6 +108,8 @@ class Statistics:
         
         for player_match in player_matches:
         	self.participations[ player_match.player_id ] += 1
+        
+        
 
     def detect_team(self, team):
         if team == self.match.team_a:
@@ -155,6 +157,8 @@ class Statistics:
         kwargs['end'] = self.match.end
         if self.match.begin is not None:
         	kwargs['elapsed'] = (datetime.datetime.now() - self.match.begin).total_seconds()
+        if self.match.end is not None:
+        	kwargs['elapsed'] = (self.match.end - self.match.begin).total_seconds()
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
         kwargs['score'] = self.score
         kwargs['partial'] = self.partial
