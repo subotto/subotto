@@ -197,7 +197,7 @@ def listen_match(match_id, target_dir):
     player_matches = session.query(PlayerMatch).filter(PlayerMatch.match <= 3).all() # TODO: anche qui bisognerà togliere la condizione match <= 3
     # TODO: probabilmente userò solo il numero di match di ogni giocatore, per cui si può economizzare la query (basta un count)
     
-    stats = Statistics(match, old_matches, players, player_matches target_dir)
+    stats = Statistics(match, old_matches, players, player_matches, target_dir)
     last_event_id = 0
     last_player_match_id = 0
 
