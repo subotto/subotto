@@ -91,13 +91,17 @@ class Statistics:
         
         self.current_phase = None
         
-        self.total_goals = None	# Map from player.id to the total number of goals ever
-        self.num_goals = None	# Map from player.id to the number of goals in this 24-hours tournament
-        self.total_time = None	# Map from player.id to the total number of seconds played ever
-        self.played_time = None	# Map from player.id to the number of seconds played in this 24-hours tournament
+        self.total_goals = dict([])	# Map from player.id to the total number of goals ever
+        self.num_goals = dict([])	# Map from player.id to the number of goals in this 24-hours tournament
+        self.total_time = dict([])	# Map from player.id to the total number of seconds played ever
+        self.played_time = dict([])	# Map from player.id to the number of seconds played in this 24-hours tournament
         self.participations = dict([])	# Map from player.id to the number of 24-hours played
         
         for player in players:
+        	self.total_goals[ player.id ] = 0
+        	self.num_goals[ player.id ] = 0
+        	self.total_time[ player.id ] = 0
+        	self.played_time[ player.id ] = 0
         	self.participations[ player.id ] = 0
 
         #TODO: aggiornare tutte queste informazioni...
@@ -137,6 +141,9 @@ class Statistics:
 
     def new_player_match(self, player_match):
         print "> Received new player match: %r" % (player_match)
+        
+        # TODO: verificare che questa funzione venga chiamata solo se quel player_match non esisteva ancora
+        self.participations[ player_match.player_id ] += 1
 
     def render_template(self, basename, kwargs):
         template = Template(filename=os.path.join('templates', '%s.mako' % (basename)), output_encoding='utf-8')
@@ -161,6 +168,9 @@ class Statistics:
         kwargs['current_players'] = self.current_players
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
         kwargs['phase'] = self.current_phase
+        
+        kwargs['participations'] = self.participations
+        
         kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
         kwargs['format_player'] = format_player
