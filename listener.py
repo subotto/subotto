@@ -56,11 +56,7 @@ def compute_linear_projection(score, target, elapsed, begin):
     return begin + datetime.timedelta(seconds=float(target-score)/ratio)
 
 def format_elapsed_time(total_seconds, begin, end):
-	if end is None:
-		return format_time(total_seconds)
-	else:
-		duration = (int)((end - begin).total_seconds())
-		return format_time(duration)
+	return format_time(total_seconds)
 
 def format_remaining_time(total_seconds, end, length, phase):
 	if end is not None:
