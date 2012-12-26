@@ -99,12 +99,15 @@ class Statistics:
         self.num_goals = None	# Map from player.id to the number of goals in this 24-hours tournament
         self.total_time = None	# Map from player.id to the total number of seconds played ever
         self.played_time = None	# Map from player.id to the number of seconds played in this 24-hours tournament
-        self.participations = None	# Map from player.id to the number of 24-hours played
+        self.participations = dict([])	# Map from player.id to the number of 24-hours played
         
+        for player in players:
+        	self.participations[ player.id ] = 0
+
         #TODO: aggiornare tutte queste informazioni...
         
         for player_match in player_matches:
-        	participations[ player_match.player_id ] += 1
+        	self.participations[ player_match.player_id ] += 1
 
     def detect_team(self, team):
         if team == self.match.team_a:
