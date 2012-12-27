@@ -8,6 +8,7 @@ import datetime
 import codecs
 import time
 from pprint import pprint
+import copy
 
 from mako.template import Template
 
@@ -106,11 +107,13 @@ def format_countdown(sched_begin):
     else:
         return "Mancano "+format_time2( time_diff )+" all'inizio della partita..."
 
-def show_player_statistics(player, total_time, total_goals, participations):
+def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = "<table class=\"giocatore\"><col width=\"220\" /><tr><th>" + format_player(player) + "</th></tr><tr><td>"
     result += "Partecipazioni: " + str( participations[ player.id ] ) + "<br />"
     result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 ) + "<br />"
-    result += "Gol fatti: " + str( total_goals[ player.id ] )
+    result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 ) + " in questa partita)<br />"
+    result += "Gol fatti: " + str( total_goals[ player.id ] ) + "<br />"
+    result += "(" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
     result += "</td></tr></table>"
     
     return result
@@ -204,16 +207,16 @@ class Statistics:
         
         # Bisogna segnare il tempo delle ultime due coppie che hanno giocato!
         for old_match in old_matches:
-        	
-        	match_id = old_match.id
-        	
-        	for team_id in [ old_match.team_a_id, old_match.team_b_id ]:
-        		delta_time = old_match.end - self.last_change[ match_id ][ team_id ]
-        		
-        		for player_id in self.current_contestants[ match_id ][ team_id ]:
-        			self.total_time[ player_id ] += delta_time
-	
-	
+            
+            match_id = old_match.id
+            
+            for team_id in [ old_match.team_a_id, old_match.team_b_id ]:
+                delta_time = old_match.end - self.last_change[ match_id ][ team_id ]
+                
+                for player_id in self.current_contestants[ match_id ][ team_id ]:
+                    self.total_time[ player_id ] += delta_time
+    
+    
     def detect_team(self, team):
         if team == self.match.team_a:
             return 0
@@ -236,8 +239,10 @@ class Statistics:
             if self.last_change[ match_id ][ team_id ] is not None:
                 # Aggiorno il tempo di gioco dei giocatori che stanno uscendo
                 delta_time = timestamp - self.last_change[ match_id ][ team_id ]
-                self.total_time[ event.player_a_id ] += delta_time
-                self.total_time[ event.player_b_id ] += delta_time
+                
+                for player_id in [ event.player_a_id, event.player_b_id ]:
+                    self.total_time[ player_id ] += delta_time
+                    self.played_time[ player_id ] += delta_time
             
             # Effettuo il cambio
             self.current_contestants[ match_id ][ team_id ] = [ event.player_a_id, event.player_b_id ]
@@ -251,12 +256,32 @@ class Statistics:
             i = self.detect_team(event.team)
             self.score[i] += 1
             self.partial[i] += 1
+            
+            match_id = self.match.id
+            team_id = event.team_id
+            contestants = self.current_contestants[ match_id ][ team_id ]
+            
+            # Segno il gol
+            for c in contestants:
+                self.total_goals[ c ] += 1
+                self.num_goals[ c ] += 1
+            
+            self.goal_sequence[ match_id ][ team_id ].append( contestants )
 
         elif event.type == Event.EV_TYPE_GOAL_UNDO:
             i = self.detect_team(event.team)
             self.score[i] -= 1
             if self.partial[i] > 0:
                 self.partial[i] -= 1
+            
+            match_id = self.match.id
+            team_id = event.team_id
+            
+            # Tolgo il gol
+            contestants = self.goal_sequence[ match_id ][ team_id ].pop()
+            for c in contestants:
+                self.total_goals[ c ] -= 1
+                self.num_goals[ c ] -= 1
         
         elif event.type == Event.EV_TYPE_ADVANTAGE_PHASE:
             self.current_phase = event.phase
@@ -291,26 +316,30 @@ class Statistics:
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
         kwargs['phase'] = self.current_phase
         
-        # Il tempo di gioco di dei current players va aggiornato a mano!
+        # Il tempo di gioco dei current players va aggiornato a mano (anche dopo la fine)!
         
-        temporary_total_time = self.total_time
-        temporary_played_time = self.played_time
+        temporary_total_time = copy.deepcopy(self.total_time)
+        temporary_played_time = copy.deepcopy(self.played_time)
         
-        if self.match.end is None:
-        		for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
-		    		delta_time = datetime.datetime.now() - self.last_change[ self.match.id ][ team_id ]
-		    		print "DELTA_TIME: %r" % delta_time
-        		
-		    		for player_id in self.current_contestants[ self.match.id ][ team_id ]:
-		    			#print "TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
-		    			temporary_total_time[ player_id ] += delta_time
-		    			#print "TEMPORARY TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
-		    			print "BASIC TOTAL TIME (%d): %r" % ( player_id, self.total_time[ player_id ] )
-		    			#temporary_played_time[ player_id ] += delta_time
+        for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
+            t = datetime.datetime.now()
+            if self.match.end is not None:
+                t = self.match.end
+            
+            delta_time = t - self.last_change[ self.match.id ][ team_id ]
+            #print "DELTA_TIME: %r" % delta_time
+        
+            for player_id in self.current_contestants[ self.match.id ][ team_id ]:
+                #print "TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
+                temporary_total_time[ player_id ] += delta_time
+                #print "TEMPORARY TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
+                #print "BASIC TOTAL TIME (%d): %r" % ( player_id, self.total_time[ player_id ] )
+                temporary_played_time[ player_id ] += delta_time
         
         kwargs['total_time'] = temporary_total_time
-        #kwargs['played_time'] = temporary_played_time
+        kwargs['played_time'] = temporary_played_time
         kwargs['total_goals'] = self.total_goals
+        kwargs['num_goals'] = self.num_goals
         kwargs['participations'] = self.participations
         
         kwargs['communicate_status'] = communicate_status
