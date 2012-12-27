@@ -10,11 +10,11 @@
 </tr>
 
 <tr>
- <td><div onMouseOver="show('00')" onMouseOut="hide('00')"> ${format_player(current_players[0][0])} </div>
- <div onMouseOver="show('01')" onMouseOut="hide('01')"> ${format_player(current_players[0][1])} </div>
+ <td><div onMouseOver="show('player00'); hide('player01')" onMouseOut="hide('player00')"> ${format_player(current_players[0][0])} </div>
+ <div onMouseOver="show('player01'); hide('player00')" onMouseOut="hide('player01')"> ${format_player(current_players[0][1])} </div>
 </td>
- <td><div onMouseOver="show('10')" onMouseOut="hide('10')"> ${format_player(current_players[1][0])} </div>
- <div onMouseOver="show('11')" onMouseOut="hide('11')">${format_player(current_players[1][1])} </div>
+ <td><div onMouseOver="show('player10'); hide('player11')" onMouseOut="hide('player10')"> ${format_player(current_players[1][0])} </div>
+ <div onMouseOver="show('player11'); hide('player10')" onMouseOut="hide('player11')">${format_player(current_players[1][1])} </div>
 </td>
 </tr>
 

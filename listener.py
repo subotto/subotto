@@ -7,6 +7,7 @@ import re
 import datetime
 import codecs
 import time
+from pprint import pprint
 
 from mako.template import Template
 
@@ -84,12 +85,17 @@ def format_countdown(sched_begin):
 	else:
 		return "Mancano "+format_time2( time_diff )+" all'inizio della partita..."
 
-def show_player_statistics(player, participations):
-	return "<p><b>" + format_player(player) + "</b></p>" + "Partecipazioni: " + str( participations[ player.id ] )
+def show_player_statistics(player, total_time, participations):
+	result = "<table class=\"giocatore\"><col width=\"220\" /><tr><th>" + format_player(player) + "</th></tr><tr><td>"
+	result += "Tempo giocato: " + format_time2( int(total_time[ player.id ].total_seconds()) ) + "<br />"
+	result += "Partecipazioni: " + str( participations[ player.id ] )
+	result += "</td></tr></table>"
+	
+	return result
 
 class Statistics:
 
-    def __init__(self, match, old_matches, players, player_matches, target_dir):
+    def __init__(self, match, old_matches, players, old_player_matches, old_events, target_dir):
         self.match = match
         self.old_matches = old_matches
         self.target_dir = target_dir
@@ -106,18 +112,69 @@ class Statistics:
         self.played_time = dict([])	# Map from player.id to the number of seconds played in this 24-hours tournament
         self.participations = dict([])	# Map from player.id to the number of 24-hours played
         
+        # Informazioni sui singoli giocatori...
         for player in players:
         	self.total_goals[ player.id ] = 0
         	self.num_goals[ player.id ] = 0
-        	self.total_time[ player.id ] = 0
-        	self.played_time[ player.id ] = 0
+        	self.total_time[ player.id ] = datetime.timedelta(0,0,0)
+        	self.played_time[ player.id ] = datetime.timedelta(0,0,0)
         	self.participations[ player.id ] = 0
 
         #TODO: aggiornare tutte queste informazioni...
         
-        for player_match in player_matches:
+        for player_match in old_player_matches:
         	self.participations[ player_match.player_id ] += 1
         
+        
+        self.goal_sequence = dict([])		# Match id => Team id => Stack of the sequence of player id
+        self.current_contestants = dict([])	# Match id => Team id => Pair of player id
+        self.last_change = dict([])			# Match id => Team id => Time of last change
+        
+        for match in old_matches:
+        	self.goal_sequence[ match.id ] = dict([ ( match.team_a_id, [] ), ( match.team_b_id, [] ) ])
+        	self.current_contestants[ match.id ] = dict([ ( match.team_a_id, [] ), ( match.team_b_id, [] ) ])
+        	self.last_change[ match.id ] = dict([ ( match.team_a_id, None ), ( match.team_b_id, None ) ])
+        
+        #pprint( self.last_change )
+        
+        for event in old_events:
+        	if event.type == Event.EV_TYPE_CHANGE:
+        		match_id = event.match_id
+        		team_id = event.team_id
+        		timestamp = event.timestamp
+        		
+        		if self.last_change[ match_id ][ team_id ] is not None:
+        			# Aggiorno il tempo di gioco dei giocatori che stanno uscendo
+        			delta_time = timestamp - self.last_change[ match_id ][ team_id ]
+        			self.total_time[ event.player_a_id ] += delta_time
+        			self.total_time[ event.player_b_id ] += delta_time
+        		
+        		# Effettuo il cambio
+        		self.current_contestants[ match_id ][ team_id ] = [ event.player_a_id, event.player_b_id ]
+        		if self.last_change[ match_id ][ team_id ] is None:
+        			self.last_change[ match_id ][ team_id ] = event.match.begin
+        		else:
+        			self.last_change[ match_id ][ team_id ] = timestamp
+        	
+        	elif event.type == Event.EV_TYPE_GOAL:
+        		match_id = event.match_id
+        		team_id = event.team_id
+        		contestants = self.current_contestants[ match_id ][ team_id ]
+        		
+        		# Segno il gol
+        		for c in contestants:
+        			self.total_goals[ c ] += 1
+        		
+        		self.goal_sequence[ match_id ][ team_id ].append( contestants )
+        	
+        	elif event.type == Event.EV_TYPE_GOAL_UNDO:
+        		match_id = event.match_id
+        		team_id = event.team_id
+        		
+        		# Tolgo il gol
+        		contestants = self.goal_sequence[ match_id ][ team_id ].pop()
+        		for c in contestants:
+        			self.total_goals[ c ] -= 1
         
 
     def detect_team(self, team):
@@ -151,7 +208,7 @@ class Statistics:
     def new_player_match(self, player_match):
         print "> Received new player match: %r" % (player_match)
         
-        # TODO: verificare che questa funzione venga chiamata solo se quel player_match non esisteva ancora
+        # TODO: verificare (sperare) che questa funzione venga chiamata solo se quel player_match non esisteva ancora
         self.participations[ player_match.player_id ] += 1
 
     def render_template(self, basename, kwargs):
@@ -178,6 +235,7 @@ class Statistics:
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
         kwargs['phase'] = self.current_phase
         
+        kwargs['total_time'] = self.total_time
         kwargs['participations'] = self.participations
         
         kwargs['communicate_status'] = communicate_status
@@ -218,12 +276,12 @@ def listen_match(match_id, target_dir):
     session = Session()
 
     match = session.query(Match).filter(Match.id == match_id).one()
-    old_matches = session.query(Match).filter(Match.id <= 3).all()	# TODO: immagino che un giorno la condizione Match.id <= 3 vada tolta...
+    old_matches = session.query(Match).filter(Match.id <= 3).all()	# TODO: immagino che un giorno la condizione Match.id <= 3 vada aggiustata...
     players = session.query(Player).all()
-    player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id <= 3).all() # TODO: anche qui bisognerà togliere la condizione match <= 3
-    # TODO: probabilmente userò solo il numero di match di ogni giocatore, per cui si può economizzare la query (basta un count)
+    old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id <= 3).all() # TODO: anche qui bisognerà aggiustare la condizione match <= 3
+    old_events = session.query(Event).filter(Event.match_id <= 3).all() # TODO: stessa cosa
     
-    stats = Statistics(match, old_matches, players, player_matches, target_dir)
+    stats = Statistics(match, old_matches, players, old_player_matches, old_events, target_dir)
     last_event_id = 0
     last_player_match_id = 0
 
