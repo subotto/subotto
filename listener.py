@@ -35,6 +35,13 @@ def format_time(total_seconds):
     hours = total_seconds / 60
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
+def format_time2(total_seconds):
+    seconds = total_seconds % 60
+    total_seconds = total_seconds / 60
+    minutes = total_seconds % 60
+    hours = total_seconds / 60
+    return "%d ore, %d minuti e %d secondi" % (hours, minutes, seconds)
+
 def format_player(player):
     return "%s %s" % (player.fname, player.lname)
 
@@ -75,8 +82,10 @@ def format_countdown(sched_begin):
 		return "La partita dovrebbe iniziare a momenti!"
 	
 	else:
-		return "Tempo mancante all'inizio della 24 ore: "+format_time( time_diff )
+		return "Mancano "+format_time2( time_diff )+" all'inizio della partita..."
 
+def show_player_statistics(player, participations):
+	return "<p><b>" + format_player(player) + "</b></p>" + "Partecipazioni: " + str( participations[ player.id ] )
 
 class Statistics:
 
@@ -173,6 +182,7 @@ class Statistics:
         
         kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
+        kwargs['format_time2'] = format_time2
         kwargs['format_player'] = format_player
         kwargs['remount_index'] = remount_index
         kwargs['compute_interesting_score'] = compute_interesting_score
@@ -180,6 +190,7 @@ class Statistics:
         kwargs['format_elapsed_time'] = format_elapsed_time
         kwargs['format_remaining_time'] = format_remaining_time
         kwargs['format_countdown'] = format_countdown
+        kwargs['show_player_statistics'] = show_player_statistics
 
         # Generate stats dir
         try:
@@ -188,7 +199,7 @@ class Statistics:
             pass
 
         # Render templates
-        templates = [ "time", "score", "general_stats", "projection", "fake" ]
+        templates = [ "time", "score", "general_stats", "projection", "fake", "player00", "player01", "player10", "player11" ]
         if self.match.begin is None:
         	templates = [ "fake", "countdown" ]
         
