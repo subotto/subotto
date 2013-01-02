@@ -79,7 +79,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     # Replay events
     for wait_secs, orig_ev in events:
         print "> Waiting %f seconds..." % (wait_secs)
-        time.sleep(wait_secs / mult)
+        time.sleep(wait_secs)
         ev = Event()
         ev.timestamp = datetime.datetime.now()
         ev.match = match
