@@ -73,6 +73,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     # Set begin
     match.begin = datetime.datetime.now()
+    print "> Match begins at %s" % (match.begin)
     session.commit()
 
     # Replay events
@@ -97,7 +98,11 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     # Set end
     match.end = datetime.datetime.now()
+    print "> Match ends at %s" % (match.end)
     session.commit()
+
+    print "> Finished feeding match with ID %d" % (match.id)
+    print "> Scheduled times were: %s -- %s" % (match.sched_begin, match.sched_end)
 
 if __name__ == '__main__':
     match_id, mult, initial_wait = sys.argv[1:]
