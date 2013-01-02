@@ -25,7 +25,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
     for i in xrange(len(events)):
         delta = events[i][0] - ref_time
         ref_time = events[i][0]
-        events[i] = (multiply_timedelta(1.0 / mult, delta), events[i][1])
+        events[i] = (delta / mult, events[i][1])
 
     # Replicate the original match
     match = Match()
