@@ -16,28 +16,21 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     session = Session()
 
-    # Retrieve the original match and its beginning time
+    # Retrieve the original match and prepare the new event list
+    # (already sorted by SQLAlchemy)
     orig_match = session.query(Match).filter(Match.id == orig_match_id).one()
-    orig_start_time = orig_match.begin
-
-    # Prepare the time conversion function
-    now = datetime.datetime.now()
-    start_time = now + datetime.timedelta(seconds=initial_wait)
-    def convert_time(time):
-        return start_time + multiply_timedelta(1.0 / mult, time - orig_start_time)
-
-    # Prepare the event list (they're already sorted by SQLAlchemy)
-    events = map(lambda x: (max(x.timestamp - orig_start_time, datetime.timedelta(0)).total_seconds(), x), orig_match.events)
+    events = [((min(max(x.timestamp, orig_match.begin), orig_match.end) - orig_match.begin).total_seconds(), x)
+              for x in orig_match.events]
     ref_time = 0.0
     for i in xrange(len(events)):
         delta = events[i][0] - ref_time
         ref_time = events[i][0]
-        events[i] = (delta, events[i][1])
+        events[i] = (multiply_timedelta(1.0 / mult, delta), events[i][1])
 
     # Replicate the original match
     match = Match()
-    match.sched_begin = now + datetime.timedelta(seconds=0.5 * initial_wait)
-    match.sched_end = now + datetime.timedelta(seconds=0.5 * initial_wait) + multiply_timedelta(1.0 / mult, orig_match.sched_end - orig_match.sched_begin)
+    match.sched_begin = datetime.datetime.now() + datetime.timedelta(seconds=0.5 * initial_wait)
+    match.sched_end = match.sched_begin + multiply_timedelta(1.0 / mult, orig_match.sched_end - orig_match.sched_begin)
     match.name = "Replay of \"%s\"" % (orig_match.name)
     match.team_a = orig_match.team_a
     match.team_b = orig_match.team_b
@@ -74,11 +67,12 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
 
     # Print match ID and start wait
     print "> Feeding match with ID %d" % (match.id)
+    print "> Scheduled times: %s -- %s" % (match.sched_begin, match.sched_end)
     print "> Waiting initial %f seconds..." % (initial_wait)
     time.sleep(initial_wait)
 
     # Set begin
-    match.begin = start_time
+    match.begin = datetime.datetime.now()
     session.commit()
 
     # Replay events
@@ -86,7 +80,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
         print "> Waiting %f seconds..." % (wait_secs)
         time.sleep(wait_secs / mult)
         ev = Event()
-        ev.timestamp = convert_time(orig_ev.timestamp)
+        ev.timestamp = datetime.datetime.now()
         ev.match = match
         ev.type = orig_ev.type
         ev.source = orig_ev.source
@@ -102,7 +96,7 @@ def replay_match(orig_match_id, mult=1.0, initial_wait=0.0):
         session.commit()
 
     # Set end
-    match.end = convert_time(orig_match.end)
+    match.end = datetime.datetime.now()
     session.commit()
 
 if __name__ == '__main__':
