@@ -68,6 +68,13 @@ def format_time2(total_seconds, abbr):
 def format_player(player):
     return "%s %s" % (player.fname, player.lname)
 
+
+def compute_extimated_score(score, elapsed, length):
+	if elapsed <= 0.1:
+		return "-"
+	else:
+		return "%d - %d" % ( int(score[0]*length/elapsed), int(score[1]*length/elapsed) )
+
 def remount_index(score, elapsed, length):
     to_go = length - elapsed
     if to_go <= 0.0:
@@ -82,8 +89,19 @@ def compute_interesting_score(score):
 def compute_linear_projection(score, target, elapsed, begin):
     # TODO: evitare le divisioni per 0
     # TODO: la proiezione lineare non funziona... debuggare!
+    
+    # print "Score: %d. Target: %d. Elapsed: %d." % (score, target, elapsed)
+    
+    if elapsed <= 0.1:
+    	return "-"
+    if score == 0:
+    	return "&infin;"
+    
     ratio = score / elapsed
-    return begin + datetime.timedelta(seconds=float(target-score)/ratio)
+    
+    # pprint( begin + datetime.timedelta(seconds=float(target-score)/ratio) )
+    
+    return ( begin + datetime.timedelta(seconds=float(target)/ratio) ).strftime("%H:%M:%S")
 
 def format_elapsed_time(total_seconds, begin, end):
     return format_time(total_seconds)
@@ -105,7 +123,7 @@ def format_countdown(sched_begin):
         return "La partita dovrebbe iniziare a momenti!"
     
     else:
-        return "Mancano "+format_time2( time_diff )+" all'inizio della partita..."
+        return "Mancano "+format_time2( time_diff, 0 )+" all'inizio della partita..."
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = "<table class=\"giocatore\"><col width=\"220\" /><tr><th>" + format_player(player) + "</th></tr><tr><td>"
@@ -326,7 +344,14 @@ class Statistics:
             if self.match.end is not None:
                 t = self.match.end
             
-            delta_time = t - self.last_change[ self.match.id ][ team_id ]
+            s = self.last_change[ self.match.id ][ team_id ]
+            if self.match.begin is None:
+            	s = t
+            
+            if self.match.begin is not None and s is None:
+            	print "QUALCOSA NON VA!"
+            
+            delta_time = t - s
             #print "DELTA_TIME: %r" % delta_time
         
             for player_id in self.current_contestants[ self.match.id ][ team_id ]:
@@ -346,6 +371,7 @@ class Statistics:
         kwargs['format_time'] = format_time
         kwargs['format_time2'] = format_time2
         kwargs['format_player'] = format_player
+        kwargs['compute_extimated_score'] = compute_extimated_score
         kwargs['remount_index'] = remount_index
         kwargs['compute_interesting_score'] = compute_interesting_score
         kwargs['compute_linear_projection'] = compute_linear_projection
