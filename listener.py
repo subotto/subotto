@@ -38,32 +38,58 @@ def format_time(total_seconds):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 def format_time2(total_seconds, abbr):
+	# Return value: [ str, k ], where str is the formatted time, and k is 0 for "plural" and 1 for "singular"
+	
     seconds = total_seconds % 60
     total_seconds = total_seconds / 60
     minutes = total_seconds % 60
     hours = total_seconds / 60
     
     result = ""
-    if hours == 1:
-        result += "1 ora, "
-    elif hours > 1:
-        result += "%d ore, " % hours
     
-    if abbr == 1 and ( minutes > 0 or hours > 0 ):
-        result += "%d min, " % minutes
-    elif minutes == 1:
-        result += "1 minuto e "
-    elif minutes > 1 or hours > 0:
-        result += "%d minuti e " % minutes
+    if abbr == 0:
+    	if hours == 1:
+    		result += "1 ora, "
+    	elif hours > 1:
+    		result += "%d ore, " % hours
+    	
+    	if minutes > 0 or hours > 0:
+    		# Printing minutes...
+    		if minutes == 1:
+    			result += "1 minuto e "
+    		elif minutes > 1:
+    			result += "%d minuti e " % minutes
+    	
+    	if seconds == 1:
+    		result += "1 secondo"
+    	else:
+    		result += "%d secondi" % seconds
+    	
+    	plural = 1
+    	if total_seconds == 1:
+    		plural = 0
+    	
+    	return [ result, plural ]
+    
     
     if abbr == 1:
-        result += "%d sec" %seconds
-    elif seconds == 1:
-        result += "1 secondo"
-    else:
-        result += "%d secondi" % seconds
-    
-    return result
+    	if hours == 1:
+    		result += "1 ora"
+    	elif hours > 1:
+    		result += "%d ore" % hours
+    	
+    	if hours > 0 and minutes > 0:
+    		result += " e "
+    	
+    	if minutes > 0:
+    		result += "%d min" % minutes
+    	
+    	plural = 1
+    	if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
+    		plural = 0
+    	
+    	return [ result, plural ]
+
 
 def format_player(player):
     return "%s %s" % (player.fname, player.lname)
@@ -123,13 +149,22 @@ def format_countdown(sched_begin):
         return "La partita dovrebbe iniziare a momenti!"
     
     else:
-        return "Mancano "+format_time2( time_diff, 0 )+" all'inizio della partita..."
+    	r = format_time2( time_diff, 0 )
+    	res = ""
+    	
+    	if r[1] == 0:
+    		res += "Mancano "
+    	else:
+    		res += "Manca "
+    	
+    	res += r[0] + " all'inizio della partita..."
+        return res
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = "<table class=\"giocatore\"><col width=\"220\" /><tr><th>" + format_player(player) + "</th></tr><tr><td>"
     result += "Partecipazioni: " + str( participations[ player.id ] ) + "<br />"
-    result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 ) + "<br />"
-    result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 ) + " in questa partita)<br />"
+    result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 )[0] + "<br />"
+    result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 )[0] + " in questa partita)<br />"
     result += "Gol fatti: " + str( total_goals[ player.id ] ) + "<br />"
     result += "(" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
     result += "</td></tr></table>"
