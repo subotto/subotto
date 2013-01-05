@@ -38,8 +38,9 @@ def format_time(total_seconds):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 def format_time2(total_seconds, abbr):
-	# Return value: [ str, k ], where str is the formatted time, and k is 0 for "plural" and 1 for "singular"
-	
+    # Return value: [ str, k ], where str is the formatted time, and k is 0 for "plural" and 1 for "singular"
+    total_seconds = int(total_seconds)
+    
     seconds = total_seconds % 60
     total_seconds = total_seconds / 60
     minutes = total_seconds % 60
@@ -60,16 +61,20 @@ def format_time2(total_seconds, abbr):
     		elif minutes > 1:
     			result += "%d minuti e " % minutes
     	
+    	print seconds
+    	
     	if seconds == 1:
     		result += "1 secondo"
     	else:
     		result += "%d secondi" % seconds
     	
-    	plural = 1
-    	if total_seconds == 1:
-    		plural = 0
+    	singular = 0
+    	if seconds == 1 and minutes == 0 and hours == 0:
+    		singular = 1
     	
-    	return [ result, plural ]
+    	print [ result, singular ]
+    	
+    	return [ result, singular ]
     
     
     if abbr == 1:
@@ -84,11 +89,11 @@ def format_time2(total_seconds, abbr):
     	if minutes > 0:
     		result += "%d min" % minutes
     	
-    	plural = 1
+    	singular = 0
     	if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
-    		plural = 0
+    		singular = 1
     	
-    	return [ result, plural ]
+    	return [ result, singular ]
 
 
 def format_player(player):
@@ -113,9 +118,6 @@ def compute_interesting_score(score):
     return INTERESTING_SCORES[idx]
 
 def compute_linear_projection(score, target, elapsed, begin):
-    # TODO: evitare le divisioni per 0
-    # TODO: la proiezione lineare non funziona... debuggare!
-    
     # print "Score: %d. Target: %d. Elapsed: %d." % (score, target, elapsed)
     
     if elapsed <= 0.1:
@@ -371,6 +373,7 @@ class Statistics:
         
         # Il tempo di gioco dei current players va aggiornato a mano (anche dopo la fine)!
         
+        # TODO: evitare questo costo lineare...
         temporary_total_time = copy.deepcopy(self.total_time)
         temporary_played_time = copy.deepcopy(self.played_time)
         
