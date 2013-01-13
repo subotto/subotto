@@ -93,6 +93,8 @@ def format_time2(total_seconds, abbr):
     	if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
     		singular = 1
     	
+    	#result += " %d sec" % seconds
+    	
     	return [ result, singular ]
 
 
@@ -111,7 +113,16 @@ def remount_index(score, elapsed, length):
     if to_go <= 0.0:
         return u"&infin;"
     else:
-        return u"%0.8f" % (float(score[0] - score[1]) / to_go * 60.0 * 60.0)
+        return u"%0.8f" % (float(abs(score[0] - score[1])) / to_go * 60.0 * 60.0)
+
+def remount_index_description(score, teams):
+	if score[0] == score[1]:
+		return "gol in pi&ugrave; all'ora che deve segnare la squadra in svantaggio per recuperare"
+	else:
+		ordered_teams = [ teams[1].name, teams[0].name ]
+		if score[0] < score[1]:
+			ordered_teams = [ teams[0].name, teams[1].name ]
+		return "gol in pi&ugrave; all'ora che devono segnare i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
 
 def compute_interesting_score(score):
     idx = map(lambda x: x > score, INTERESTING_SCORES).index(True)
@@ -373,9 +384,15 @@ class Statistics:
         
         # Il tempo di gioco dei current players va aggiornato a mano (anche dopo la fine)!
         
-        # TODO: evitare questo costo lineare...
-        temporary_total_time = copy.deepcopy(self.total_time)
-        temporary_played_time = copy.deepcopy(self.played_time)
+        # Saving the status of current players
+        old_total_time = dict([])
+        old_played_time = dict([])
+        
+        for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
+        	for player_id in self.current_contestants[ self.match.id ][ team_id ]:
+        		old_total_time[ player_id ] = self.total_time[ player_id ]
+        		old_played_time[ player_id ] = self.played_time[ player_id ]
+        
         
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
             t = datetime.datetime.now()
@@ -383,24 +400,20 @@ class Statistics:
                 t = self.match.end
             
             s = self.last_change[ self.match.id ][ team_id ]
-            if self.match.begin is None:
+            if self.match.begin is None or s is None:
             	s = t
             
             if self.match.begin is not None and s is None:
             	print "QUALCOSA NON VA!"
             
             delta_time = t - s
-            #print "DELTA_TIME: %r" % delta_time
         
             for player_id in self.current_contestants[ self.match.id ][ team_id ]:
-                #print "TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
-                temporary_total_time[ player_id ] += delta_time
-                #print "TEMPORARY TOTAL TIME (%d): %r" % ( player_id, temporary_total_time[ player_id ] )
-                #print "BASIC TOTAL TIME (%d): %r" % ( player_id, self.total_time[ player_id ] )
-                temporary_played_time[ player_id ] += delta_time
+                self.total_time[ player_id ] += delta_time
+                self.played_time[ player_id ] += delta_time
         
-        kwargs['total_time'] = temporary_total_time
-        kwargs['played_time'] = temporary_played_time
+        kwargs['total_time'] = self.total_time
+        kwargs['played_time'] = self.played_time
         kwargs['total_goals'] = self.total_goals
         kwargs['num_goals'] = self.num_goals
         kwargs['participations'] = self.participations
@@ -411,6 +424,8 @@ class Statistics:
         kwargs['format_player'] = format_player
         kwargs['compute_extimated_score'] = compute_extimated_score
         kwargs['remount_index'] = remount_index
+        kwargs['remount_index_description'] = remount_index_description
+        
         kwargs['compute_interesting_score'] = compute_interesting_score
         kwargs['compute_linear_projection'] = compute_linear_projection
         kwargs['format_elapsed_time'] = format_elapsed_time
@@ -438,6 +453,14 @@ class Statistics:
             except Exception:
                 print "> Exception when rendering %s" % (basename)
                 raise
+        
+        
+        # Restoring previous status of current players
+        for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
+        	for player_id in self.current_contestants[ self.match.id ][ team_id ]:
+        		self.total_time[ player_id ] = old_total_time[ player_id ]
+        		self.played_time[ player_id ] = old_played_time[ player_id ]
+        
 
 def listen_match(match_id, target_dir):
 

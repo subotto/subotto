@@ -20,6 +20,6 @@
  <td>Parziale</td><td>${partial[0]} - ${partial[1]}</td>
 </tr>
 
-<tr><td>Indice di rimonta<br />(gol in pi&ugrave; all'ora che devono segnare i ${teams[1].name} per recuperare i ${teams[0].name})</td><td>${remount_index(score, elapsed, length)}</td></tr>
+<tr><td>Indice di rimonta<br />(${remount_index_description(score, teams)})</td><td>${remount_index(score, elapsed, length)}</td></tr>
 </table>
 
