@@ -9,6 +9,7 @@ import codecs
 import time
 from pprint import pprint
 import copy
+import matplotlib.pyplot
 
 from mako.template import Template
 
@@ -231,7 +232,9 @@ class Statistics:
         self.last_change[ match.id ] = dict([ ( match.team_a_id, None ), ( match.team_b_id, None ) ])
         
         #pprint( self.last_change )
-        
+
+        self.score_plot = [[[], []], [[], []]]
+
         for event in old_events:
             if event.type == Event.EV_TYPE_CHANGE:
                 match_id = event.match_id
@@ -292,6 +295,12 @@ class Statistics:
     def new_event(self, event):
         print >> sys.stderr, "> Received new event: %r" % (event)
 
+        if self.match.begin != None and len(self.score_plot[0][0]) == 0:
+            self.score_plot[0][0].append(self.match.begin)
+            self.score_plot[0][1].append(0)
+            self.score_plot[1][0].append(self.match.begin)
+            self.score_plot[1][1].append(0)
+
         if event.type == Event.EV_TYPE_CHANGE:
             i = self.detect_team(event.team)
             self.partial = [0, 0]
@@ -322,6 +331,9 @@ class Statistics:
             i = self.detect_team(event.team)
             self.score[i] += 1
             self.partial[i] += 1
+
+            self.score_plot[i][0].append(event.timestamp)
+            self.score_plot[i][1].append(self.score[i])
             
             match_id = self.match.id
             team_id = event.team_id
@@ -339,7 +351,10 @@ class Statistics:
             self.score[i] -= 1
             if self.partial[i] > 0:
                 self.partial[i] -= 1
-            
+
+            self.score_plot[i][0].pop()
+            self.score_plot[i][1].pop()
+
             match_id = self.match.id
             team_id = event.team_id
             
@@ -461,6 +476,11 @@ class Statistics:
         		self.total_time[ player_id ] = old_total_time[ player_id ]
         		self.played_time[ player_id ] = old_played_time[ player_id ]
         
+        # Draw the score plot
+        #matplotlib.pyplot.figure()
+        #for i in [0, 1]:
+        #    matplotlib.pyplot.plot(self.score_plot[i][0], self.score_plot[i][1], '-o')
+        #matplotlib.pyplot.savefig(os.path.join(self.target_dir, "score.png"))
 
 def listen_match(match_id, target_dir):
 
