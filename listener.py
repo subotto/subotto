@@ -61,7 +61,7 @@ def format_time2(total_seconds, abbr):
     		elif minutes > 1:
     			result += "%d minuti e " % minutes
     	
-    	print seconds
+    	#print seconds
     	
     	if seconds == 1:
     		result += "1 secondo"
@@ -72,7 +72,7 @@ def format_time2(total_seconds, abbr):
     	if seconds == 1 and minutes == 0 and hours == 0:
     		singular = 1
     	
-    	print [ result, singular ]
+    	#print [ result, singular ]
     	
     	return [ result, singular ]
     
@@ -290,7 +290,7 @@ class Statistics:
             return 1
 
     def new_event(self, event):
-        print "> Received new event: %r" % (event)
+        print >> sys.stderr, "> Received new event: %r" % (event)
 
         if event.type == Event.EV_TYPE_CHANGE:
             i = self.detect_team(event.team)
@@ -353,7 +353,7 @@ class Statistics:
             self.current_phase = event.phase
 
     def new_player_match(self, player_match):
-        print "> Received new player match: %r" % (player_match)
+        print >> sys.stderr, "> Received new player match: %r" % (player_match)
         
         # TODO: verificare (sperare) che questa funzione venga chiamata solo se quel player_match non esisteva ancora
         self.participations[ player_match.player_id ] += 1
@@ -364,7 +364,7 @@ class Statistics:
             fout.write(template.render_unicode(**kwargs))
 
     def regenerate(self):
-        print "> Regeneration"
+        print >> sys.stderr, "> Regeneration"
 
         # Prepare mako arguments
         kwargs = {}
@@ -404,7 +404,7 @@ class Statistics:
             	s = t
             
             if self.match.begin is not None and s is None:
-            	print "QUALCOSA NON VA!"
+            	print >> "QUALCOSA NON VA!"
             
             delta_time = t - s
         
@@ -444,14 +444,14 @@ class Statistics:
         if self.match.begin is None:
             templates = [ "fake", "countdown" ]
         
-        print "BEGIN: %r" % self.match.begin
-        print "END: %r" % self.match.end
+        #print >> sys.stderr, "> BEGIN: %r" % self.match.begin
+        #print >> sys.stderr, "> END: %r" % self.match.end
         
         for basename in templates:
             try:
                 self.render_template(basename, kwargs)
             except Exception:
-                print "> Exception when rendering %s" % (basename)
+                print >> sys.stderr, "> Exception when rendering %s" % (basename)
                 raise
         
         
@@ -493,4 +493,6 @@ def listen_match(match_id, target_dir):
         pass
 
 if __name__ == '__main__':
-    listen_match(int(sys.argv[1]), sys.argv[2])
+    match_id = int(sys.argv[1])
+    target_dir = sys.argv[2]
+    listen_match(match_id, target_dir)
