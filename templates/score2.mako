@@ -1,8 +1,8 @@
 ## -*- coding: utf-8 -*-
 
-<table class="prospetto">
-	<col width="200" />
-	<col width="80" />
+<table class="miniprospetto">
+	<col width="120" />
+	<col width="60" />
 	
 	<tr>
 		<td>${teams[0].name}</td>
@@ -13,4 +13,6 @@
 		<td>${score[1]}</td>
 	</tr>
 </table>
+
+<br />
 
