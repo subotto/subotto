@@ -455,7 +455,7 @@ class Statistics:
             pass
 
         # Render templates
-        templates = [ "time", "score", "general_stats", "projection", "fake", "player00", "player01", "player10", "player11", "score2" ]
+        templates = [ "time", "score", "general_stats", "projection", "fake", "player00", "player01", "player10", "player11", "score2", "time2" ]
         if self.match.begin is None:
             templates = [ "fake", "countdown" ]
         
