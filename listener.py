@@ -493,15 +493,15 @@ class Statistics:
         matplotlib.pylab.close(fig)
         #fig.show()
 
-def listen_match(match_id, target_dir):
+def listen_match(match_id, target_dir, old_matches_id):
 
     session = Session()
 
     match = session.query(Match).filter(Match.id == match_id).one()
-    old_matches = session.query(Match).filter(Match.id <= 3).all()    # TODO: immagino che un giorno la condizione Match.id <= 3 vada aggiustata...
+    old_matches = session.query(Match).filter(Match.id.in_(old_matches_id)).all()
     players = session.query(Player).all()
-    old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id <= 3).all() # TODO: anche qui bisognerà aggiustare la condizione match <= 3
-    old_events = session.query(Event).filter(Event.match_id <= 3).all() # TODO: stessa cosa
+    old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id.in_(old_matches_id)).all()
+    old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).all()
     
     stats = Statistics(match, old_matches, players, old_player_matches, old_events, target_dir)
     last_event_id = 0
@@ -526,4 +526,5 @@ def listen_match(match_id, target_dir):
 if __name__ == '__main__':
     match_id = int(sys.argv[1])
     target_dir = sys.argv[2]
-    listen_match(match_id, target_dir)
+    old_matches_id = [1, 2, 3]
+    listen_match(match_id, target_dir, old_matches_id)
