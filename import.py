@@ -63,6 +63,7 @@ def import_from_2012():
     # Player mapping
     _player_map = {}
     player_matches = []
+    found_player_id = set()
     for old_player in old_session.query(OldPlayer).all():
         player = Player.get_or_create(session, old_player.fname, old_player.lname, None)
         _player_map[old_player.id] = player
@@ -101,12 +102,16 @@ def import_from_2012():
                 event.team = _team_map[old_team_id]
                 event.player_a = _player_map[old_player_a_id]
                 event.player_b = _player_map[old_player_b_id]
+                found_player_id.add(event.player_a.id)
+                found_player_id.add(event.player_b.id)
             else:
                 assert(False, "Command not supported")
             events.append(event)
 
     session.add(match)
-    session.add_all(player_matches)
+    for pm in player_matches:
+        if pm.player.id in found_player_id:
+            session.add(pm)
     for ev in events:
         session.add(ev)
         assert(ev.check_type())
