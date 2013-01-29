@@ -10,6 +10,7 @@ import time
 from pprint import pprint
 import copy
 import matplotlib.pyplot
+import matplotlib.pylab
 
 from mako.template import Template
 
@@ -381,13 +382,15 @@ class Statistics:
     def regenerate(self):
         print >> sys.stderr, "> Regeneration"
 
+        now = datetime.datetime.now()
+
         # Prepare mako arguments
         kwargs = {}
         kwargs['sched_begin'] = self.match.sched_begin
         kwargs['begin'] = self.match.begin
         kwargs['end'] = self.match.end
         if self.match.begin is not None:
-            kwargs['elapsed'] = (datetime.datetime.now() - self.match.begin).total_seconds()
+            kwargs['elapsed'] = (now - self.match.begin).total_seconds()
         if self.match.end is not None:
             kwargs['elapsed'] = (self.match.end - self.match.begin).total_seconds()
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
@@ -410,7 +413,7 @@ class Statistics:
         
         
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
-            t = datetime.datetime.now()
+            t = now
             if self.match.end is not None:
                 t = self.match.end
             
@@ -477,10 +480,18 @@ class Statistics:
         		self.played_time[ player_id ] = old_played_time[ player_id ]
         
         # Draw the score plot
-        #matplotlib.pyplot.figure()
-        #for i in [0, 1]:
-        #    matplotlib.pyplot.plot(self.score_plot[i][0], self.score_plot[i][1], '-o')
-        #matplotlib.pyplot.savefig(os.path.join(self.target_dir, "score.png"))
+        fig = matplotlib.pyplot.figure()
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax.grid(True)
+        for i in [0, 1]:
+            self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
+            self.score_plot[i][1].append(self.score_plot[i][1][-1])
+            ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-o')
+            self.score_plot[i][0].pop()
+            self.score_plot[i][1].pop()
+        fig.savefig(os.path.join(self.target_dir, "score.png"))
+        matplotlib.pylab.close(fig)
+        #fig.show()
 
 def listen_match(match_id, target_dir):
 
