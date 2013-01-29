@@ -37,7 +37,8 @@ class SubottoGoal(object):
 
 class PGSubotto(object):
     def __init__ (self, **connoptions):
-        self.conndict={'database' :'subotto', 'user': 'subotto', 'host' : 'roma.uz.sns.it', 'port' : 5432, 'password' : '******', 'sslmode' : 'require'}
+        with open('passwd') as fpasswd:
+            self.conndict={'database' :'subotto', 'user': 'subotto', 'host' : 'roma.uz.sns.it', 'port' : 5432, 'password' : fpasswd.read().strip(), 'sslmode' : 'require'}
         self.conndict.update(connoptions)
         self.conn=psycopg2.connect(**(self.conndict))
     
