@@ -481,12 +481,12 @@ class Statistics:
         
         # Draw the score plot
         fig = matplotlib.pyplot.figure()
-        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         ax.grid(True)
         for i in [0, 1]:
             self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
             self.score_plot[i][1].append(self.score_plot[i][1][-1])
-            ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-o')
+            ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-')
             self.score_plot[i][0].pop()
             self.score_plot[i][1].pop()
         fig.savefig(os.path.join(self.target_dir, "score.png"))
