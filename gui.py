@@ -8,6 +8,8 @@ import os
 from select import select
 now=datetime.datetime.now
 
+from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
+
 #try:
 import gi
 # make sure you use gtk+-2.0
@@ -220,78 +222,38 @@ class SquadraSubotto(object):
 
 
 class Subotto24GTK(object):
+
     team=dict()
     team_slot=dict()
+
     def __init__ (self,file="subotto24.glade"):
         gi.repository.GObject.timeout_add(10000,self.update)
-        self.pgs=PGSubotto()
         self.builder=Gtk.Builder()
         self.builder.add_objects_from_file(file,["window_subotto_main","im_team_switch"])
+        self.core = None
 
         self.window=self.builder.get_object("window_subotto_main")
         
-        self.team_slot["red"]=self.builder.get_object("box_red_slot")
-        self.team_slot["blue"]=self.builder.get_object("box_blue_slot")
-
-	#self.fotocellule=open('fotocellule.fifo')
-        #gi.repository.GObject.timeout_add(500,self.leggi_fotocellula)
+        self.team_slot = [self.builder.get_object("box_red_slot"),
+                          self.builder.get_object("box_blue_slot")]
+        self.teams = [None, None]
 
         self.builder.connect_signals(self)
 
-    def select_wrapper(self, fd):
-        readable, writable, exeptionable = select([fd], [], [], 0.0)
-        return len(readable) == 1
- 	0
-    def leggi_fotocellula(self):
-	print "Leggendo fotocellule: "
-        while self.select_wrapper(self.fotocellule):
-		line = self.fotocellule.readline()
-	#for line in self.fotocellule:
-		print "Got line:"
-		print repr(line)
-		if line=="1\n":
-			self.team['blue'].goal_incr(self.team['blue'])
-			print "Goal blu"
-		if line=="3\n":
-			self.team['red'].goal_incr(self.team['red'])
-			print "Goal rosso"
-		if line=='':
-			break 
-	return True
-    def set_team(self, team, color):
-        self.team[color]=team
-        self.team[color].pgs=self.pgs
-        self.update_teams()
-
     def switch_teams(self):
-        self.pgs.swap(self.team["blue"].name, self.team["red"].name)
+        self.core.act_switch_teams()
         self.update_teams()
 
     def update_teams(self):
-        order=self.pgs.teamorder_get()
-        debug("Order from psql: " +str(order), 15)
-
-        team_tmp=dict(self.team)
-
-        
-        for i in team_tmp:
-            if self.pgs.teamid_get(team_tmp[i].name)==order[0]:
-                self.team["red"]=team_tmp[i]
-            if self.pgs.teamid_get(team_tmp[i].name)==order[1]:
-                self.team["blue"]=team_tmp[i]
-        for tname in self.team:
-            debug(tname + " : " + self.team[tname].name, 20 )
-
-        for color in self.team.keys():
-            if self.team[color].box.get_parent() is None:
-                self.team_slot[color].add(self.team[color].box)
+        # FIXME
+        for i in [0, 1]:
+            if self.teams[i].box.get_parent() is None:
+                self.team_slot[i].add(self.teams[i].box)
             else:
-                self.team[color].box.reparent(self.team_slot[color])
-            self.team[color].update()
+                self.teams[i].box.reparent(self.team_slot[i])
+            self.team[i].update()
                               
             # self.team_slot[color].add(self.team[color].box)
-            
-        
             
     def on_window_destroy (self, widget):
         Gtk.main_quit()
@@ -299,19 +261,92 @@ class Subotto24GTK(object):
     def on_btn_switch_clicked (self, widget):
         debug("Cambio!", 2)
         self.switch_teams()
-    def update(self):
+
+    def regenerate(self):
         debug("Updating!",20)
         self.update_teams()
         return True
 
+class SubottoCore:
+
+    def __init__(self, match_id):
+        self.session = Session()
+        self.match = self.session.query(Match).filter(Match.id == match_id).one()
+        self.teams = [self.match.team_a, self.match.team_b]
+        self.order = [None, None]
+        self.listeners = []
+
+        self.last_event_id = 0
+        self.last_player_match_id = 0
+        self.last_timestamp = None
+
+    def new_player_match(self, player_match):
+        print >> sys.stderr, "> Received new player match: %r" % (player_match)
+        #for listener in self.listeners:
+        #    listener.new_player_match(player_match)
+
+    def new_event(self, event):
+        print >> sys.stderr, "> Received new event: %r" % (event)
+        #for listener in self.listeners:
+        #    listener.new_event(event)
+
+    def regenerate(self):
+        print >> sys.stderr, "> Regeneration"
+        for listener in self.listeners:
+            listener.regenerate()
+
+    def update(self):
+        self.session.rollback()
+        for player_match in self.session.query(PlayerMatch).filter(PlayerMatch.match == self.match).filter(PlayerMatch.id > self.last_player_match_id).order_by(PlayerMatch.id):
+            self.new_player_match(player_match)
+            self.last_player_match_id = player_match.id
+        for event in self.session.query(Event).filter(Event.match == self.match).filter(Event.id > self.last_event_id).order_by(Event.id):
+            if self.last_timestamp is not None and event.timestamp <= self.last_timestamp:
+                print >> sys.stderr, "> Timestamp monotonicity error at %s!\n" % (event.timestamp)
+                #sys.exit(1)
+            self.new_event(event)
+            self.last_timestamp = event.timestamp
+            self.last_event_id = event.id
+        self.regenerate()
+
+    def act_event(self, event, source=None):
+        event.timestamp = now()
+        event.match = self.match
+        if source is None:
+            e.source = Event.EV_SOURCE_MANUAL
+        else:
+            e.source = source
+        if not event.check_type():
+            print >> sys.stderr, "> Sending bad event...\n"
+        self.session.add(event)
+        self.session.commit()
+        self.update()
+
+    def act_switch_teams(self, source=None):
+        e = Event()
+        e.type = Event.EV_TYPE_SWAP
+        if self.order == [None, None]:
+            e.red_team = self.teams[0]
+            e.blue_team = self.teams[1]
+        else:
+            e.red_team = self.order[1]
+            e.blue_team = self.order[0]
+        self.act_event(e, source)
+
+
 if __name__ == "__main__":
 
-    matematici=SquadraSubotto("Matematici")
-    fisici=SquadraSubotto("Fisici")
+    #matematici=SquadraSubotto("Matematici")
+    #fisici=SquadraSubotto("Fisici")
     
     main_window = Subotto24GTK()
+    core = SubottoCore(3)
+    main_window.core = core
+    core.listeners.append(main_window)
+    core.update()
+    gi.repository.GObject.timeout_add(1000, core.update)
 
-    main_window.set_team(matematici, "red")
-    main_window.set_team(fisici, "blue")
+    #main_window.set_team(matematici, "red")
+    #main_window.set_team(fisici, "blue")
     
-    Gtk.main()
+    #Gtk.main()

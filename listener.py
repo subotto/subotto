@@ -511,15 +511,15 @@ def listen_match(match_id, target_dir, old_matches_id):
     try:
         while True:
             session.rollback()
-            for player_match in session.query(PlayerMatch).filter(PlayerMatch.match == match).filter(PlayerMatch.id > last_player_match_id):
+            for player_match in session.query(PlayerMatch).filter(PlayerMatch.match == match).filter(PlayerMatch.id > last_player_match_id).order_by(PlayerMatch.id):
                 stats.new_player_match(player_match)
                 last_player_match_id = player_match.id
             for event in session.query(Event).filter(Event.match == match).filter(Event.id > last_event_id).order_by(Event.id):
                 if last_timestamp is not None and event.timestamp <= last_timestamp:
                     print >> sys.stderr, "> Timestamp monotonicity error at %s!\n" % (event.timestamp)
                     #sys.exit(1)
-                last_timestamp = event.timestamp
                 stats.new_event(event)
+                last_timestamp = event.timestamp
                 last_event_id = event.id
             stats.regenerate()
 
