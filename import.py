@@ -76,7 +76,7 @@ def import_from_2012():
 
     # Events
     events = []
-    for old_event in old_session.query(OldEvent).all():
+    for old_event in old_session.query(OldEvent).order_by(OldEvent.timestamp).all():
         if old_event.type == 'sched_begin':
             match.sched_begin = old_event.timestamp
         elif old_event.type == 'begin':
