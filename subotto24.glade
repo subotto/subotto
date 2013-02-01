@@ -1,13 +1,23 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy toplevel-contextual -->
+  <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkImage" id="im_gol_minus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="im_queue_promote">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
+  </object>
   <object class="GtkVBox" id="box_team">
     <property name="visible">True</property>
-    <property name="orientation">vertical</property>
+    <property name="can_focus">False</property>
     <child>
       <object class="GtkLabel" id="name_team">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="yalign">0.49000000953674316</property>
         <property name="label" translatable="yes">Squadra1</property>
         <attributes>
@@ -23,46 +33,51 @@
     <child>
       <object class="GtkTable" id="box_current">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="n_rows">3</property>
         <property name="n_columns">2</property>
         <child>
           <object class="GtkLabel" id="label_current">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Giocatori</property>
           </object>
           <packing>
             <property name="right_attach">2</property>
-            <property name="x_options"></property>
-            <property name="y_options"></property>
+            <property name="x_options"/>
+            <property name="y_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label_current_att">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="xalign">0</property>
             <property name="label" translatable="yes">Attaccante:</property>
           </object>
           <packing>
             <property name="top_attach">1</property>
             <property name="bottom_attach">2</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label_current_dif">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="xalign">0</property>
             <property name="label" translatable="yes">Difensore:</property>
           </object>
           <packing>
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkLabel" id="name_current_att">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="width_chars">20</property>
           </object>
           <packing>
@@ -75,6 +90,7 @@
         <child>
           <object class="GtkLabel" id="name_current_dif">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="width_chars">20</property>
           </object>
           <packing>
@@ -86,17 +102,21 @@
         </child>
       </object>
       <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="position">1</property>
       </packing>
     </child>
     <child>
       <object class="GtkTable" id="box_queue">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="n_rows">3</property>
         <property name="n_columns">3</property>
         <child>
           <object class="GtkLabel" id="label_queue">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Fila</property>
           </object>
           <packing>
@@ -106,34 +126,38 @@
         <child>
           <object class="GtkLabel" id="label_queue_att">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="xalign">0</property>
             <property name="label" translatable="yes">Attaccante:</property>
           </object>
           <packing>
             <property name="top_attach">1</property>
             <property name="bottom_attach">2</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkLabel" id="label_queue_dif">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="xalign">0</property>
             <property name="label" translatable="yes">Difensore:</property>
           </object>
           <packing>
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkButton" id="btn_queue_promote">
+            <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
             <property name="image">im_queue_promote</property>
-            <signal name="clicked" handler="on_btn_queue_promote_clicked"/>
+            <signal name="clicked" handler="on_btn_queue_promote_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">2</property>
@@ -145,6 +169,7 @@
         <child>
           <object class="GtkComboBox" id="combo_queue_att">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="has_frame">False</property>
           </object>
           <packing>
@@ -157,6 +182,7 @@
         <child>
           <object class="GtkComboBox" id="combo_queue_dif">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="has_frame">False</property>
           </object>
           <packing>
@@ -168,17 +194,21 @@
         </child>
       </object>
       <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="position">2</property>
       </packing>
     </child>
     <child>
       <object class="GtkTable" id="box_points">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="n_rows">3</property>
         <property name="n_columns">2</property>
         <child>
           <object class="GtkLabel" id="label_points">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Gol</property>
           </object>
           <packing>
@@ -188,6 +218,7 @@
         <child>
           <object class="GtkLabel" id="points">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
           </object>
           <packing>
             <property name="top_attach">1</property>
@@ -196,79 +227,84 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_gol_minus">
+            <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
             <property name="image">im_gol_minus</property>
-            <signal name="clicked" handler="on_btn_gol_minus_clicked"/>
+            <signal name="clicked" handler="on_btn_gol_minus_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
             <property name="right_attach">2</property>
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
         <child>
           <object class="GtkButton" id="btn_gol_plus">
+            <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
             <property name="image">im_gol_plus</property>
-            <signal name="clicked" handler="on_btn_gol_plus_clicked"/>
+            <signal name="clicked" handler="on_btn_gol_plus_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
             <property name="right_attach">2</property>
             <property name="top_attach">1</property>
             <property name="bottom_attach">2</property>
-            <property name="x_options"></property>
+            <property name="x_options"/>
           </packing>
         </child>
       </object>
       <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="position">3</property>
       </packing>
     </child>
   </object>
-  <object class="GtkImage" id="im_gol_minus">
-    <property name="visible">True</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="im_gol_plus">
-    <property name="visible">True</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="im_queue_promote">
-    <property name="visible">True</property>
-    <property name="stock">gtk-go-up</property>
-  </object>
   <object class="GtkImage" id="im_team_switch">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="stock">gtk-refresh</property>
     <property name="icon-size">2</property>
   </object>
+  <object class="GtkImage" id="im_gol_plus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
   <object class="GtkWindow" id="window_subotto_main">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="title" translatable="yes">Subotto 24 Ore</property>
     <property name="resizable">False</property>
-    <signal name="destroy" handler="on_window_destroy"/>
+    <signal name="destroy" handler="on_window_destroy" swapped="no"/>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
-        <property name="orientation">vertical</property>
+        <property name="can_focus">False</property>
         <child>
           <object class="GtkMenuBar" id="menubar1">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="menuitem1">
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Subotto</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                   </object>
                 </child>
               </object>
@@ -276,34 +312,72 @@
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
           <object class="GtkHBox" id="box_teams">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
-              <object class="GtkTable" id="box_red_slot">
+              <object class="GtkBox" id="box1">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <placeholder/>
+                  <object class="GtkLabel" id="label1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Squadra rossa</property>
+                    <attributes>
+                      <attribute name="foreground" value="#ffff00000000"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkTable" id="box_red_slot">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkVButtonBox" id="bbox_teamcontrol">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="layout_style">center</property>
                 <child>
                   <object class="GtkButton" id="btn_switch">
+                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="image">im_team_switch</property>
-                    <signal name="clicked" handler="on_btn_switch_clicked"/>
+                    <signal name="clicked" handler="on_btn_switch_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -319,13 +393,46 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTable" id="box_blue_slot">
+              <object class="GtkBox" id="box2">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <placeholder/>
+                  <object class="GtkLabel" id="label2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Squadra blu</property>
+                    <attributes>
+                      <attribute name="foreground" value="#00000000ffff"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkTable" id="box_blue_slot">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">2</property>
               </packing>
             </child>
@@ -339,9 +446,12 @@
         <child>
           <object class="GtkLabel" id="lbl_stat">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Statistiche</property>
           </object>
           <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
         </child>
