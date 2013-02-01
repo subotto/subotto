@@ -1,9 +1,9 @@
-#include <SimpleTimer.h>
+//#include <SimpleTimer.h>
 
 #define BLUE1 2
-#define BLUE2 3
-#define RED1 5
-#define RED2 6
+#define BLUE2 5
+#define RED1 10
+#define RED2 12
 
 #define TEST_MODE 0
 #define SLAVE_MODE 1
@@ -11,10 +11,10 @@
 #define GOAL_DELAY 3000
 
 int mode;
-int last_goal;
-int sensors_enabled;
+unsigned long last_goal;
+//int sensors_enabled;
 
-SimpleTimer timer;
+//SimpleTimer timer;
 
 void setup()
 {
@@ -30,7 +30,7 @@ void setup()
   
   mode = TEST_MODE;
   last_goal = millis();
-  sensors_enabled = 1;
+//  sensors_enabled = 1;
   
 }
 
@@ -86,7 +86,7 @@ void test_main(int input)
 void slave_main(int input)
 {
 //  Serial.println("Begin slave main");
-//  if (millis() > last_goal + 1000)
+  if (millis() > last_goal + GOAL_DELAY)
 //  if (sensors_enabled)
   {
      if (digitalRead(BLUE1))
@@ -94,16 +94,16 @@ void slave_main(int input)
        Serial.println(1);
        last_goal = millis();
 //       while(digitalRead(BLUE1));
-        sensors_enabled = 0;
-        timer.setTimeout(GOAL_DELAY,enable_sensors);
+//        sensors_enabled = 0;
+//        timer.setTimeout(GOAL_DELAY,enable_sensors);
      }
      if (digitalRead(BLUE2))
      {
        Serial.println(2);
        last_goal = millis();
 //       while(digitalRead(BLUE2));
-        sensors_enabled = 0;
-        timer.setTimeout(GOAL_DELAY,enable_sensors);
+//        sensors_enabled = 0;
+//        timer.setTimeout(GOAL_DELAY,enable_sensors);
 
      }
      if (digitalRead(RED1))
@@ -111,8 +111,8 @@ void slave_main(int input)
        Serial.println(3);
        last_goal = millis();
 //       while(digitalRead(RED1));
-        sensors_enabled = 0;
-        timer.setTimeout(GOAL_DELAY,enable_sensors);
+//        sensors_enabled = 0;
+//        timer.setTimeout(GOAL_DELAY,enable_sensors);
 
 
      }
@@ -121,8 +121,8 @@ void slave_main(int input)
        Serial.println(4);
        last_goal = millis();
 //       while(digitalRead(RED2));
-        sensors_enabled = 0;
-        timer.setTimeout(GOAL_DELAY,enable_sensors);
+//        sensors_enabled = 0;
+//        timer.setTimeout(GOAL_DELAY,enable_sensors);
      }
     
   }
@@ -131,8 +131,8 @@ void slave_main(int input)
   
 }
 
-void enable_sensors()
+/*void enable_sensors()
 {
   Serial.println("enable");
   sensors_enabled = 1;
-}
+}*/
