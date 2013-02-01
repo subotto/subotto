@@ -158,14 +158,14 @@ class SquadraSubotto(object):
     currentplayers=SubottoPlayers()
     players=[]
     name=None
-    def __init__ (self,name="Squadra Ignota",file="subotto24.glade"):
-        self.name=name
+    def __init__ (self, team, glade_file="subotto24.glade"):
+        self.team = team
         self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus"])
+        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus"])
 
         self.box=self.builder.get_object("box_team")
         self.name_gtk=self.builder.get_object("name_team")
-        self.name_gtk.set_text(self.name)
+        self.name_gtk.set_text(self.team.name)
         self.builder.connect_signals(self)        
         
         self.combo_players=Gtk.ListStore(int,str)
@@ -226,17 +226,19 @@ class Subotto24GTK(object):
     team=dict()
     team_slot=dict()
 
-    def __init__ (self,file="subotto24.glade"):
-        gi.repository.GObject.timeout_add(10000,self.update)
+    def __init__ (self, core, glade_file="subotto24.glade"):
         self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(file,["window_subotto_main","im_team_switch"])
-        self.core = None
+        self.builder.add_objects_from_file(glade_file,["window_subotto_main","im_team_switch"])
+        self.core = core
+        self.core.listeners.append(self)
 
         self.window=self.builder.get_object("window_subotto_main")
         
         self.team_slot = [self.builder.get_object("box_red_slot"),
                           self.builder.get_object("box_blue_slot")]
-        self.teams = [None, None]
+        self.teams = [SquadraSubotto(self.core.match.team_a),
+                      SquadraSubotto(self.core.match.team_b)]
+        self.order = [None, None]
 
         self.builder.connect_signals(self)
 
@@ -245,7 +247,13 @@ class Subotto24GTK(object):
         self.update_teams()
 
     def update_teams(self):
-        # FIXME
+        # Update our internal copy of order
+        if self.core.order[0] == self.core.teams[0]:
+            self.order = [self.teams[0], self.teams[1]]
+        else:
+            self.order = [self.teams[1], self.teams[0]]
+
+        # Update GUI and teams
         for i in [0, 1]:
             if self.teams[i].box.get_parent() is None:
                 self.team_slot[i].add(self.teams[i].box)
@@ -267,6 +275,12 @@ class Subotto24GTK(object):
         self.update_teams()
         return True
 
+    def new_player_match(self, player_match):
+        pass
+
+    def new_event(self, event):
+        pass
+
 class SubottoCore:
 
     def __init__(self, match_id):
@@ -274,21 +288,49 @@ class SubottoCore:
         self.match = self.session.query(Match).filter(Match.id == match_id).one()
         self.teams = [self.match.team_a, self.match.team_b]
         self.order = [None, None]
+        self.score = [0, 0]
+        self.players = [[None, None], [None, None]]
         self.listeners = []
 
         self.last_event_id = 0
         self.last_player_match_id = 0
         self.last_timestamp = None
 
+    def detect_team(self, team):
+        if team == self.match.team_a:
+            return 0
+        else:
+            return 1
+
     def new_player_match(self, player_match):
         print >> sys.stderr, "> Received new player match: %r" % (player_match)
-        #for listener in self.listeners:
-        #    listener.new_player_match(player_match)
+
+        for listener in self.listeners:
+            listener.new_player_match(player_match)
 
     def new_event(self, event):
         print >> sys.stderr, "> Received new event: %r" % (event)
-        #for listener in self.listeners:
-        #    listener.new_event(event)
+
+        if event.type == Event.EV_TYPE_SWAP:
+            self.order = [event.red_team, event.blue_team]
+
+        elif event.type == Event.EV_TYPE_CHANGE:
+            self.players[self.detect_team(event.team)] = [event.player_a, event.player_b]
+
+        elif event.type == Event.EV_TYPE_GOAL:
+            self.score[self.detect_team(event.team)] += 1
+
+        elif event.type == Event.EV_TYPE_GOAL_UNDO:
+            self.score[self.detect_team(event.team)] += 1
+
+        elif event.type == Event.EV_TYPE_ADVANTAGE_PHASE:
+            pass
+
+        else:
+            print >> sys.stderr, "> Wrong event type %r\n" % (event.type)
+
+        for listener in self.listeners:
+            listener.new_event(event)
 
     def regenerate(self):
         print >> sys.stderr, "> Regeneration"
@@ -339,11 +381,10 @@ if __name__ == "__main__":
     #matematici=SquadraSubotto("Matematici")
     #fisici=SquadraSubotto("Fisici")
     
-    main_window = Subotto24GTK()
     core = SubottoCore(3)
-    main_window.core = core
-    core.listeners.append(main_window)
     core.update()
+    main_window = Subotto24GTK(core)
+
     gi.repository.GObject.timeout_add(1000, core.update)
 
     #main_window.set_team(matematici, "red")
