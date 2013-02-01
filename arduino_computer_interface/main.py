@@ -22,6 +22,8 @@ from gi.repository import Gtk
 
 import gobject
 
+from opcodes import *
+
 class interfaccia:
 
     work_mode = 0

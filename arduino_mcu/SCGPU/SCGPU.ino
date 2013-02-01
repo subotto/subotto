@@ -34,6 +34,7 @@
 #define SUB_BLUE_SUPER_DISABLED 15
 #define SUB_TEST_OPEN 16
 #define SUB_TEST_CLOSE 17
+#define SUB_READY 252
 #define SUB_SLAVE_MODE 253
 #define SUB_TEST_MODE 254
 #define SUB_ECHO_REPLY 255
@@ -84,8 +85,6 @@ void setup()
   pinMode(RED_ADD_PIN,INPUT_PULLUP);
   pinMode(RED_UNDO_PIN,INPUT_PULLUP);
   
-  
-  
   pinMode(13,OUTPUT);
   digitalWrite(13,LOW);
   
@@ -98,6 +97,7 @@ void setup()
   last_push = 0;
 //  sensors_enabled = 1;
   
+  Serial.println(SUB_READY);
 }
 
 void loop()
