@@ -1,9 +1,9 @@
 //#include <SimpleTimer.h>
 
-#define BLUE1_PIN 2
-#define BLUE2_PIN 3
-#define RED1_PIN 4
-#define RED2_PIN 5
+#define BLUE1_PIN 4
+#define BLUE2_PIN 4
+#define RED1_PIN 7
+#define RED2_PIN 7
 
 #define BLUE1_GOAL 1
 #define BLUE2_GOAL 2
@@ -36,10 +36,10 @@ unsigned long last_push;
 
 void setup()
 {
-  pinMode(BLUE1_PIN,INPUT_PULLUP);
-  pinMode(BLUE2_PIN,INPUT_PULLUP);
-  pinMode(RED1_PIN,INPUT_PULLUP);
-  pinMode(RED2_PIN,INPUT_PULLUP);
+  pinMode(BLUE1_PIN,INPUT);
+  pinMode(BLUE2_PIN,INPUT);
+  pinMode(RED1_PIN,INPUT);
+  pinMode(RED2_PIN,INPUT);
   
   pinMode(BLUE_ADD_PIN,INPUT_PULLUP);
   pinMode(BLUE_UNDO_PIN,INPUT_PULLUP);
@@ -157,7 +157,8 @@ void slave_main(int input)
 //  else
 //    Serial.println("not_enable");
 
-  if (millis() > last_push + PUSH_DELAY)
+//  if (millis() > last_push + PUSH_DELAY)
+  if (0 == 1)
   {
     if (digitalRead(BLUE_ADD_PIN))
     {
