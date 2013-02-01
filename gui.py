@@ -38,7 +38,8 @@ class SquadraSubotto(object):
         self.builder.connect_signals(self)        
 
         self.player_list = []
-        self.combo_players=Gtk.ListStore(int,str)
+        self.player_map = {}
+        self.combo_players=Gtk.ListStore(int, str)
         combo_renderer = Gtk.CellRendererText()
         self.builder.get_object("combo_queue_att").set_model(self.combo_players)
         self.builder.get_object("combo_queue_att").pack_start(combo_renderer, True)
@@ -46,6 +47,8 @@ class SquadraSubotto(object):
         self.builder.get_object("combo_queue_dif").set_model(self.combo_players)
         self.builder.get_object("combo_queue_dif").pack_start(combo_renderer, True)
         self.builder.get_object("combo_queue_dif").add_attribute(combo_renderer, 'text',1)
+        self.combos = [self.builder.get_object("combo_queue_att"),
+                       self.builder.get_object("combo_queue_dif")]
 
     def goal_incr(self):
         self.core.act_goal(self.team)
@@ -54,14 +57,11 @@ class SquadraSubotto(object):
         self.core.act_goal_undo(self.team)
 
     def promote(self):
-        # FIXME
-        combo=dict()
-        player=dict()
-        for i in ('att','dif'):
-            combo[i]=self.builder.get_object("combo_queue_"+i)
-            player[i]=combo[i].get_model()[combo[i].get_active()]
-        self.pgs.change(self.name,player['att'][0],player['dif'][0])
-        debug(self.name+" promoting : "+ str(player['att'][1]) + " and " + str(player['dif'][1])  ,20)
+        player_a, player_b = map(lambda x: self.player_map[x.get_model()[x.get_active()][0]] if x.get_active() >= 0 else None, self.combos)
+        if player_a is None or player_b is None:
+            print >> sys.stderr, "> Cannot promote when one of the players is not chosen..."
+        else:
+            self.core.act_team_change(self.team, player_a, player_b)
 
     def on_btn_gol_plus_clicked (self, widget):
         self.goal_incr()
@@ -90,6 +90,7 @@ class SquadraSubotto(object):
             # the list sorted in a nicer way
             self.player_list.append((player.format_name(), player.id))
             self.player_list.sort()
+            self.player_map[player.id] = player
             self.combo_players.clear()
             for i, j in self.player_list:
                 self.combo_players.append((j, i))
@@ -236,7 +237,7 @@ class SubottoCore:
         else:
             event.source = source
         if not event.check_type():
-            print >> sys.stderr, "> Sending bad event...\n"
+            print >> sys.stderr, "> Sending bad event..."
         self.session.add(event)
         self.session.commit()
         self.update()
@@ -262,6 +263,14 @@ class SubottoCore:
         e = Event()
         e.type = Event.EV_TYPE_GOAL_UNDO
         e.team = team
+        self.act_event(e, source)
+
+    def act_team_change(self, team, player_a, player_b, source=None):
+        e = Event()
+        e.type = Event.EV_TYPE_CHANGE
+        e.team = team
+        e.player_a = player_a
+        e.player_b = player_b
         self.act_event(e, source)
 
 if __name__ == "__main__":
