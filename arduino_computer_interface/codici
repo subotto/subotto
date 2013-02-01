@@ -15,4 +15,8 @@ subotto -> computer
 00000001 1 blue1 goal
 00000010 2 blue2 goal
 00000011 3 red1 goal
-00000100 4 red2 goal	
+00000100 4 red2 goal
+00000101 5 add_blue
+00000110 6 undo_blue
+00000111 7 add_red
+00001000 8 undo_red
