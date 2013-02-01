@@ -68,6 +68,12 @@ class Player(Base):
     lname = Column(String, nullable=False)
     comment = Column(String)
 
+    def format_name(self):
+        if self.comment is None:
+            return "%s %s" % (self.fname, self.lname)
+        else:
+            return "%s %s (%s)" % (self.fname, self.lname, self.comment)
+
     @classmethod
     def get_or_create(cls, session, fname, lname, comment):
 
