@@ -1,0 +1,18 @@
+Computer -> subotto
+
+00000000 0 toggle to test mode
+00010000 16 toggle to slave mode
+
+00000001 1 blue1 test
+00000010 2 blue2 test
+00000011 3 red1 test
+00000100 4 red2 test
+
+
+
+subotto -> computer
+
+00000001 1 blue1 goal
+00000010 2 blue2 goal
+00000011 3 red1 goal
+00000100 4 red2 goal	
