@@ -106,7 +106,7 @@ class SubottoSerial:
 
 
 if __name__ == '__main__':
-    ss = SubottoSerial('/dev/ttyACM0', 9600)
+    ss = SubottoSerial('/dev/ttyACM0', 115200)
     # Here we wait for the SUB_READY command, otherwise we risk to
     # send commands before the unit is ready
     print ss.wait_for_ready()
