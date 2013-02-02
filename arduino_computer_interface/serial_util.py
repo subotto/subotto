@@ -15,7 +15,7 @@ class SubottoSerial:
 
     def send_number(self, num):
         print >> sys.stderr, "> TO SERIAL PORT: %d" % (num)
-        self.serial.write("%d" % (num))
+        self.serial.write("%d\n" % (num))
         self.serial.flush()
 
     def recv_number(self):
@@ -29,7 +29,10 @@ class SubottoSerial:
 
 if __name__ == '__main__':
     ss = SubottoSerial('/dev/ttyACM0', 9600)
+    # Here we wait for the SUB_READY command, otherwise we risk to
+    # send commands before the unit is ready
     print ss.recv_number()
+
     ss.send_number(255)
     time.sleep(2)
     print ss.has_data()
