@@ -1,54 +1,46 @@
-//#include <SimpleTimer.h>
-
 #include "opcodes.h"
 
-#define BLUE1_PIN 4
-#define BLUE2_PIN 4
-#define RED1_PIN 7
-#define RED2_PIN 7
+// Porte di I/O su Arduino
 
-//#define BLUE1_GOAL 1
-//#define BLUE2_GOAL 2
-//#define RED1_GOAL 3
-//#define RED2_GOAL 4
+#define BLUE_NORMAL_PIN 3
+#define BLUE_SUPER_PIN 5
+#define RED_NORMAL_PIN 8
+#define RED_SUPER_PIN 10
 
-#define BLUE_ADD_PIN 8
-#define BLUE_UNDO_PIN 9
-#define RED_ADD_PIN 10
-#define RED_UNDO_PIN 11
+#define BLUE_ADD_PIN 12
+#define BLUE_UNDO_PIN 12
+#define RED_ADD_PIN 12
+#define RED_UNDO_PIN 12
 
-//#define BLUE_ADD_PUSH 5
-//#define BLUE_UNDO_PUSH 6
-//#define RED_ADD_PUSH 7
-//#define RED_UNDO_PUSH 8
-
-
-#define TEST_MODE 0
-#define SLAVE_MODE 1
+// Settaggi
 
 #define GOAL_DELAY 3000
 #define PUSH_DELAY 5000
 
-int mode;
-unsigned long last_goal;
-unsigned long last_push;
-//int sensors_enabled;
 
-//SimpleTimer timer;
+// Costanti del programma
+
+#define TEST_MODE 0
+#define SLAVE_MODE 1
+
+int mode;	// l'attuale modalità di lavoro
+unsigned long last_goal;	// il millis dell'ultimo goal
+unsigned long last_push;	// il millis dell'ultima pressione di pulsante
+
 
 void setup()
 {
-  pinMode(BLUE1_PIN,INPUT_PULLUP);
-  pinMode(BLUE2_PIN,INPUT_PULLUP);
-  pinMode(RED1_PIN,INPUT_PULLUP);
-  pinMode(RED2_PIN,INPUT_PULLUP);
+  pinMode(BLUE_NORMAL_PIN,INPUT);
+  pinMode(BLUE_SUPER_PIN,INPUT);
+  pinMode(RED_NORMAL_PIN,INPUT);
+  pinMode(RED_SUPER_PIN,INPUT);
   
   pinMode(BLUE_ADD_PIN,INPUT_PULLUP);
   pinMode(BLUE_UNDO_PIN,INPUT_PULLUP);
   pinMode(RED_ADD_PIN,INPUT_PULLUP);
   pinMode(RED_UNDO_PIN,INPUT_PULLUP);
   
-  pinMode(13,OUTPUT);
+  pinMode(13,OUTPUT);		// led per debug
   digitalWrite(13,LOW);
   
   Serial.begin(115200);
@@ -58,7 +50,7 @@ void setup()
 //  last_push = millis();
   last_goal = 0;
   last_push = 0;
-//  sensors_enabled = 1;
+  
   
   Serial.println(SUB_READY);
 }
@@ -102,14 +94,16 @@ void loop()
 void test_main(int input)
 {
   int result = -1;
+  
+  // Se mi è stato chiesto di leggere un sensore rispondo
   if (input == COM_BLUE_NORMAL_TEST)
-    result = digitalRead(BLUE1_PIN);
+    result = digitalRead(BLUE_NORMAL_PIN);
   else if (input == COM_BLUE_SUPER_TEST)
-    result = digitalRead(BLUE2_PIN);
+    result = digitalRead(BLUE_SUPER_PIN);
   else if (input == COM_RED_NORMAL_TEST)
-    result = digitalRead(RED1_PIN);
+    result = digitalRead(RED_NORMAL_PIN);
   else if (input == COM_RED_SUPER_TEST)
-    result = digitalRead(RED2_PIN);
+    result = digitalRead(RED_SUPER_PIN);
 
   if (result != -1) {
     //Serial.println(result);
@@ -124,52 +118,36 @@ void test_main(int input)
 
 void slave_main(int input)
 {
-//  Serial.println("Begin slave main");
+	
+  // Scansione delle fotocellule
   if (millis() > last_goal + GOAL_DELAY)
-//  if (sensors_enabled)
   {
-     if (digitalRead(BLUE1_PIN))
+     if (digitalRead(BLUE_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_NORMAL);
        last_goal = millis();
-//       while(digitalRead(BLUE1));
-//        sensors_enabled = 0;
-//        timer.setTimeout(GOAL_DELAY,enable_sensors);
      }
-     if (digitalRead(BLUE2_PIN))
+     if (digitalRead(BLUE_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_SUPER);
        last_goal = millis();
-//       while(digitalRead(BLUE2));
-//        sensors_enabled = 0;
-//        timer.setTimeout(GOAL_DELAY,enable_sensors);
-
      }
-     if (digitalRead(RED1_PIN))
+     if (digitalRead(RED_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_RED_NORMAL);
        last_goal = millis();
-//       while(digitalRead(RED1));
-//        sensors_enabled = 0;
-//        timer.setTimeout(GOAL_DELAY,enable_sensors);
-
-
      }
-     if (digitalRead(RED2_PIN))
+     if (digitalRead(RED_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_RED_SUPER);
        last_goal = millis();
-//       while(digitalRead(RED2));
-//        sensors_enabled = 0;
-//        timer.setTimeout(GOAL_DELAY,enable_sensors);
      }
-    
   }
-//  else
-//    Serial.println("not_enable");
 
+
+  // Scansione dei pulsanti
 //  if (millis() > last_push + PUSH_DELAY)
-  if (0 == 1)
+  if (0 == 1)		// non sono ancora collegati
   {
     if (digitalRead(BLUE_ADD_PIN))
     {
@@ -195,8 +173,3 @@ void slave_main(int input)
   
 }
 
-/*void enable_sensors()
-{
-  Serial.println("enable");
-  sensors_enabled = 1;
-}*/
