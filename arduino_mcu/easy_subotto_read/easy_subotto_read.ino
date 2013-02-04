@@ -1,7 +1,8 @@
-#define BLUE_NORMAL_PIN 3
-#define BLUE_SUPER_PIN 5
-#define RED_NORMAL_PIN 8
-#define RED_SUPER_PIN 10
+
+#define BLUE_NORMAL_PIN 10
+#define BLUE_SUPER_PIN 8
+#define RED_NORMAL_PIN 5
+#define RED_SUPER_PIN 3
 
 void setup()
 {
@@ -18,7 +19,7 @@ void loop()
   {
     Serial.println("Blu normale");
   }
-  else if (digitalRead(BLUE_SUPER_PIN))
+  if (digitalRead(BLUE_SUPER_PIN))
   {
     Serial.println("Blu super");
   }
@@ -26,9 +27,10 @@ void loop()
   {
     Serial.println("Rosso normale");
   }
-  else if (digitalRead(RED_SUPER_PIN))
+  if (digitalRead(RED_SUPER_PIN))
   {
     Serial.println("Rosso super");
   }
+  //delay(50);
 }
   

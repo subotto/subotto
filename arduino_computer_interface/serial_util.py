@@ -19,6 +19,14 @@ class SubottoSerial:
                        SUB_BUTTON_RED_UNDO,
                        SUB_BUTTON_BLUE_GOAL,
                        SUB_BUTTON_BLUE_UNDO])
+    ASYNC_DESC = {SUB_PHOTO_RED_NORMAL: (0, 1, "Normal red photo"),
+                  SUB_PHOTO_RED_SUPER: (0, 1, "Super red photo"),
+                  SUB_PHOTO_BLUE_NORMAL: (1, 1, "Normal blue photo"),
+                  SUB_PHOTO_BLUE_SUPER: (1, 1, "Super blue photo"),
+                  SUB_BUTTON_RED_GOAL: (0, 1, "Red button"),
+                  SUB_BUTTON_RED_UNDO: (0, -1, "Red undo button"),
+                  SUB_BUTTON_BLUE_GOAL: (1, 1, "Blue button"),
+                  SUB_BUTTON_BLUE_UNDO: (1, -1, "Blue undo button")}
 
     def __init__(self, port, speed):
         self.port = port
@@ -94,6 +102,9 @@ class SubottoSerial:
                 self.events.append(num)
             else:
                 print >> sys.stderr, "> Strange, I received asynchronously a synchronous opcode (%d), I'll ignore it..." % (num)
+        new_events = self.events
+        self.events = []
+        return new_events
 
     def request_echo(self):
         return self.send_expect(COM_ECHO_TEST, SUB_ECHO_REPLY)
@@ -106,11 +117,22 @@ class SubottoSerial:
 
 
 if __name__ == '__main__':
-    ss = SubottoSerial('/dev/ttyACM0', 115200)
+    serial_port = sys.argv[1]
+    ss = SubottoSerial(serial_port, 115200)
     # Here we wait for the SUB_READY command, otherwise we risk to
     # send commands before the unit is ready
     print ss.wait_for_ready()
 
+    # Run a test match
     ss.set_slave_mode()
-    time.sleep(2)
-    ss.receive_events()
+    score = [0, 0]
+    try:
+        while True:
+            events = ss.receive_events()
+            for ev in events:
+                team, var, desc = SubottoSerial.ASYNC_DESC[ev]
+                score[team] += var
+                print "%s; result is %d -- %d" % (desc, score[0], score[1])
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        pass

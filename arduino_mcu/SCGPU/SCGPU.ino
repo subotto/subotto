@@ -2,10 +2,10 @@
 
 // Porte di I/O su Arduino
 
-#define BLUE_NORMAL_PIN 3
-#define BLUE_SUPER_PIN 5
-#define RED_NORMAL_PIN 8
-#define RED_SUPER_PIN 10
+#define BLUE_NORMAL_PIN 10
+#define BLUE_SUPER_PIN 8
+#define RED_NORMAL_PIN 5
+#define RED_SUPER_PIN 3
 
 #define BLUE_ADD_PIN 12
 #define BLUE_UNDO_PIN 12
@@ -16,6 +16,7 @@
 
 #define GOAL_DELAY 3000
 #define PUSH_DELAY 5000
+#define DELAY 10
 
 
 // Costanti del programma
@@ -87,7 +88,7 @@ void loop()
   if (mode == TEST_MODE) test_main(input);
   else slave_main(input);
   
-  //delay(500);
+  delay(DELAY);
   
 }
 
