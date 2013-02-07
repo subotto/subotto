@@ -40,19 +40,19 @@ unsigned long last_push;	// il millis dell'ultima pressione di pulsante
 
 LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
-void scriviIntero(int numero, int display)
+void writeInteger(int number, int display_number)
 /*
 	Scrivi l'intero numero su display (0 o 1)
 	Gli zeri iniziali vengono buttati via
 	Le cifre 0 (per display 0) e 4 (per display 1) sono le più significative
 */
 {
-	display *= 4;
-	for ( i = 3 ; i > 0 ; --i)
+	display_number *= 4;
+	for ( int   i = 3 ; i > 0 ; --i)
 	{
-		lc.setDigit(0,i+display,numero%10, false);
-		numero /= 10; 
-		if (numero == 0 ) return ;
+		lc.setDigit(0,i+display_number,number%10, false);
+		number /= 10; 
+		if (number == 0 ) return ;
 	}
 }
 
@@ -89,8 +89,8 @@ void setup()
   lc.setIntensity(0,8);
   /* and clear the display */
   lc.clearDisplay(0);
-  scriviIntero(0,0);
-  scriviIntero(0,1);
+  writeInteger(0,0);
+  writeInteger(0,1);
   
   Serial.println(SUB_READY);
 }
@@ -120,6 +120,10 @@ void loop()
         break;
       default:
         consumed = 0;
+    }
+    if (input >= 16384)
+    {
+      refreshDisplay(input);
     }
     if (consumed) return;
   }
@@ -213,3 +217,10 @@ void slave_main(int input)
   
 }
 
+
+// Aggiorna i display con l'input che arriva dal computer)
+void refreshDisplay(int input)
+{
+  input -= 16384;
+  writeInteger ( input % 8192 , input/8192);
+}
