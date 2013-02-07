@@ -1,4 +1,5 @@
 #include "opcodes.h"
+#include "LedControl.h"
 
 // Porte di I/O su Arduino
 
@@ -11,6 +12,15 @@
 #define BLUE_UNDO_PIN 12
 #define RED_ADD_PIN 12
 #define RED_UNDO_PIN 12
+
+// Interfacce seriali 
+
+#define SPI_CLK 11		// Clock
+#define SPI_MOSI 12		// Master Out Slave In 
+#define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
+
+#define SPI_DISPLAY_LOAD 10	 // Load per il display
+
 
 // Settaggi
 
@@ -28,6 +38,23 @@ int mode;	// l'attuale modalità di lavoro
 unsigned long last_goal;	// il millis dell'ultimo goal
 unsigned long last_push;	// il millis dell'ultima pressione di pulsante
 
+LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
+
+void scriviIntero(int numero, int display)
+/*
+	Scrivi l'intero numero su display (0 o 1)
+	Gli zeri iniziali vengono buttati via
+	Le cifre 0 (per display 0) e 4 (per display 1) sono le più significative
+*/
+{
+	display *= 4;
+	for ( i = 3 ; i > 0 ; --i)
+	{
+		lc.setDigit(0,i+display,numero%10, false);
+		numero /= 10; 
+		if (numero == 0 ) return ;
+	}
+}
 
 void setup()
 {
@@ -52,6 +79,18 @@ void setup()
   last_goal = 0;
   last_push = 0;
   
+  // Inizializzazione del display
+  /*
+   The MAX72XX is in power-saving mode on startup,
+   we have to do a wakeup call
+   */
+  lc.shutdown(0,false);
+  /* Set the brightness to a medium values */
+  lc.setIntensity(0,8);
+  /* and clear the display */
+  lc.clearDisplay(0);
+  scriviIntero(0,0);
+  scriviIntero(0,1);
   
   Serial.println(SUB_READY);
 }
