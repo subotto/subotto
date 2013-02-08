@@ -489,7 +489,7 @@ class Statistics:
             ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-')
             self.score_plot[i][0].pop()
             self.score_plot[i][1].pop()
-        fig.savefig(os.path.join(self.target_dir, "score.png"))
+        fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
         matplotlib.pylab.close(fig)
         #fig.show()
 
