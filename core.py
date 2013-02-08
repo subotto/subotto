@@ -159,6 +159,9 @@ class SubottoCore:
         self.session.flush()
         del queue[num]
         for i in xrange(num, len(queue)):
+            queue[i].num = None
+        self.session.flush()
+        for i in xrange(num, len(queue)):
             queue[i].num = i
         self.session.commit()
         self.update()

@@ -29,7 +29,7 @@ class SquadraSubotto(object):
         self.team = team
         self.core = core
         self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus", "liststore_queue",
+        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus",
                                                        "im_to_queue", "im_swap_up", "im_swap_down"])
         self.core.listeners.append(self)
 
@@ -54,7 +54,8 @@ class SquadraSubotto(object):
         self.treeview_queue = self.builder.get_object("treeview_queue")
         self.treeview_queue.append_column(Gtk.TreeViewColumn("Attaccante", Gtk.CellRendererText(), text=0))
         self.treeview_queue.append_column(Gtk.TreeViewColumn("Difensore", Gtk.CellRendererText(), text=1))
-        self.queue_model = self.builder.get_object("liststore_queue")
+        self.queue_model = Gtk.ListStore(str, str)
+        self.treeview_queue.set_model(self.queue_model)
         self.queue_cache = None
 
     def goal_incr(self):
@@ -84,6 +85,7 @@ class SquadraSubotto(object):
         length = len(self.queue_model)
         if first >= 0 and second >= 0 and first < length and second < length:
             self.core.act_swap_queue(self.team, first, second)
+            self.set_selection_index(second)
 
     def swap_up(self):
         sel = self.get_selection_index()
@@ -123,6 +125,11 @@ class SquadraSubotto(object):
             if selection.iter_is_selected(self.treeview_queue.get_model().get_iter(Gtk.TreePath(i))):
                 return i
 
+    def set_selection_index(self, idx):
+        selection = self.treeview_queue.get_selection()
+        selection.unselect_all()
+        selection.select_iter(self.treeview_queue.get_model().get_iter(Gtk.TreePath(idx)))
+
     def regenerate(self):
         # Write score
         self.builder.get_object("points").set_text("%d" % (self.core.score[self.core.detect_team(self.team)]))
@@ -135,10 +142,13 @@ class SquadraSubotto(object):
 
         # Write queue
         if self.queue_cache != self.core.queues[self.core.detect_team(self.team)]:
+            sel_idx = self.get_selection_index()
             self.queue_cache = self.core.queues[self.core.detect_team(self.team)]
             self.queue_model.clear()
             for queue_element in self.core.queues[self.core.detect_team(self.team)]:
-                self.queue_model.append(tuple(map(lambda x: x.id, queue_element)))
+                self.queue_model.append(tuple(map(lambda x: x.format_name(), queue_element)))
+            if sel_idx is not None and sel_idx < len(self.queue_model):
+                self.set_selection_index(sel_idx)
 
     def new_player_match(self, player_match):
         # Update player combo boxes
