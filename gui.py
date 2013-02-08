@@ -29,7 +29,7 @@ class SquadraSubotto(object):
         self.team = team
         self.core = core
         self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus"])
+        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus", "liststore_queue"])
         self.core.listeners.append(self)
 
         self.box=self.builder.get_object("box_team")
@@ -50,6 +50,10 @@ class SquadraSubotto(object):
         self.combos = [self.builder.get_object("combo_queue_att"),
                        self.builder.get_object("combo_queue_dif")]
 
+        self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Attaccante", Gtk.CellRendererText(), text=0))
+        self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Difensore", Gtk.CellRendererText(), text=1))
+        self.queue_model = self.builder.get_object("liststore_queue")
+
     def goal_incr(self):
         self.core.act_goal(self.team)
 
@@ -61,7 +65,8 @@ class SquadraSubotto(object):
         if player_a is None or player_b is None:
             print >> sys.stderr, "> Cannot promote when one of the players is not chosen..."
         else:
-            self.core.act_team_change(self.team, player_a, player_b)
+            #self.core.act_team_change(self.team, player_a, player_b)
+            self.core.act_add_to_queue(self.team, player_a, player_b)
 
     def on_btn_gol_plus_clicked (self, widget):
         self.goal_incr()
@@ -81,6 +86,11 @@ class SquadraSubotto(object):
         if players != [None, None]:
             for i in (("name_current_att",0),("name_current_dif",1)):
                 self.builder.get_object(i[0]).set_text(players[i[1]].format_name())
+
+        # Write queue
+        self.queue_model.clear()
+        for queue_element in self.core.queues[self.core.detect_team(self.team)]:
+            self.queue_model.append(tuple(map(lambda x: x.id, queue_element)))
 
     def new_player_match(self, player_match):
         # Update player combo boxes

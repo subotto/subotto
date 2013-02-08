@@ -7,7 +7,7 @@ import os
 from select import select
 now=datetime.datetime.now
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
+from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
 
 class SubottoCore:
 
@@ -16,6 +16,7 @@ class SubottoCore:
         self.match = self.session.query(Match).filter(Match.id == match_id).one()
         self.teams = [self.match.team_a, self.match.team_b]
         self.order = [None, None]
+        self.queues = [[], []]
         self.score = [0, 0]
         self.players = [[None, None], [None, None]]
         self.listeners = []
@@ -67,9 +68,11 @@ class SubottoCore:
 
     def update(self):
         self.session.rollback()
+
         for player_match in self.session.query(PlayerMatch).filter(PlayerMatch.match == self.match).filter(PlayerMatch.id > self.last_player_match_id).order_by(PlayerMatch.id):
             self.new_player_match(player_match)
             self.last_player_match_id = player_match.id
+
         for event in self.session.query(Event).filter(Event.match == self.match).filter(Event.id > self.last_event_id).order_by(Event.id):
             if self.last_timestamp is not None and event.timestamp <= self.last_timestamp:
                 print >> sys.stderr, "> Timestamp monotonicity error at %s!\n" % (event.timestamp)
@@ -77,6 +80,17 @@ class SubottoCore:
             self.new_event(event)
             self.last_timestamp = event.timestamp
             self.last_event_id = event.id
+
+        for idx in [0, 1]:
+            team = self.teams[idx]
+            this_num = 0
+            self.queues[idx] = []
+            for queue_element in self.match.get_queue(team):
+                if queue_element.num != this_num:
+                    printf >> sys.stderr, "> Error: queues are inconsistent"
+                this_num += 1
+                self.queues[idx].append((queue_element.player_a, queue_element.player_b))
+
         self.regenerate()
         return True
 
@@ -123,3 +137,14 @@ class SubottoCore:
         e.player_a = player_a
         e.player_b = player_b
         self.act_event(e, source)
+
+    def act_add_to_queue(self, team, player_a, player_b):
+        qe = QueueElement()
+        qe.match = self.match
+        qe.team = team
+        qe.player_a = player_a
+        qe.player_b = player_b
+        qe.num = len(self.queues[self.detect_team(team)])
+        self.session.add(qe)
+        self.session.commit()
+        self.update()
