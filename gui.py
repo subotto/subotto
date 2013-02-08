@@ -30,7 +30,7 @@ class SquadraSubotto(object):
         self.core = core
         self.builder=Gtk.Builder()
         self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus",
-                                                       "im_to_queue", "im_swap_up", "im_swap_down"])
+                                                       "im_to_queue", "im_swap_up", "im_swap_down", "im_add_player"])
         self.core.listeners.append(self)
 
         self.box=self.builder.get_object("box_team")
@@ -118,6 +118,9 @@ class SquadraSubotto(object):
 
     def on_btn_swap_down_clicked(self, widget):
         self.swap_down()
+
+    def on_btn_add_player_clicked(self, widget):
+        self.add_player()
 
     def get_selection_index(self):
         selection = self.treeview_queue.get_selection()

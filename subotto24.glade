@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkImage" id="im_team_switch">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-refresh</property>
+    <property name="icon-size">2</property>
+  </object>
+  <object class="GtkImage" id="im_add_player">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-new</property>
+  </object>
+  <object class="GtkImage" id="im_gol_minus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="im_gol_plus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="im_queue_promote">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
+  </object>
   <object class="GtkImage" id="im_swap_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -123,26 +149,9 @@
             <signal name="clicked" handler="on_btn_queue_promote_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="left_attach">1</property>
-            <property name="right_attach">2</property>
-            <property name="x_options">GTK_SHRINK</property>
-            <property name="y_options">GTK_SHRINK</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="label3">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="label4">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-          </object>
-          <packing>
-            <property name="left_attach">2</property>
             <property name="right_attach">3</property>
+            <property name="x_options">GTK_EXPAND | GTK_SHRINK</property>
+            <property name="y_options">GTK_EXPAND | GTK_SHRINK</property>
           </packing>
         </child>
       </object>
@@ -226,7 +235,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="n_rows">3</property>
-        <property name="n_columns">3</property>
+        <property name="n_columns">4</property>
         <child>
           <object class="GtkLabel" id="label_queue_att">
             <property name="visible">True</property>
@@ -264,9 +273,9 @@
             <signal name="clicked" handler="on_btn_to_queue_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="right_attach">3</property>
-            <property name="x_options">GTK_SHRINK</property>
-            <property name="y_options">GTK_SHRINK</property>
+            <property name="right_attach">4</property>
+            <property name="x_options">GTK_EXPAND | GTK_SHRINK</property>
+            <property name="y_options">GTK_EXPAND | GTK_SHRINK</property>
           </packing>
         </child>
         <child>
@@ -292,6 +301,23 @@
             <property name="left_attach">1</property>
             <property name="right_attach">3</property>
             <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="btn_add_player">
+            <property name="use_action_appearance">False</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="image">im_add_player</property>
+            <signal name="clicked" handler="on_btn_add_player_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">3</property>
+            <property name="right_attach">4</property>
+            <property name="top_attach">1</property>
             <property name="bottom_attach">3</property>
           </packing>
         </child>
@@ -372,28 +398,7 @@
       </packing>
     </child>
   </object>
-  <object class="GtkImage" id="im_team_switch">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-refresh</property>
-    <property name="icon-size">2</property>
-  </object>
   <object class="GtkImage" id="im_to_queue">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-go-up</property>
-  </object>
-  <object class="GtkImage" id="im_gol_minus">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="im_gol_plus">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="im_queue_promote">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-go-up</property>
@@ -402,7 +407,6 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Subotto 24 Ore</property>
-    <property name="resizable">False</property>
     <signal name="destroy" handler="on_window_destroy" swapped="no"/>
     <child>
       <object class="GtkVBox" id="vbox1">
@@ -436,6 +440,9 @@
                   <object class="GtkTable" id="box_red_slot">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
                     <child>
                       <placeholder/>
                     </child>
@@ -523,6 +530,9 @@
                   <object class="GtkTable" id="box_blue_slot">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
                     <child>
                       <placeholder/>
                     </child>
