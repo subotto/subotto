@@ -148,3 +148,20 @@ class SubottoCore:
         self.session.add(qe)
         self.session.commit()
         self.update()
+
+    def act_remove_from_queue(self, team, num):
+        queue = self.match.get_queue(team)
+        session.delete(queue[num])
+        del queue[num]
+        for i in xrange(num, len(queue)):
+            queue[i].num = i
+        self.session.commit()
+        self.update()
+
+    def act_swap_queue(self, team, num1, num2):
+        queue = self.match.get_queue(team)
+        # TODO - This could fail some constraint...
+        queue[num1].num = num2
+        queue[num2].num = num1
+        self.session.commit()
+        self.update()
