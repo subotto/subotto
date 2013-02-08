@@ -116,6 +116,10 @@ class Match(Base):
         return sessionlib.object_session(self).query(PlayerMatch).filter(PlayerMatch.match == self). \
             filter(PlayerMatch.player == player).one().team
 
+    def get_queue(self, team):
+        return sessionlib.object_session(self).query(QueueElement).filter(QueueElement.match == self). \
+            filter(QueueElement.team == team).order_by(QueueElement.num).all()
+
 class PlayerMatch(Base):
     __tablename__ = 'player_matches'
     __table_args__ = (
@@ -226,6 +230,26 @@ class Event(Base):
                 return False
 
         return True
+
+class QueueElement(Base):
+
+    __tablename__ = 'queue'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'team_id', 'num',
+                         name='cst_events_match_id_team_id_num'),
+        )
+
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    num = Column(Integer)
+    team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"))
+    player_a_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
+    player_b_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"))
+
+    match = relationship(Match)
+    team = relationship(Team)
+    player_a = relationship(Player, primaryjoin="Player.id == QueueElement.player_a_id")
+    player_b = relationship(Player, primaryjoin="Player.id == QueueElement.player_b_id")
 
 if __name__ == '__main__':
     session = Session()
