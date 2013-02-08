@@ -53,6 +53,7 @@ class SquadraSubotto(object):
         self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Attaccante", Gtk.CellRendererText(), text=0))
         self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Difensore", Gtk.CellRendererText(), text=1))
         self.queue_model = self.builder.get_object("liststore_queue")
+        self.queue_cache = None
 
     def goal_incr(self):
         self.core.act_goal(self.team)
@@ -88,9 +89,11 @@ class SquadraSubotto(object):
                 self.builder.get_object(i[0]).set_text(players[i[1]].format_name())
 
         # Write queue
-        self.queue_model.clear()
-        for queue_element in self.core.queues[self.core.detect_team(self.team)]:
-            self.queue_model.append(tuple(map(lambda x: x.id, queue_element)))
+        if self.queue_cache != self.core.queues[self.core.detect_team(self.team)]:
+            self.queue_cache = self.core.queues[self.core.detect_team(self.team)]
+            self.queue_model.clear()
+            for queue_element in self.core.queues[self.core.detect_team(self.team)]:
+                self.queue_model.append(tuple(map(lambda x: x.id, queue_element)))
 
     def new_player_match(self, player_match):
         # Update player combo boxes
