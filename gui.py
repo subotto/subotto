@@ -29,7 +29,8 @@ class SquadraSubotto(object):
         self.team = team
         self.core = core
         self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus", "liststore_queue"])
+        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus", "liststore_queue",
+                                                       "im_to_queue", "im_swap_up", "im_swap_down"])
         self.core.listeners.append(self)
 
         self.box=self.builder.get_object("box_team")
@@ -50,8 +51,9 @@ class SquadraSubotto(object):
         self.combos = [self.builder.get_object("combo_queue_att"),
                        self.builder.get_object("combo_queue_dif")]
 
-        self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Attaccante", Gtk.CellRendererText(), text=0))
-        self.builder.get_object("treeview_queue").append_column(Gtk.TreeViewColumn("Difensore", Gtk.CellRendererText(), text=1))
+        self.treeview_queue = self.builder.get_object("treeview_queue")
+        self.treeview_queue.append_column(Gtk.TreeViewColumn("Attaccante", Gtk.CellRendererText(), text=0))
+        self.treeview_queue.append_column(Gtk.TreeViewColumn("Difensore", Gtk.CellRendererText(), text=1))
         self.queue_model = self.builder.get_object("liststore_queue")
         self.queue_cache = None
 
@@ -61,13 +63,41 @@ class SquadraSubotto(object):
     def goal_decr(self):
         self.core.act_goal_undo(self.team)
 
-    def promote(self):
+    def to_queue(self):
         player_a, player_b = map(lambda x: self.player_map[x.get_model()[x.get_active()][0]] if x.get_active() >= 0 else None, self.combos)
         if player_a is None or player_b is None:
-            print >> sys.stderr, "> Cannot promote when one of the players is not chosen..."
+            print >> sys.stderr, "> Cannot move to queue when one of the players is not chosen..."
         else:
             #self.core.act_team_change(self.team, player_a, player_b)
             self.core.act_add_to_queue(self.team, player_a, player_b)
+
+    def promote(self):
+        #(player_a_id, player_b_id), _ = self.treeview_queue.get_selection().get_selected()
+        if len(self.core.queues[self.core.detect_team(self.team)]) == 0:
+            print >> sys.stderr, "> Cannot promote when queue is empty"
+        else:
+            player_a, player_b = self.core.queues[self.core.detect_team(self.team)][0]
+            self.core.act_team_change(self.team, player_a, player_b)
+            self.core.act_remove_from_queue(self.team, 0)
+
+    def swap(self, first, second):
+        length = len(self.queue_model)
+        if first >= 0 and second >= 0 and first < length and second < length:
+            self.core.act_swap_queue(self.team, first, second)
+
+    def swap_up(self):
+        sel = self.get_selection_index()
+        if sel is None:
+            print >> sys.stderr, "> Error: no selection when swapping queue"
+        else:
+            self.swap(sel, sel-1)
+
+    def swap_down(self):
+        sel = self.get_selection_index()
+        if sel is None:
+            print >> sys.stderr, "> Error: no selection when swapping queue"
+        else:
+            self.swap(sel, sel+1)
 
     def on_btn_gol_plus_clicked (self, widget):
         self.goal_incr()
@@ -75,8 +105,23 @@ class SquadraSubotto(object):
     def on_btn_gol_minus_clicked (self, widget):
         self.goal_decr()
 
+    def on_btn_to_queue_clicked(self, widget):
+        self.to_queue()
+
     def on_btn_queue_promote_clicked(self, widget):
         self.promote()
+
+    def on_btn_swap_up_clicked(self, widget):
+        self.swap_up()
+
+    def on_btn_swap_down_clicked(self, widget):
+        self.swap_down()
+
+    def get_selection_index(self):
+        selection = self.treeview_queue.get_selection()
+        for i in xrange(len(self.queue_model)):
+            if selection.iter_is_selected(self.treeview_queue.get_model().get_iter(Gtk.TreePath(i))):
+                return i
 
     def regenerate(self):
         # Write score
@@ -155,6 +200,7 @@ class Subotto24GTK(object):
                     self.order[i].box.reparent(self.team_slot[i])
             
     def on_window_destroy (self, widget):
+        self.core.close()
         Gtk.main_quit()
 
     def on_btn_switch_clicked (self, widget):

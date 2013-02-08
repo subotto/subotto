@@ -25,6 +25,10 @@ class SubottoCore:
         self.last_player_match_id = 0
         self.last_timestamp = None
 
+    def close(self):
+        self.session.rollback()
+        self.session.close()
+
     def detect_team(self, team):
         if team == self.match.team_a:
             return 0
@@ -151,7 +155,8 @@ class SubottoCore:
 
     def act_remove_from_queue(self, team, num):
         queue = self.match.get_queue(team)
-        session.delete(queue[num])
+        self.session.delete(queue[num])
+        self.session.flush()
         del queue[num]
         for i in xrange(num, len(queue)):
             queue[i].num = i
@@ -160,7 +165,10 @@ class SubottoCore:
 
     def act_swap_queue(self, team, num1, num2):
         queue = self.match.get_queue(team)
-        # TODO - This could fail some constraint...
+        # Indirect assignement to prevent failing constraints
+        queue[num1].num = None
+        queue[num2].num = None
+        self.session.flush()
         queue[num1].num = num2
         queue[num2].num = num1
         self.session.commit()

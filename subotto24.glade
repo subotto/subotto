@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkImage" id="im_gol_minus">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="im_gol_plus">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
   <object class="GtkVBox" id="box_team">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -108,21 +98,123 @@
       </packing>
     </child>
     <child>
+      <object class="GtkTable" id="box_btn_queue_promote">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="n_columns">3</property>
+        <child>
+          <object class="GtkButton" id="btn_queue_promote">
+            <property name="use_action_appearance">False</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="image">im_queue_promote</property>
+            <signal name="clicked" handler="on_btn_queue_promote_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="x_options">GTK_SHRINK</property>
+            <property name="y_options">GTK_SHRINK</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label3">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label4">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkTable" id="table1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="n_rows">2</property>
+        <property name="n_columns">2</property>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
+            <property name="height_request">150</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkTreeView" id="treeview_queue">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="model">liststore_queue</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="bottom_attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="btn_swap_up">
+            <property name="use_action_appearance">False</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="image">im_swap_up</property>
+            <signal name="clicked" handler="on_btn_swap_up_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="x_options">GTK_SHRINK</property>
+            <property name="y_options">GTK_SHRINK | GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="btn_swap_down">
+            <property name="use_action_appearance">False</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="image">im_swap_down</property>
+            <signal name="clicked" handler="on_btn_swap_down_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="x_options">GTK_SHRINK</property>
+            <property name="y_options">GTK_SHRINK | GTK_FILL</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkTable" id="box_queue">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="n_rows">3</property>
         <property name="n_columns">3</property>
-        <child>
-          <object class="GtkLabel" id="label_queue">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Fila</property>
-          </object>
-          <packing>
-            <property name="right_attach">2</property>
-          </packing>
-        </child>
         <child>
           <object class="GtkLabel" id="label_queue_att">
             <property name="visible">True</property>
@@ -150,17 +242,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="btn_queue_promote">
+          <object class="GtkButton" id="btn_to_queue">
             <property name="use_action_appearance">False</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="use_action_appearance">False</property>
-            <property name="image">im_queue_promote</property>
-            <signal name="clicked" handler="on_btn_queue_promote_clicked" swapped="no"/>
+            <property name="image">im_to_queue</property>
+            <signal name="clicked" handler="on_btn_to_queue_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="left_attach">2</property>
             <property name="right_attach">3</property>
             <property name="x_options">GTK_SHRINK</property>
             <property name="y_options">GTK_SHRINK</property>
@@ -196,7 +287,7 @@
       <packing>
         <property name="expand">True</property>
         <property name="fill">True</property>
-        <property name="position">2</property>
+        <property name="position">4</property>
       </packing>
     </child>
     <child>
@@ -209,7 +300,7 @@
           <object class="GtkLabel" id="label_points">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Gol</property>
+            <property name="label" translatable="yes">Goal</property>
           </object>
           <packing>
             <property name="right_attach">2</property>
@@ -265,29 +356,31 @@
       <packing>
         <property name="expand">True</property>
         <property name="fill">True</property>
-        <property name="position">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkTreeView" id="treeview_queue">
-        <property name="height_request">100</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="model">liststore_queue</property>
-        <child internal-child="selection">
-          <object class="GtkTreeSelection" id="treeview_queue_selection">
-            <property name="mode">multiple</property>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">True</property>
-        <property name="fill">True</property>
-        <property name="position">4</property>
+        <property name="position">5</property>
       </packing>
     </child>
   </object>
+  <object class="GtkImage" id="im_gol_minus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="im_gol_plus">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
   <object class="GtkImage" id="im_queue_promote">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
+  </object>
+  <object class="GtkImage" id="im_swap_down">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-down</property>
+  </object>
+  <object class="GtkImage" id="im_swap_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-go-up</property>
@@ -297,6 +390,11 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-refresh</property>
     <property name="icon-size">2</property>
+  </object>
+  <object class="GtkImage" id="im_to_queue">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
   </object>
   <object class="GtkListStore" id="liststore_queue">
     <columns>
@@ -344,6 +442,12 @@
                   <object class="GtkTable" id="box_red_slot">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
                     <child>
                       <placeholder/>
                     </child>
@@ -422,6 +526,12 @@
                   <object class="GtkTable" id="box_blue_slot">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
                     <child>
                       <placeholder/>
                     </child>
