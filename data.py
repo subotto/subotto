@@ -172,6 +172,10 @@ class Event(Base):
     EV_SOURCE_CELL_BLUE_PLAIN = 'cell_blue_plain'
     EV_SOURCE_CELL_RED_SUPER = 'cell_red_super'
     EV_SOURCE_CELL_BLUE_SUPER = 'cell_blue_super'
+    EV_SOURCE_BUTTON_RED_GOAL = 'button_red_goal'
+    EV_SOURCE_BUTTON_RED_UNDO = 'button_red_undo'
+    EV_SOURCE_BUTTON_BLUE_GOAL = 'button_blue_goal'
+    EV_SOURCE_BUTTON_BLUE_UNDO = 'button_blue_undo'
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, nullable=False, index=True)

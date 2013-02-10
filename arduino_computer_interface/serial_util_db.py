@@ -8,6 +8,7 @@ import time
 sys.path.insert(0,"..")
 
 from core import SubottoCore
+from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 
 
 from opcodes import *
@@ -24,14 +25,14 @@ class SubottoSerial:
                        SUB_BUTTON_RED_UNDO,
                        SUB_BUTTON_BLUE_GOAL,
                        SUB_BUTTON_BLUE_UNDO])
-    ASYNC_DESC = {SUB_PHOTO_RED_NORMAL: (0, 1, "Normal red photo", "cell_red_plain"),
-                  SUB_PHOTO_RED_SUPER: (0, 1, "Super red photo", "cell_red_super"),
-                  SUB_PHOTO_BLUE_NORMAL: (1, 1, "Normal blue photo","cell_blue_plain"),
-                  SUB_PHOTO_BLUE_SUPER: (1, 1, "Super blue photo","cell_blue_super"),
-                  SUB_BUTTON_RED_GOAL: (0, 1, "Red button","button_red_goal"),
-                  SUB_BUTTON_RED_UNDO: (0, -1, "Red undo button","button_red_undo"),
-                  SUB_BUTTON_BLUE_GOAL: (1, 1, "Blue button","button_blue_goal"),
-                  SUB_BUTTON_BLUE_UNDO: (1, -1, "Blue undo button","button_blue_undo")}
+    ASYNC_DESC = {SUB_PHOTO_RED_NORMAL: (0, 1, "Normal red photo", Event.EV_SOURCE_CELL_RED_PLAIN),
+                  SUB_PHOTO_RED_SUPER: (0, 1, "Super red photo", Event.EV_SOURCE_CELL_RED_SUPER),
+                  SUB_PHOTO_BLUE_NORMAL: (1, 1, "Normal blue photo", Event.EV_SOURCE_CELL_BLUE_PLAIN),
+                  SUB_PHOTO_BLUE_SUPER: (1, 1, "Super blue photo", Event.EV_SOURCE_CELL_BLUE_SUPER),
+                  SUB_BUTTON_RED_GOAL: (0, 1, "Red button", Event.EV_SOURCE_BUTTON_RED_GOAL),
+                  SUB_BUTTON_RED_UNDO: (0, -1, "Red undo button", Event.EV_SOURCE_BUTTON_RED_UNDO),
+                  SUB_BUTTON_BLUE_GOAL: (1, 1, "Blue button", Event.EV_SOURCE_BUTTON_BLUE_GOAL),
+                  SUB_BUTTON_BLUE_UNDO: (1, -1, "Blue undo button", Event.EV_SOURCE_BUTTON_BLUE_UNDO)}
 
     def __init__(self, port, speed):
         self.port = port
