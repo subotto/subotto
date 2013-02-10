@@ -10,8 +10,13 @@ from sqlalchemy.orm import session as sessionlib
 
 import datetime
 
-with open('passwd') as fpasswd:
-    db = create_engine('postgresql://subotto:%s@roma.uz.sns.it/subotto_new' % (fpasswd.read().strip()), echo=False)
+try:
+    with open('database_url') as fdata:
+        database_url = fdata.readline().strip()
+except IOError:
+    with open('passwd') as fpasswd:
+        database_url = 'postgresql://subotto:%s@roma.uz.sns.it/subotto_new' % (fpasswd.read().strip())
+db = create_engine(database_url, echo=False)
 #db = create_engine('sqlite:///subotto.sqlite', echo=True)
 Session = sessionmaker(db)
 Base = declarative_base(db)
