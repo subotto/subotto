@@ -121,6 +121,10 @@ class SubottoSerial:
     def set_test_mode(self):
         return self.send_expect(COM_SET_TEST_MODE, SUB_TEST_MODE)
 
+    def set_score(self, score, team):
+        command = 2**14 + score + 2**13 * team
+        return self.send_expect(command, command)
+
 
 if __name__ == '__main__':
     serial_port = sys.argv[1]
@@ -128,7 +132,8 @@ if __name__ == '__main__':
     # Here we wait for the SUB_READY command, otherwise we risk to
     # send commands before the unit is ready
     print ss.wait_for_ready()
-    core = SubottoCore(9)
+    match_id = int(sys.argv[1])
+    core = SubottoCore(match_id)
 	
     # Run a test match
     ss.set_slave_mode()
@@ -137,14 +142,16 @@ if __name__ == '__main__':
         while True:
             events = ss.receive_events()
             for ev in events:
-                team, var, desc , source = SubottoSerial.ASYNC_DESC[ev]
+                team, var, desc, source = SubottoSerial.ASYNC_DESC[ev]
                 score[team] += var
                 print "%s; result is %d -- %d" % (desc, score[0], score[1])
                 if var > 0:
                 	core.act_goal(core.order[team], source)
                 elif var < 0:
                 	core.act_goal_undo(core.order[team], source)
-            time.sleep(0.5)
             core.update()
+            for i in [0, 1]:
+                ss.set_score(core.score[self.detect_team(core.order[i])], i)
+            time.sleep(0.5)
     except KeyboardInterrupt:
         pass

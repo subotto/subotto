@@ -232,7 +232,7 @@ class Subotto24GTK(object):
 
 if __name__ == "__main__":
 
-    match_id = 4
+    match_id = int(sys.argv[1])
     core = SubottoCore(match_id)
     main_window = Subotto24GTK(core)
 
