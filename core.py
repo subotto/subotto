@@ -9,7 +9,7 @@ now=datetime.datetime.now
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
 
-def act_init_match(name, team_a, team_b, sched_begin, sched_end):
+def act_init_match(session, name, team_a, team_b, sched_begin, sched_end):
     match = Match()
     match.sched_begin = sched_begin
     match.sched_end = sched_end
@@ -18,7 +18,6 @@ def act_init_match(name, team_a, team_b, sched_begin, sched_end):
     match.name = name
     match.team_a = team_a
     match.team_b = team_b
-    session = Session()
     session.add(match)
     session.commit()
     return match.id
