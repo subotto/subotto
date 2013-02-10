@@ -140,9 +140,9 @@ if __name__ == '__main__':
                 score[team] += var
                 print "%s; result is %d -- %d" % (desc, score[0], score[1])
                 if var > 0:
-                	core.act_goal(team,source)
+                	core.act_goal(core.order[team], source)
                 elif var < 0:
-                	core.act_goal_undo(team,source)
+                	core.act_goal_undo(core.order[team], source)
             time.sleep(0.5)
             core.update()
     except KeyboardInterrupt:
