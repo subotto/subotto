@@ -9,6 +9,20 @@ now=datetime.datetime.now
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
 
+def act_init_match(name, team_a, team_b, sched_begin, sched_end):
+    match = Match()
+    match.sched_begin = sched_begin
+    match.sched_end = sched_end
+    match.begin = None
+    match.end = None
+    match.name = name
+    match.team_a = team_a
+    match.team_b = team_b
+    session = Session()
+    session.add(match)
+    session.commit()
+    return match.id
+
 class SubottoCore:
 
     def __init__(self, match_id):
@@ -158,6 +172,7 @@ class SubottoCore:
         self.session.delete(queue[num])
         self.session.flush()
         del queue[num]
+        # Indirect assignement to prevent failing constraints
         for i in xrange(num, len(queue)):
             queue[i].num = None
         self.session.flush()
@@ -176,3 +191,15 @@ class SubottoCore:
         queue[num2].num = num1
         self.session.commit()
         self.update()
+
+    def act_begin_match(self, begin=None):
+        if begin is None:
+            begin = datetime.datetime.now()
+        self.match.begin = begin
+        self.session.commit()
+
+    def act_end_match(self, end=None):
+        if end is None:
+            end = datetime.datetime.now()
+        self.match.end = end
+        self.session.commit()
