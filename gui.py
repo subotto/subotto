@@ -30,7 +30,8 @@ class SquadraSubotto(object):
         self.core = core
         self.builder=Gtk.Builder()
         self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus",
-                                                       "im_to_queue", "im_swap_up", "im_swap_down", "im_add_player"])
+                                                       "im_to_queue", "im_swap_up", "im_swap_down", "im_add_player",
+                                                       "im_delete_queue", "window_new_player"])
         self.core.listeners.append(self)
 
         self.box=self.builder.get_object("box_team")
@@ -58,6 +59,11 @@ class SquadraSubotto(object):
         self.treeview_queue.set_model(self.queue_model)
         self.queue_cache = None
 
+        self.window_new_player = self.builder.get_object("window_new_player")
+        self.entry_fname = self.builder.get_object("entry_fname")
+        self.entry_lname = self.builder.get_object("entry_lname")
+        self.entry_comment = self.builder.get_object("entry_comment")
+
     def goal_incr(self):
         self.core.act_goal(self.team)
 
@@ -69,11 +75,9 @@ class SquadraSubotto(object):
         if player_a is None or player_b is None:
             print >> sys.stderr, "> Cannot move to queue when one of the players is not chosen..."
         else:
-            #self.core.act_team_change(self.team, player_a, player_b)
             self.core.act_add_to_queue(self.team, player_a, player_b)
 
     def promote(self):
-        #(player_a_id, player_b_id), _ = self.treeview_queue.get_selection().get_selected()
         if len(self.core.queues[self.core.detect_team(self.team)]) == 0:
             print >> sys.stderr, "> Cannot promote when queue is empty"
         else:
@@ -101,6 +105,31 @@ class SquadraSubotto(object):
         else:
             self.swap(sel, sel+1)
 
+    def delete_queue(self):
+        sel = self.get_selection_index()
+        if sel is None:
+            print >> sys.stderr, "> Error: no selection when deleting queue"
+        else:
+            self.core.act_remove_from_queue(self.team, sel)
+
+    def add_player(self):
+        self.entry_fname.set_text('')
+        self.entry_lname.set_text('')
+        self.entry_comment.set_text('')
+        self.window_new_player.set_visible(True)
+
+    def on_btn_new_player_ok_clicked(self, widget):
+        fname = self.entry_fname.get_text()
+        lname = self.entry_lname.get_text()
+        comment = self.entry_comment.get_text()
+        if comment == '':
+            comment = None
+        self.core.act_add_player_match_from_name(self.team, fname, lname, comment)
+        self.window_new_player.set_visible(False)
+
+    def on_btn_new_player_cancel_clicked(self, widget):
+        self.window_new_player.set_visible(False)
+
     def on_btn_gol_plus_clicked (self, widget):
         self.goal_incr()
 
@@ -121,6 +150,9 @@ class SquadraSubotto(object):
 
     def on_btn_add_player_clicked(self, widget):
         self.add_player()
+
+    def on_btn_delete_queue_clicked(self, widget):
+        self.delete_queue()
 
     def get_selection_index(self):
         selection = self.treeview_queue.get_selection()
@@ -232,7 +264,7 @@ class Subotto24GTK(object):
 
 if __name__ == "__main__":
 
-    match_id = 4
+    match_id = int(sys.argv[1])
     core = SubottoCore(match_id)
     main_window = Subotto24GTK(core)
 

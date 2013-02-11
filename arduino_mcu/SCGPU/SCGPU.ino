@@ -3,24 +3,24 @@
 
 // Porte di I/O su Arduino
 
-#define BLUE_NORMAL_PIN 10
-#define BLUE_SUPER_PIN 8
-#define RED_NORMAL_PIN 5
-#define RED_SUPER_PIN 3
+#define BLUE_NORMAL_PIN 3
+#define BLUE_SUPER_PIN 5
+#define RED_NORMAL_PIN 2
+#define RED_SUPER_PIN 4
 
-#define BLUE_ADD_PIN 12
-#define BLUE_UNDO_PIN 12
-#define RED_ADD_PIN 12
-#define RED_UNDO_PIN 12
+#define BLUE_ADD_PIN 8
+#define BLUE_UNDO_PIN 10
+#define RED_ADD_PIN 11
+#define RED_UNDO_PIN 9
 
-// Interfacce seriali 
+/* // Interfacce seriali 
 
 #define SPI_CLK 11		// Clock
 #define SPI_MOSI 12		// Master Out Slave In 
 #define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
 
 #define SPI_DISPLAY_LOAD 10	 // Load per il display
-
+*/
 
 // Settaggi
 
@@ -38,14 +38,19 @@ int mode;	// l'attuale modalità di lavoro
 unsigned long last_goal;	// il millis dell'ultimo goal
 unsigned long last_push;	// il millis dell'ultima pressione di pulsante
 
-LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
+int blue_normal_enable = 1;
+int blue_super_enable = 1;
+int red_normal_enable = 1;
+int red_super_enable = 1;
 
-void writeInteger(int number, int display_number)
-/*
-	Scrivi l'intero numero su display (0 o 1)
-	Gli zeri iniziali vengono buttati via
-	Le cifre 0 (per display 0) e 4 (per display 1) sono le più significative
-*/
+//LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
+
+/* void writeInteger(int number, int display_number)
+
+//	Scrivi l'intero numero su display (0 o 1)
+//	Gli zeri iniziali vengono buttati via
+//	Le cifre 0 (per display 0) e 4 (per display 1) sono le più significative
+
 {
 	display_number *= 4;
 	for ( int   i = 3 ; i > 0 ; --i)
@@ -54,7 +59,7 @@ void writeInteger(int number, int display_number)
 		number /= 10; 
 		if (number == 0 ) return ;
 	}
-}
+}*/
 
 void setup()
 {
@@ -71,6 +76,11 @@ void setup()
   pinMode(13,OUTPUT);		// led per debug
   digitalWrite(13,LOW);
   
+  blue_normal_enable = 1;
+  blue_super_enable = 1;
+  red_normal_enable = 1;
+  red_super_enable = 1;
+
   Serial.begin(115200);
   
   mode = TEST_MODE;
@@ -84,13 +94,13 @@ void setup()
    The MAX72XX is in power-saving mode on startup,
    we have to do a wakeup call
    */
-  lc.shutdown(0,false);
+//  lc.shutdown(0,false);
   /* Set the brightness to a medium values */
-  lc.setIntensity(0,8);
+//  lc.setIntensity(0,8);
   /* and clear the display */
-  lc.clearDisplay(0);
-  writeInteger(0,0);
-  writeInteger(0,1);
+//  lc.clearDisplay(0);
+//  writeInteger(0,0);
+//  writeInteger(0,1);
   
   Serial.println(SUB_READY);
 }
@@ -123,7 +133,8 @@ void loop()
     }
     if (input >= 16384)
     {
-      refreshDisplay(input);
+      //refreshDisplay(input);
+      Serial.println(input);
     }
     if (consumed) return;
   }
@@ -162,26 +173,62 @@ void test_main(int input)
 
 void slave_main(int input)
 {
-	
+  switch (input)
+  {
+    case COM_ENABLE_RED_NORMAL:
+      red_normal_enable = 1;
+      Serial.println(SUB_RED_NORMAL_ENABLED);
+      break;
+    case COM_ENABLE_RED_SUPER:
+      red_super_enable = 1;
+      Serial.println(SUB_RED_SUPER_ENABLED);
+      break;
+    case COM_ENABLE_BLUE_NORMAL:
+      blue_normal_enable = 1;
+      Serial.println(SUB_BLUE_NORMAL_ENABLED);
+      break;
+    case COM_ENABLE_BLUE_SUPER:
+      blue_normal_enable = 1;
+      Serial.println(SUB_BLUE_SUPER_ENABLED);
+      break;
+    case COM_DISABLE_RED_NORMAL:
+      red_normal_enable = 0;
+      Serial.println(SUB_RED_NORMAL_DISABLED);
+      break;
+    case COM_DISABLE_RED_SUPER:
+      red_super_enable = 0;
+      Serial.println(SUB_RED_SUPER_DISABLED);
+      break;
+    case COM_DISABLE_BLUE_NORMAL:
+      blue_normal_enable = 0;
+      Serial.println(SUB_BLUE_NORMAL_DISABLED);
+      break;
+    case COM_DISABLE_BLUE_SUPER:
+      blue_super_enable = 0;
+      Serial.println(SUB_BLUE_SUPER_DISABLED);
+      break;    
+    
+  }
+  
   // Scansione delle fotocellule
   if (millis() > last_goal + GOAL_DELAY)
   {
-     if (digitalRead(BLUE_NORMAL_PIN))
+     if (blue_normal_enable && digitalRead(BLUE_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_NORMAL);
        last_goal = millis();
      }
-     if (digitalRead(BLUE_SUPER_PIN))
+     if (blue_super_enable && digitalRead(BLUE_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_SUPER);
        last_goal = millis();
      }
-     if (digitalRead(RED_NORMAL_PIN))
+     if (red_normal_enable && digitalRead(RED_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_RED_NORMAL);
        last_goal = millis();
      }
-     if (digitalRead(RED_SUPER_PIN))
+     if (red_super_enable && digitalRead(RED_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_RED_SUPER);
        last_goal = millis();
@@ -190,25 +237,25 @@ void slave_main(int input)
 
 
   // Scansione dei pulsanti
-//  if (millis() > last_push + PUSH_DELAY)
-  if (0 == 1)		// non sono ancora collegati
+  if (millis() > last_push + PUSH_DELAY)
+//  if (0 == 1)		// non sono ancora collegati
   {
-    if (digitalRead(BLUE_ADD_PIN))
+    if (!digitalRead(BLUE_ADD_PIN))
     {
        Serial.println(SUB_BUTTON_BLUE_GOAL);
        last_push = millis();
     }
-    if (digitalRead(BLUE_UNDO_PIN))
+    if (!digitalRead(BLUE_UNDO_PIN))
     {
        Serial.println(SUB_BUTTON_BLUE_UNDO);
        last_push = millis();
     }
-    if (digitalRead(RED_ADD_PIN))
+    if (!digitalRead(RED_ADD_PIN))
     {
        Serial.println(SUB_BUTTON_RED_GOAL);
        last_push = millis();
     }
-    if (digitalRead(RED_UNDO_PIN))
+    if (!digitalRead(RED_UNDO_PIN))
     {
        Serial.println(SUB_BUTTON_RED_UNDO);
        last_push = millis();
@@ -219,8 +266,8 @@ void slave_main(int input)
 
 
 // Aggiorna i display con l'input che arriva dal computer)
-void refreshDisplay(int input)
+/*void refreshDisplay(int input)
 {
   input -= 16384;
   writeInteger ( input % 8192 , input/8192);
-}
+}*/
