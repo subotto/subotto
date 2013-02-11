@@ -1,4 +1,5 @@
 #include "LedControl.h"
+#include "opcodes.h"
 
 // Interfacce seriali 
 
@@ -12,7 +13,7 @@ LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   // Inizializzazione del display
   /*
@@ -27,6 +28,7 @@ void setup()
   writeInteger(0,0);
   writeInteger(0,1);
   
+  Serial.println(SUB_READY);
 }
 
 void refreshDisplay(int input)
@@ -57,11 +59,13 @@ void loop()
   if (Serial.available()>0)
   {
     int input = Serial.parseInt();
-    Serial.println(input);
-    if (input >=16384)
+    if (input == COM_RESET) {
+      setup();
+    } else if (input >=16384)
     {
       refreshDisplay(input);
      // Serial.println(input);
     }
+  Serial.println(input);
   }
 }
