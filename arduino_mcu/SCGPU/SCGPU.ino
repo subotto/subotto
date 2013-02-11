@@ -76,6 +76,11 @@ void setup()
   pinMode(13,OUTPUT);		// led per debug
   digitalWrite(13,LOW);
   
+  blue_normal_enable = 1;
+  blue_super_enable = 1;
+  red_normal_enable = 1;
+  red_super_enable = 1;
+
   Serial.begin(115200);
   
   mode = TEST_MODE;
