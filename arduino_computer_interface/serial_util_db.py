@@ -151,7 +151,7 @@ if __name__ == '__main__':
                 	core.act_goal_undo(core.order[team], source)
             core.update()
             for i in [0, 1]:
-                ss.set_score(core.score[self.detect_team(core.order[i])], i)
+                ss.set_score(core.score[core.detect_team(core.order[i])], i)
             time.sleep(0.5)
     except KeyboardInterrupt:
         pass
