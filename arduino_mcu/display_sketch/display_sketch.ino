@@ -13,7 +13,7 @@ LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   
   // Inizializzazione del display
   /*
@@ -59,6 +59,7 @@ void loop()
   if (Serial.available()>0)
   {
     int input = Serial.parseInt();
+    Serial.println(input);
     if (input == COM_RESET) {
       setup();
     } else if (input >=16384)
@@ -66,6 +67,6 @@ void loop()
       refreshDisplay(input);
      // Serial.println(input);
     }
-  Serial.println(input);
+  
   }
 }
