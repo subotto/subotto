@@ -127,17 +127,18 @@ class SubottoSerial:
 
 
 if __name__ == '__main__':
+    match_id = int(sys.argv[1])
     serial_port = sys.argv[2]
     ss = SubottoSerial(serial_port, 115200)
     # Here we wait for the SUB_READY command, otherwise we risk to
     # send commands before the unit is ready
     print ss.wait_for_ready()
-    match_id = int(sys.argv[1])
     core = SubottoCore(match_id)
 	
     # Run a test match
     ss.set_slave_mode()
     score = [0, 0]
+    cached_score = [None, None]
     try:
         while True:
             events = ss.receive_events()
@@ -151,7 +152,10 @@ if __name__ == '__main__':
                 	core.act_goal_undo(core.order[team], source)
             core.update()
             for i in [0, 1]:
-                ss.set_score(core.score[core.detect_team(core.order[i])], i)
-            time.sleep(0.5)
+                this_score = core.score[core.detect_team(core.order[i])]
+                if this_score != cached_score[i]:
+                    ss.set_score(this_score, i)
+                    cached_score[i] = this_score
+            time.sleep(0.2)
     except KeyboardInterrupt:
         pass

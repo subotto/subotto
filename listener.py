@@ -349,6 +349,11 @@ class Statistics:
 
         elif event.type == Event.EV_TYPE_GOAL_UNDO:
             i = self.detect_team(event.team)
+
+            # BAD
+            if self.score[i] == 0:
+                return
+
             self.score[i] -= 1
             if self.partial[i] > 0:
                 self.partial[i] -= 1
