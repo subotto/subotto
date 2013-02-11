@@ -127,7 +127,7 @@ class SubottoSerial:
 
 
 if __name__ == '__main__':
-    serial_port = sys.argv[1]
+    serial_port = sys.argv[2]
     ss = SubottoSerial(serial_port, 115200)
     # Here we wait for the SUB_READY command, otherwise we risk to
     # send commands before the unit is ready
