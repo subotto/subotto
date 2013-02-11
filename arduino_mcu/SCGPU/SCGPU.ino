@@ -173,23 +173,42 @@ void test_main(int input)
 
 void slave_main(int input)
 {
-/*  switch (input)
+  switch (input)
   {
     case COM_ENABLE_RED_NORMAL:
       red_normal_enable = 1;
-      Serial.println();
+      Serial.println(SUB_RED_NORMAL_ENABLED);
       break;
     case COM_ENABLE_RED_SUPER:
       red_super_enable = 1;
-COM_ENABLE_BLUE_NORMAL
-COM_ENABLE_BLUE_SUPER
-COM_DISABLE_RED_NORMAL
-COM_DISABLE_RED_SUPER
-COM_DISABLE_BLUE_NORMAL
-COM_DISABLE_BLUE_SUPER
+      Serial.println(SUB_RED_SUPER_ENABLED);
+      break;
+    case COM_ENABLE_BLUE_NORMAL:
+      blue_normal_enable = 1;
+      Serial.println(SUB_BLUE_NORMAL_ENABLED);
+      break;
+    case COM_ENABLE_BLUE_SUPER:
+      blue_normal_enable = 1;
+      Serial.println(SUB_BLUE_SUPER_ENABLED);
+      break;
+    case COM_DISABLE_RED_NORMAL:
+      red_normal_enable = 0;
+      Serial.println(SUB_RED_NORMAL_DISABLED);
+      break;
+    case COM_DISABLE_RED_SUPER:
+      red_super_enable = 0;
+      Serial.println(SUB_RED_SUPER_DISABLED);
+      break;
+    case COM_DISABLE_BLUE_NORMAL:
+      blue_normal_enable = 0;
+      Serial.println(SUB_BLUE_NORMAL_DISABLED);
+      break;
+    case COM_DISABLE_BLUE_SUPER:
+      blue_super_enable = 0;
+      Serial.println(SUB_BLUE_SUPER_DISABLED);
+      break;    
     
-    
-  }*/
+  }
   
   // Scansione delle fotocellule
   if (millis() > last_goal + GOAL_DELAY)
