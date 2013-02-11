@@ -485,18 +485,19 @@ class Statistics:
         		self.played_time[ player_id ] = old_played_time[ player_id ]
         
         # Draw the score plot
-        fig = matplotlib.pyplot.figure()
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-        ax.grid(True)
-        for i in [0, 1]:
-            self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
-            self.score_plot[i][1].append(self.score_plot[i][1][-1])
-            ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-')
-            self.score_plot[i][0].pop()
-            self.score_plot[i][1].pop()
-        fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
-        matplotlib.pylab.close(fig)
-        #fig.show()
+        if self.match.begin is not None:
+		fig = matplotlib.pyplot.figure()
+		ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+		ax.grid(True)
+		for i in [0, 1]:
+		    self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
+		    self.score_plot[i][1].append(self.score_plot[i][1][-1])
+		    ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-')
+		    self.score_plot[i][0].pop()
+		    self.score_plot[i][1].pop()
+		fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
+		matplotlib.pylab.close(fig)
+		#fig.show()
 
 def listen_match(match_id, target_dir, old_matches_id):
 
