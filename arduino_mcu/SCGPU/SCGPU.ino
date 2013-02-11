@@ -38,6 +38,11 @@ int mode;	// l'attuale modalità di lavoro
 unsigned long last_goal;	// il millis dell'ultimo goal
 unsigned long last_push;	// il millis dell'ultima pressione di pulsante
 
+int blue_normal_enable = 1;
+int blue_super_enable = 1;
+int red_normal_enable = 1;
+int red_super_enable = 1;
+
 //LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
 /* void writeInteger(int number, int display_number)
@@ -121,11 +126,12 @@ void loop()
       default:
         consumed = 0;
     }
- /*   if (input >= 16384)
+    if (input >= 16384)
     {
-      refreshDisplay(input);
+      //refreshDisplay(input);
+      Serial.println(input);
     }
-    if (consumed) return;*/
+    if (consumed) return;
   }
 
   if (mode == TEST_MODE) test_main(input);
@@ -162,26 +168,43 @@ void test_main(int input)
 
 void slave_main(int input)
 {
-	
+/*  switch (input)
+  {
+    case COM_ENABLE_RED_NORMAL:
+      red_normal_enable = 1;
+      Serial.println();
+      break;
+    case COM_ENABLE_RED_SUPER:
+      red_super_enable = 1;
+COM_ENABLE_BLUE_NORMAL
+COM_ENABLE_BLUE_SUPER
+COM_DISABLE_RED_NORMAL
+COM_DISABLE_RED_SUPER
+COM_DISABLE_BLUE_NORMAL
+COM_DISABLE_BLUE_SUPER
+    
+    
+  }*/
+  
   // Scansione delle fotocellule
   if (millis() > last_goal + GOAL_DELAY)
   {
-     if (digitalRead(BLUE_NORMAL_PIN))
+     if (blue_normal_enable && digitalRead(BLUE_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_NORMAL);
        last_goal = millis();
      }
-     if (digitalRead(BLUE_SUPER_PIN))
+     if (blue_super_enable && digitalRead(BLUE_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_BLUE_SUPER);
        last_goal = millis();
      }
-     if (digitalRead(RED_NORMAL_PIN))
+     if (red_normal_enable && digitalRead(RED_NORMAL_PIN))
      {
        Serial.println(SUB_PHOTO_RED_NORMAL);
        last_goal = millis();
      }
-     if (digitalRead(RED_SUPER_PIN))
+     if (red_super_enable && digitalRead(RED_SUPER_PIN))
      {
        Serial.println(SUB_PHOTO_RED_SUPER);
        last_goal = millis();
