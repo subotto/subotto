@@ -25,7 +25,7 @@
 // Settaggi
 
 #define GOAL_DELAY 3000
-#define PUSH_DELAY 5000
+#define PUSH_DELAY 1500
 #define DELAY 10
 
 
