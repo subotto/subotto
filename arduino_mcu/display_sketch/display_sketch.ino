@@ -13,7 +13,7 @@ LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   // Inizializzazione del display
   /*
@@ -46,27 +46,47 @@ void writeInteger(int number, int display_number)
 {
         
         display_number *= 4;
-        for ( int   i = 0 ; i < 4 ; ++i)
+        int i;
+        for ( i = 0 ; i < 4 ; ++i)
         {
-                lc.setDigit(0,i+display_number,number%10, false);
+                if (number == 0 && i!=0) {
+                  lc.setChar(0,i+display_number,' ',false);
+                }
+                else {
+                  lc.setDigit(0,i+display_number,number%10, false);
+                }
                 number /= 10; 
-                if (number == 0 ) return ;
         }
+        
 }
 
-void loop()
-{
-  if (Serial.available()>0)
-  {
+void loop() {
+  while (Serial.available() > 0) {
     int input = Serial.parseInt();
-    Serial.println(input);
-    if (input == COM_RESET) {
-      setup();
-    } else if (input >=16384)
-    {
-      refreshDisplay(input);
-     // Serial.println(input);
+    
+    if (Serial.read() == '\n') {
+      Serial.println(input);
+      if (input == COM_RESET) {
+        setup();
+      }
+      else if (input >=16384) {
+        refreshDisplay(input);
+       // Serial.println(input);
+      }
     }
-  
   }
 }
+
+/* Scritte utili:
+
+  lc.setRow(0,3,B01011110);
+  lc.setDigit(0,2,0, false);
+  lc.setChar(0,1,'A', false);
+  lc.setChar(0,0,'L', false);
+  
+  
+  lc.setChar(0,3,' ', false);
+  lc.setDigit(0,2,2, false);
+  lc.setDigit(0,1,4, false);
+  lc.setChar(0,0,'H', false);
+*/

@@ -46,7 +46,7 @@ class SubottoSerial:
 
     def send_number(self, num):
         print >> sys.stderr, "> TO SERIAL PORT: %d" % (num)
-        self.serial.write("%d" % (num))
+        self.serial.write("%d\n" % (num))
         self.serial.flush()
 
     def recv_number(self):
