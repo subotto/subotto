@@ -36,7 +36,7 @@ class SquadraSubotto(object):
         self.box=self.builder.get_object("box_team")
         self.name_gtk=self.builder.get_object("name_team")
         self.name_gtk.set_text(self.team.name)
-        self.builder.connect_signals(self)        
+        self.builder.connect_signals(self)
 
         self.player_list = []
         self.player_map = {}
