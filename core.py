@@ -7,6 +7,8 @@ import os
 from select import select
 now=datetime.datetime.now
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
 
 def act_init_match(session, name, team_a, team_b, sched_begin, sched_end):
@@ -202,3 +204,17 @@ class SubottoCore:
             end = datetime.datetime.now()
         self.match.end = end
         self.session.commit()
+
+    def act_add_player_match_from_name(self, team, fname, lname, comment=None, bulk=False):
+        player = Player.get_or_create(self.session, fname, lname, comment)
+        try:
+            player_match = self.session.query(PlayerMatch).filter(PlayerMatch.match == self.match). \
+                filter(PlayerMatch.player == player).one()
+        except NoResultFound:
+            player_match = PlayerMatch()
+            player_match.player = player
+            player_match.match = self.match
+            player_match.team = team
+            self.session.add(player_match)
+            if not bulk:
+                self.session.commit()
