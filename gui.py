@@ -113,6 +113,9 @@ class SquadraSubotto(object):
             self.core.act_remove_from_queue(self.team, sel)
 
     def add_player(self):
+        self.entry_fname.set_text('')
+        self.entry_lname.set_text('')
+        self.entry_comment.set_text('')
         self.window_new_player.set_visible(True)
 
     def on_btn_new_player_ok_clicked(self, widget):
