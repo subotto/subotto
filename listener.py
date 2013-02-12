@@ -192,6 +192,9 @@ class Statistics:
         self.match = match
         self.old_matches = old_matches
         self.target_dir = target_dir
+        self.last_match = old_matches[-1] if len(old_matches) > 0 else None
+        self.last_score_plot = [[[], []], [[], []]]
+        self.last_score = [0, 0]
 
         self.score = [0, 0]
         self.current_players = [None, None]
@@ -265,6 +268,12 @@ class Statistics:
                     self.total_goals[ c ] += 1
                 
                 self.goal_sequence[ match_id ][ team_id ].append( contestants )
+
+                if match_id == self.last_match.id:
+                    i = 0 if team_id == self.last_match.team_a_id else 1
+                    self.last_score[i] += 1
+                    self.last_score_plot[i][0].append((event.timestamp - self.last_match.begin) + self.match.begin)
+                    self.last_score_plot[i][1].append(self.last_score[i])
             
             elif event.type == Event.EV_TYPE_GOAL_UNDO:
                 match_id = event.match_id
@@ -274,6 +283,12 @@ class Statistics:
                 contestants = self.goal_sequence[ match_id ][ team_id ].pop()
                 for c in contestants:
                     self.total_goals[ c ] -= 1
+
+                if match_id == self.last_match.id:
+                    i = 0 if team_id == self.last_match.team_a_id else 1
+                    self.last_score[i] -= 1
+                    self.last_score_plot[i][0].pop()
+                    self.last_score_plot[i][1].pop()
         
         # Bisogna segnare il tempo delle ultime due coppie che hanno giocato!
         for old_match in old_matches:
@@ -301,6 +316,10 @@ class Statistics:
             self.score_plot[0][1].append(0)
             self.score_plot[1][0].append(self.match.begin)
             self.score_plot[1][1].append(0)
+            self.last_score_plot[0][0].insert(0, self.match.begin)
+            self.last_score_plot[0][1].insert(0, 0)
+            self.last_score_plot[1][0].insert(0, self.match.begin)
+            self.last_score_plot[1][1].insert(0, 0)
 
         if event.type == Event.EV_TYPE_CHANGE:
             i = self.detect_team(event.team)
@@ -486,18 +505,27 @@ class Statistics:
         
         # Draw the score plot
         if self.match.begin is not None:
-		fig = matplotlib.pyplot.figure()
-		ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-		ax.grid(True)
-		for i in [0, 1]:
-		    self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
-		    self.score_plot[i][1].append(self.score_plot[i][1][-1])
-		    ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-')
-		    self.score_plot[i][0].pop()
-		    self.score_plot[i][1].pop()
-		fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
-		matplotlib.pylab.close(fig)
-		#fig.show()
+            fig = matplotlib.pyplot.figure()
+            ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+            ax.grid(True)
+            COLORS = ['g', 'b']
+            for i in [0, 1]:
+                self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
+                self.score_plot[i][1].append(self.score_plot[i][1][-1])
+                ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
+                self.score_plot[i][0].pop()
+                self.score_plot[i][1].pop()
+            for i in [0, 1]:
+                threshold = 0
+                for j in self.last_score_plot[i][0]:
+                    if j < now:
+                        threshold += 1
+                    else:
+                        break
+                ax.plot(self.last_score_plot[i][0][:threshold], self.last_score_plot[i][1][:threshold], '--%s' % (COLORS[i]))
+            fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
+            matplotlib.pylab.close(fig)
+            #fig.show()
 
 def listen_match(match_id, target_dir, old_matches_id):
 
@@ -507,7 +535,7 @@ def listen_match(match_id, target_dir, old_matches_id):
     old_matches = session.query(Match).filter(Match.id.in_(old_matches_id)).all()
     players = session.query(Player).all()
     old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id.in_(old_matches_id)).all()
-    old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).all()
+    old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).order_by(Event.timestamp).all()
     
     stats = Statistics(match, old_matches, players, old_player_matches, old_events, target_dir)
     last_event_id = 0
