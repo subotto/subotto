@@ -4,23 +4,23 @@
 // Porte di I/O su Arduino
 
 #define BLUE_NORMAL_PIN 3
-#define BLUE_SUPER_PIN 5
-#define RED_NORMAL_PIN 2
-#define RED_SUPER_PIN 4
+#define BLUE_SUPER_PIN 4
+#define RED_NORMAL_PIN 5
+#define RED_SUPER_PIN 6
 
-#define BLUE_ADD_PIN 8
-#define BLUE_UNDO_PIN 10
-#define RED_ADD_PIN 11
-#define RED_UNDO_PIN 9
+#define BLUE_ADD_PIN 7
+#define BLUE_UNDO_PIN 8
+#define RED_ADD_PIN 9
+#define RED_UNDO_PIN 10
 
-/* // Interfacce seriali 
+// Interfacce seriali 
 
-#define SPI_CLK 11		// Clock
-#define SPI_MOSI 12		// Master Out Slave In 
+#define SPI_CLK 12		// Clock
+#define SPI_MOSI 13		// Master Out Slave In 
 #define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
 
-#define SPI_DISPLAY_LOAD 10	 // Load per il display
-*/
+#define SPI_DISPLAY_LOAD 11	 // Load per il display
+
 
 // Settaggi
 
@@ -43,9 +43,9 @@ int blue_super_enable = 1;
 int red_normal_enable = 1;
 int red_super_enable = 1;
 
-//LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
+LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
-/* void writeInteger(int number, int display_number)
+void writeInteger(int number, int display_number)
 
 //	Scrivi l'intero numero su display (0 o 1)
 //	Gli zeri iniziali vengono buttati via
@@ -59,7 +59,7 @@ int red_super_enable = 1;
 		number /= 10; 
 		if (number == 0 ) return ;
 	}
-}*/
+}
 
 void setup()
 {
@@ -94,13 +94,13 @@ void setup()
    The MAX72XX is in power-saving mode on startup,
    we have to do a wakeup call
    */
-//  lc.shutdown(0,false);
+  lc.shutdown(0,false);
   /* Set the brightness to a medium values */
-//  lc.setIntensity(0,8);
+  lc.setIntensity(0,8);
   /* and clear the display */
-//  lc.clearDisplay(0);
-//  writeInteger(0,0);
-//  writeInteger(0,1);
+  lc.clearDisplay(0);
+  writeInteger(0,0);
+  writeInteger(0,1);
   
   Serial.println(SUB_READY);
 }
@@ -133,7 +133,7 @@ void loop()
     }
     if (input >= 16384)
     {
-      //refreshDisplay(input);
+      refreshDisplay(input);
       Serial.println(input);
     }
     if (consumed) return;
@@ -266,8 +266,8 @@ void slave_main(int input)
 
 
 // Aggiorna i display con l'input che arriva dal computer)
-/*void refreshDisplay(int input)
+void refreshDisplay(int input)
 {
   input -= 16384;
   writeInteger ( input % 8192 , input/8192);
-}*/
+}
