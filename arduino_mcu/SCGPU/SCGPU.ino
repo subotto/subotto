@@ -33,6 +33,7 @@
 
 #define TEST_MODE 0
 #define SLAVE_MODE 1
+#define MASTER_MODE 2
 
 int mode;	// l'attuale modalità di lavoro
 unsigned long last_goal;	// il millis dell'ultimo goal
@@ -125,6 +126,10 @@ void loop()
         mode = TEST_MODE;
         Serial.println(SUB_TEST_MODE);
         break;
+      case COM_SET_MASTER_MODE:
+        mode = MASTER_MODE;
+        Serial.println(SUB_MASTER_MODE);
+        break;
       case COM_RESET:
         setup();
         break;
@@ -139,8 +144,17 @@ void loop()
     if (consumed) return;
   }
 
-  if (mode == TEST_MODE) test_main(input);
-  else slave_main(input);
+  switch (mode) {
+  	case TEST_MODE:
+  	  test_main(input);
+  	  break;
+  	case SLAVE_MODE:
+  	  slave_main(input);
+  	  break;
+  	case MASTER_MODE:
+      master_mode(input);
+      break;
+    }
   
   delay(DELAY);
   
@@ -207,30 +221,43 @@ void slave_main(int input)
       blue_super_enable = 0;
       Serial.println(SUB_BLUE_SUPER_DISABLED);
       break;    
-    
   }
   
+  Serial.println(scan_input());
+  
+}
+
+void master_mode(int input)
+{
+  int 
+
+}
+
+
+
+int scan_input ()
+{
   // Scansione delle fotocellule
   if (millis() > last_goal + GOAL_DELAY)
   {
      if (blue_normal_enable && digitalRead(BLUE_NORMAL_PIN))
      {
-       Serial.println(SUB_PHOTO_BLUE_NORMAL);
+       return SUB_PHOTO_BLUE_NORMAL;
        last_goal = millis();
      }
      if (blue_super_enable && digitalRead(BLUE_SUPER_PIN))
      {
-       Serial.println(SUB_PHOTO_BLUE_SUPER);
+       return SUB_PHOTO_BLUE_SUPER;
        last_goal = millis();
      }
      if (red_normal_enable && digitalRead(RED_NORMAL_PIN))
      {
-       Serial.println(SUB_PHOTO_RED_NORMAL);
+       retunr SUB_PHOTO_RED_NORMAL;
        last_goal = millis();
      }
      if (red_super_enable && digitalRead(RED_SUPER_PIN))
      {
-       Serial.println(SUB_PHOTO_RED_SUPER);
+       return SUB_PHOTO_RED_SUPER;
        last_goal = millis();
      }
   }
@@ -242,26 +269,26 @@ void slave_main(int input)
   {
     if (!digitalRead(BLUE_ADD_PIN))
     {
-       Serial.println(SUB_BUTTON_BLUE_GOAL);
+       return SUB_BUTTON_BLUE_GOAL;
        last_push = millis();
     }
     if (!digitalRead(BLUE_UNDO_PIN))
     {
-       Serial.println(SUB_BUTTON_BLUE_UNDO);
+       return SUB_BUTTON_BLUE_UNDO;
        last_push = millis();
     }
     if (!digitalRead(RED_ADD_PIN))
     {
-       Serial.println(SUB_BUTTON_RED_GOAL);
+       return SUB_BUTTON_RED_GOAL;
        last_push = millis();
     }
     if (!digitalRead(RED_UNDO_PIN))
     {
-       Serial.println(SUB_BUTTON_RED_UNDO);
+       return SUB_BUTTON_RED_UNDO;
        last_push = millis();
     }
   }
-  
+  return -1; //TODO: this must be a code defined and managed by the functions
 }
 
 
