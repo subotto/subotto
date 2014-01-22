@@ -1,10 +1,10 @@
 #include "LedControl.h"
 
-#define SPI_CLK 11		// Clock
-#define SPI_MOSI 12		// Master Out Slave In 
+#define SPI_CLK 12		// Clock
+#define SPI_MOSI 11		// Master Out Slave In 
 #define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
 
-#define SPI_DISPLAY_LOAD 10	 // Load per il display
+#define SPI_DISPLAY_LOAD 13	 // Load per il display
 
 LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
@@ -30,8 +30,8 @@ void refreshDisplay(int input)
 
 void setup()
 {
-  pinMode(13,OUTPUT);		// led per debug
-  digitalWrite(13,LOW);
+ // pinMode(13,OUTPUT);		// led per debug
+ // digitalWrite(13,LOW);
   
   Serial.begin(9600);
   Serial.println("I'm ready");

@@ -1,31 +1,32 @@
 #include "opcodes.h"
 #include "LedControl.h"
 
+
 // Porte di I/O su Arduino
 
-#define BLUE_NORMAL_PIN 3
-#define BLUE_SUPER_PIN 4
-#define RED_NORMAL_PIN 5
-#define RED_SUPER_PIN 6
+#define BLUE_NORMAL_PIN 2
+#define BLUE_SUPER_PIN 3
+#define RED_NORMAL_PIN 4
+#define RED_SUPER_PIN 5
 
-#define BLUE_ADD_PIN 7
-#define BLUE_UNDO_PIN 8
-#define RED_ADD_PIN 9
-#define RED_UNDO_PIN 10
+#define BLUE_ADD_PIN 6
+#define BLUE_UNDO_PIN 7
+#define RED_ADD_PIN 8
+#define RED_UNDO_PIN 9
 
 // Interfacce seriali 
 
-#define SPI_CLK 12		// Clock
-#define SPI_MOSI 13		// Master Out Slave In 
+#define SPI_CLK 11		// Clock
+#define SPI_MOSI 12		// Master Out Slave In 
 #define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
 
-#define SPI_DISPLAY_LOAD 11	 // Load per il display
+#define SPI_DISPLAY_LOAD 10	 // Load per il display
 
 
 // Settaggi
 
 #define GOAL_DELAY 3000
-#define PUSH_DELAY 1500
+#define PUSH_DELAY 1000
 #define DELAY 10
 
 
@@ -34,6 +35,8 @@
 #define TEST_MODE 0
 #define SLAVE_MODE 1
 #define MASTER_MODE 2
+
+#define SUB_NONE -1
 
 int mode;	// l'attuale modalità di lavoro
 unsigned long last_goal;	// il millis dell'ultimo goal
@@ -44,22 +47,28 @@ int blue_super_enable = 1;
 int red_normal_enable = 1;
 int red_super_enable = 1;
 
+unsigned long blue_score = 0;
+unsigned long red_score = 0;
+
 LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
 void writeInteger(int number, int display_number)
-
 //	Scrivi l'intero numero su display (0 o 1)
 //	Gli zeri iniziali vengono buttati via
 //	Le cifre 0 (per display 0) e 4 (per display 1) sono le più significative
-
 {
-	display_number *= 4;
-	for ( int   i = 3 ; i > 0 ; --i)
-	{
-		lc.setDigit(0,i+display_number,number%10, false);
-		number /= 10; 
-		if (number == 0 ) return ;
-	}
+        display_number *= 4;
+        int i;
+        for ( i = 0 ; i < 4 ; ++i)
+        {
+                if (number == 0 && i!=0) {
+                  lc.setChar(0,i+display_number,' ',false);
+                }
+                else {
+                  lc.setDigit(0,i+display_number,number%10, false);
+                }
+                number /= 10; 
+        }
 }
 
 void setup()
@@ -81,10 +90,13 @@ void setup()
   blue_super_enable = 1;
   red_normal_enable = 1;
   red_super_enable = 1;
+  
+  blue_score = 0;
+  red_score = 0;
 
   Serial.begin(115200);
   
-  mode = TEST_MODE;
+  mode = MASTER_MODE;
 //  last_goal = millis();
 //  last_push = millis();
   last_goal = 0;
@@ -128,6 +140,9 @@ void loop()
         break;
       case COM_SET_MASTER_MODE:
         mode = MASTER_MODE;
+        blue_score = 0;
+        red_score = 0;
+        write_points();
         Serial.println(SUB_MASTER_MODE);
         break;
       case COM_RESET:
@@ -152,8 +167,8 @@ void loop()
   	  slave_main(input);
   	  break;
   	case MASTER_MODE:
-      master_mode(input);
-      break;
+          master_mode(input);
+          break;
     }
   
   delay(DELAY);
@@ -223,13 +238,47 @@ void slave_main(int input)
       break;    
   }
   
-  Serial.println(scan_input());
+  int result = scan_input();
+  if (result != SUB_NONE)
+  {
+  	Serial.println(result);
+  }
   
 }
 
 void master_mode(int input)
 {
-  int 
+  int result = scan_input();
+  
+  switch (result)
+  {
+  	// ++red
+  	case SUB_PHOTO_BLUE_NORMAL:
+  	case SUB_PHOTO_BLUE_SUPER:
+  	case SUB_BUTTON_RED_GOAL:
+  	  ++red_score;
+  	  write_points();
+  	  break;
+  	// --blue
+  	case SUB_BUTTON_BLUE_UNDO:
+          if (blue_score >0)
+  	    --blue_score;
+  	  write_points();
+  	  break;
+  	// ++blue
+  	case SUB_PHOTO_RED_NORMAL:
+  	case SUB_PHOTO_RED_SUPER:
+  	case SUB_BUTTON_BLUE_GOAL:
+  	  ++blue_score;
+  	  write_points();
+  	  break;
+  	// --red
+  	case SUB_BUTTON_RED_UNDO:
+          if (red_score > 0)
+  	    --red_score;
+  	  write_points();
+  	  break;
+  }
 
 }
 
@@ -242,23 +291,23 @@ int scan_input ()
   {
      if (blue_normal_enable && digitalRead(BLUE_NORMAL_PIN))
      {
-       return SUB_PHOTO_BLUE_NORMAL;
        last_goal = millis();
+       return SUB_PHOTO_BLUE_NORMAL;
      }
      if (blue_super_enable && digitalRead(BLUE_SUPER_PIN))
      {
-       return SUB_PHOTO_BLUE_SUPER;
        last_goal = millis();
+       return SUB_PHOTO_BLUE_SUPER;
      }
      if (red_normal_enable && digitalRead(RED_NORMAL_PIN))
      {
-       retunr SUB_PHOTO_RED_NORMAL;
        last_goal = millis();
+       return SUB_PHOTO_RED_NORMAL;
      }
      if (red_super_enable && digitalRead(RED_SUPER_PIN))
      {
-       return SUB_PHOTO_RED_SUPER;
        last_goal = millis();
+       return SUB_PHOTO_RED_SUPER;
      }
   }
 
@@ -269,26 +318,32 @@ int scan_input ()
   {
     if (!digitalRead(BLUE_ADD_PIN))
     {
-       return SUB_BUTTON_BLUE_GOAL;
-       last_push = millis();
+      last_push = millis();
+      return SUB_BUTTON_BLUE_GOAL;
     }
     if (!digitalRead(BLUE_UNDO_PIN))
     {
-       return SUB_BUTTON_BLUE_UNDO;
-       last_push = millis();
+      last_push = millis();
+      return SUB_BUTTON_BLUE_UNDO; 
     }
     if (!digitalRead(RED_ADD_PIN))
     {
-       return SUB_BUTTON_RED_GOAL;
-       last_push = millis();
+      last_push = millis();
+      return SUB_BUTTON_RED_GOAL;
     }
     if (!digitalRead(RED_UNDO_PIN))
     {
-       return SUB_BUTTON_RED_UNDO;
-       last_push = millis();
+      last_push = millis();
+      return SUB_BUTTON_RED_UNDO;
     }
   }
-  return -1; //TODO: this must be a code defined and managed by the functions
+  return SUB_NONE;
+}
+
+void write_points()
+{
+  writeInteger(blue_score,0); 
+  writeInteger(red_score,1);
 }
 
 
