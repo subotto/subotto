@@ -4,23 +4,25 @@
 
 // Porte di I/O su Arduino
 
-#define BLUE_NORMAL_PIN 2
-#define BLUE_SUPER_PIN 3
-#define RED_NORMAL_PIN 4
-#define RED_SUPER_PIN 5
+#define BLUE_NORMAL_PIN 5
+#define BLUE_SUPER_PIN 4
+#define RED_NORMAL_PIN 6
+#define RED_SUPER_PIN 7
 
-#define BLUE_ADD_PIN 6
-#define BLUE_UNDO_PIN 7
-#define RED_ADD_PIN 8
-#define RED_UNDO_PIN 9
+#define BLUE_ADD_PIN 9
+#define BLUE_UNDO_PIN 12
+#define RED_ADD_PIN 11
+#define RED_UNDO_PIN 10
+
+#define SOFT_RESET_PIN A3
 
 // Interfacce seriali 
 
-#define SPI_CLK 11		// Clock
-#define SPI_MOSI 12		// Master Out Slave In 
+#define SPI_CLK A1		// Clock
+#define SPI_MOSI A0		// Master Out Slave In 
 #define SPI_MISO 100	// Master In Slave Out - per i led non ci serve questa porta
 
-#define SPI_DISPLAY_LOAD 10	 // Load per il display
+#define SPI_DISPLAY_LOAD A2	 // Load per il display
 
 
 // Settaggi
@@ -82,6 +84,8 @@ void setup()
   pinMode(BLUE_UNDO_PIN,INPUT_PULLUP);
   pinMode(RED_ADD_PIN,INPUT_PULLUP);
   pinMode(RED_UNDO_PIN,INPUT_PULLUP);
+  
+  pinMode(SOFT_RESET_PIN,INPUT_PULLUP);
   
   pinMode(13,OUTPUT);		// led per debug
   digitalWrite(13,LOW);
@@ -249,6 +253,12 @@ void slave_main(int input)
 void master_mode(int input)
 {
   int result = scan_input();
+  if (!digitalRead(SOFT_RESET_PIN))
+  {
+    blue_score = 0;
+    red_score = 0;
+    update_points(); 
+  }
   
   switch (result)
   {
@@ -257,26 +267,24 @@ void master_mode(int input)
   	case SUB_PHOTO_BLUE_SUPER:
   	case SUB_BUTTON_RED_GOAL:
   	  ++red_score;
-  	  write_points();
+  	  update_points();
   	  break;
   	// --blue
   	case SUB_BUTTON_BLUE_UNDO:
-          if (blue_score >0)
   	    --blue_score;
-  	  write_points();
+  	  update_points();
   	  break;
   	// ++blue
   	case SUB_PHOTO_RED_NORMAL:
   	case SUB_PHOTO_RED_SUPER:
   	case SUB_BUTTON_BLUE_GOAL:
   	  ++blue_score;
-  	  write_points();
+  	  update_points();
   	  break;
   	// --red
   	case SUB_BUTTON_RED_UNDO:
-          if (red_score > 0)
   	    --red_score;
-  	  write_points();
+  	  update_points();
   	  break;
   }
 
@@ -338,6 +346,25 @@ int scan_input ()
     }
   }
   return SUB_NONE;
+}
+
+void update_points()
+{
+	if (blue_score<0)
+	{
+		blue_score = 0;
+	}
+	if (red_score<0)
+	{
+		red_score = 0;
+	}
+/*	if ((blue_score >= 6 && blue_score > red_score +1) || (red_score >= 6 && red_score > blue_score + 1))
+		{
+			blue_score = 0;
+			red_score = 0;
+		}
+*/
+	write_points();
 }
 
 void write_points()
