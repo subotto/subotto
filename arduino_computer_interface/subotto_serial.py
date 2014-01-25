@@ -39,7 +39,7 @@ class SubottoSerial:
         self.speed = speed
         self.serial = serial.Serial(port=port, baudrate=speed, timeout=None)
         self.events = []
-
+        
         #self.serial.nonblocking()
 
     # BASIC IO INTERFACE
@@ -120,6 +120,9 @@ class SubottoSerial:
 
     def set_test_mode(self):
         return self.send_expect(COM_SET_TEST_MODE, SUB_TEST_MODE)
+    
+    def set_master_mode(self):
+        return self.send_expect(COM_SET_MASTER_MODE, SUB_MASTER_MODE)
 
     def set_score(self, score, team):
         command = 2**14 + score + 2**13 * team
