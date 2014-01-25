@@ -176,13 +176,12 @@ def format_countdown(sched_begin):
         return res
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
-    result = "<table class=\"giocatore\"><col width=\"220\" /><tr><th>" + format_player(player) + "</th></tr><tr><td>"
+    result = ""
     result += "Partecipazioni: " + str( participations[ player.id ] ) + "<br />"
     result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 )[0] + "<br />"
     result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 )[0] + " in questa partita)<br />"
     result += "Gol fatti: " + str( total_goals[ player.id ] ) + "<br />"
     result += "(" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
-    result += "</td></tr></table>"
     
     return result
 
