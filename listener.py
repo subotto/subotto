@@ -51,53 +51,53 @@ def format_time2(total_seconds, abbr):
     result = ""
     
     if abbr == 0:
-    	if hours == 1:
-    		result += "1 ora, "
-    	elif hours > 1:
-    		result += "%d ore, " % hours
-    	
-    	if minutes > 0 or hours > 0:
-    		# Printing minutes...
-    		if minutes == 1:
-    			result += "1 minuto e "
-    		elif minutes > 1:
-    			result += "%d minuti e " % minutes
-    	
-    	#print seconds
-    	
-    	if seconds == 1:
-    		result += "1 secondo"
-    	else:
-    		result += "%d secondi" % seconds
-    	
-    	singular = 0
-    	if seconds == 1 and minutes == 0 and hours == 0:
-    		singular = 1
-    	
-    	#print [ result, singular ]
-    	
-    	return [ result, singular ]
+        if hours == 1:
+            result += "1 ora, "
+        elif hours > 1:
+            result += "%d ore, " % hours
+        
+        if minutes > 0 or hours > 0:
+            # Printing minutes...
+            if minutes == 1:
+                result += "1 minuto e "
+            elif minutes > 1:
+                result += "%d minuti e " % minutes
+        
+        #print seconds
+        
+        if seconds == 1:
+            result += "1 secondo"
+        else:
+            result += "%d secondi" % seconds
+        
+        singular = 0
+        if seconds == 1 and minutes == 0 and hours == 0:
+            singular = 1
+        
+        #print [ result, singular ]
+        
+        return [ result, singular ]
     
     
     if abbr == 1:
-    	if hours == 1:
-    		result += "1 ora"
-    	elif hours > 1:
-    		result += "%d ore" % hours
-    	
-    	if hours > 0 and minutes > 0:
-    		result += " e "
-    	
-    	if minutes > 0:
-    		result += "%d min" % minutes
-    	
-    	singular = 0
-    	if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
-    		singular = 1
-    	
-    	#result += " %d sec" % seconds
-    	
-    	return [ result, singular ]
+        if hours == 1:
+            result += "1 ora"
+        elif hours > 1:
+            result += "%d ore" % hours
+        
+        if hours > 0 and minutes > 0:
+            result += " e "
+        
+        if minutes > 0:
+            result += "%d min" % minutes
+        
+        singular = 0
+        if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
+            singular = 1
+        
+        #result += " %d sec" % seconds
+        
+        return [ result, singular ]
 
 
 def format_player(player):
@@ -105,10 +105,10 @@ def format_player(player):
 
 
 def compute_extimated_score(score, elapsed, length):
-	if elapsed <= 0.1:
-		return "-"
-	else:
-		return "%d - %d" % ( int(score[0]*length/elapsed), int(score[1]*length/elapsed) )
+    if elapsed <= 0.1:
+        return "-"
+    else:
+        return "%d - %d" % ( int(score[0]*length/elapsed), int(score[1]*length/elapsed) )
 
 def remount_index(score, elapsed, length):
     to_go = length - elapsed
@@ -118,13 +118,13 @@ def remount_index(score, elapsed, length):
         return u"%0.8f" % (float(abs(score[0] - score[1])) / to_go * 60.0 * 60.0)
 
 def remount_index_description(score, teams):
-	if score[0] == score[1]:
-		return "gol in pi&ugrave; all'ora che deve segnare la squadra in svantaggio per recuperare"
-	else:
-		ordered_teams = [ teams[1].name, teams[0].name ]
-		if score[0] < score[1]:
-			ordered_teams = [ teams[0].name, teams[1].name ]
-		return "gol in pi&ugrave; all'ora che devono segnare i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
+    if score[0] == score[1]:
+        return "gol in pi&ugrave; all'ora che deve segnare la squadra in svantaggio per recuperare"
+    else:
+        ordered_teams = [ teams[1].name, teams[0].name ]
+        if score[0] < score[1]:
+            ordered_teams = [ teams[0].name, teams[1].name ]
+        return "gol in pi&ugrave; all'ora che devono segnare i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
 
 def compute_interesting_score(score):
     idx = map(lambda x: x > score, INTERESTING_SCORES).index(True)
@@ -134,9 +134,9 @@ def compute_linear_projection(score, target, elapsed, begin):
     # print "Score: %d. Target: %d. Elapsed: %d." % (score, target, elapsed)
     
     if elapsed <= 0.1:
-    	return "-"
+        return "-"
     if score == 0:
-    	return "&infin;"
+        return "&infin;"
     
     ratio = score / elapsed
     
@@ -164,15 +164,15 @@ def format_countdown(sched_begin):
         return "La partita dovrebbe iniziare a momenti!"
     
     else:
-    	r = format_time2( time_diff, 0 )
-    	res = ""
-    	
-    	if r[1] == 0:
-    		res += "Mancano "
-    	else:
-    		res += "Manca "
-    	
-    	res += r[0] + " all'inizio della partita..."
+        r = format_time2( time_diff, 0 )
+        res = ""
+        
+        if r[1] == 0:
+            res += "Mancano "
+        else:
+            res += "Manca "
+        
+        res += r[0] + " all'inizio della partita..."
         return res
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
@@ -199,6 +199,7 @@ class Statistics:
         self.score = [0, 0]
         self.current_players = [None, None]
         self.partial = [0, 0]
+        self.rev_colors = [None, None]    # 0 => red_team_id, 1 => blue_team_id
         
         self.current_phase = None
         
@@ -320,8 +321,12 @@ class Statistics:
             self.last_score_plot[0][1].insert(0, 0)
             self.last_score_plot[1][0].insert(0, self.match.begin)
             self.last_score_plot[1][1].insert(0, 0)
-
-        if event.type == Event.EV_TYPE_CHANGE:
+        
+        if event.type == Event.EV_TYPE_SWAP:
+            self.rev_colors[0] = event.red_team_id
+            self.rev_colors[1] = event.blue_team_id
+        
+        elif event.type == Event.EV_TYPE_CHANGE:
             i = self.detect_team(event.team)
             self.partial = [0, 0]
             self.current_players[i] = [event.player_a, event.player_b]
@@ -424,6 +429,14 @@ class Statistics:
         kwargs['teams'] = (self.match.team_a, self.match.team_b)
         kwargs['phase'] = self.current_phase
         
+        teams = (self.match.team_a, self.match.team_b)
+        teams_id2pos = { self.match.team_a.id: 0, self.match.team_b.id: 1 }
+        teams_col2pos = [ teams_id2pos[ self.rev_colors[0] ], teams_id2pos[ self.rev_colors[1] ] ]
+        rev_teams = [ teams[ teams_col2pos[0] ], teams[ teams_col2pos[1] ] ]
+        
+        kwargs['teams_col2pos'] = teams_col2pos    # 0 => red_team_index, 1 => blue_team_index
+        kwargs['rev_teams'] = rev_teams    # 0 => red_team, 1 => blue_team
+        
         # Il tempo di gioco dei current players va aggiornato a mano (anche dopo la fine)!
         
         # Saving the status of current players
@@ -431,9 +444,9 @@ class Statistics:
         old_played_time = dict([])
         
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
-        	for player_id in self.current_contestants[ self.match.id ][ team_id ]:
-        		old_total_time[ player_id ] = self.total_time[ player_id ]
-        		old_played_time[ player_id ] = self.played_time[ player_id ]
+            for player_id in self.current_contestants[ self.match.id ][ team_id ]:
+                old_total_time[ player_id ] = self.total_time[ player_id ]
+                old_played_time[ player_id ] = self.played_time[ player_id ]
         
         
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
@@ -443,10 +456,10 @@ class Statistics:
             
             s = self.last_change[ self.match.id ][ team_id ]
             if self.match.begin is None or s is None:
-            	s = t
+                s = t
             
             if self.match.begin is not None and s is None:
-            	print >> "QUALCOSA NON VA!"
+                print >> "QUALCOSA NON VA!"
             
             delta_time = t - s
         
@@ -482,7 +495,7 @@ class Statistics:
             pass
 
         # Render templates
-        templates = [ "time", "score", "general_stats", "projection", "fake", "player00", "player01", "player10", "player11", "score2", "time2" ]
+        templates = [ "time", "score", "general_stats", "projection", "fake", "score2", "red_team", "blue_team", "red_score", "blue_score", "red_defender", "red_attacker", "blue_defender", "blue_attacker", "red_defender_stats", "red_attacker_stats", "blue_defender_stats", "blue_attacker_stats" ]
         if self.match.begin is None:
             templates = [ "fake", "countdown" ]
         
@@ -499,9 +512,9 @@ class Statistics:
         
         # Restoring previous status of current players
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
-        	for player_id in self.current_contestants[ self.match.id ][ team_id ]:
-        		self.total_time[ player_id ] = old_total_time[ player_id ]
-        		self.played_time[ player_id ] = old_played_time[ player_id ]
+            for player_id in self.current_contestants[ self.match.id ][ team_id ]:
+                self.total_time[ player_id ] = old_total_time[ player_id ]
+                self.played_time[ player_id ] = old_played_time[ player_id ]
         
         # Draw the score plot
         if self.match.begin is not None:
