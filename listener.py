@@ -422,16 +422,17 @@ class Statistics:
         print >> sys.stderr, "> Regeneration"
 
         now = datetime.datetime.now()
+        if self.match.begin is not None:
+            elapsed_time = (now - self.match.begin).total_seconds()
+        if self.match.end is not None:
+            elapsed_time = (self.match.end - self.match.begin).total_seconds()
 
         # Prepare mako arguments
         kwargs = {}
         kwargs['sched_begin'] = self.match.sched_begin
         kwargs['begin'] = self.match.begin
         kwargs['end'] = self.match.end
-        if self.match.begin is not None:
-            kwargs['elapsed'] = (now - self.match.begin).total_seconds()
-        if self.match.end is not None:
-            kwargs['elapsed'] = (self.match.end - self.match.begin).total_seconds()
+        kwargs['elapsed'] = elapsed_time
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
         kwargs['score'] = self.score
         kwargs['partial'] = self.partial
@@ -528,42 +529,51 @@ class Statistics:
         
         # Draw the score plot
         if self.match.begin is not None:
-            output_dpi = 72.0
-            output_pixels = (440, 330)
-            output_inches = (float(output_pixels[0]) / output_dpi, float(output_pixels[1]) / output_dpi)
-            fig = matplotlib.pyplot.figure(figsize=output_inches)
-            ax = fig.add_axes([0.1, 0.1, 0.85, 0.85])
-            ax.grid(True)
+            for plot_scope in ['all', 'last']:
+                output_dpi = 72.0
+                output_pixels = (440, 330)
+                output_inches = (float(output_pixels[0]) / output_dpi, float(output_pixels[1]) / output_dpi)
+                fig = matplotlib.pyplot.figure(figsize=output_inches)
+                ax = fig.add_axes([0.1, 0.1, 0.85, 0.85])
+                ax.grid(True)
 
-            # Set algorithms to draw ticks and labels on axes
-            ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
-            #ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=20))
-            ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
+                # Set algorithms to draw ticks and labels on axes
+                if plot_scope == 'all':
+                    ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+                    if elapsed_time < 6 * 3600:
+                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
+                    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
+                elif plot_scope == 'last':
+                    ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=10))
+                    ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=5))
+                    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
 
-            # Set limits (not sure how to make it work...)
-            #print ax.get_xlim()
-            #print ax.get_ylim()
-            #ax.set_xlim(xmin=0)
-            #ax.set_ylim(ymin=0)
+                # Set limits (not sure how to make it work...)
+                #print ax.get_xlim()
+                #print ax.get_ylim()
+                #ax.set_xlim(xmin=0)
+                #ax.set_ylim(ymin=0)
 
-            COLORS = ['g', 'b']
-            for i in [0, 1]:
-                self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
-                self.score_plot[i][1].append(self.score_plot[i][1][-1])
-                ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
-                self.score_plot[i][0].pop()
-                self.score_plot[i][1].pop()
-            for i in [0, 1]:
-                threshold = 0
-                for j in self.last_score_plot[i][0]:
-                    if j < now:
-                        threshold += 1
-                    else:
-                        break
-                ax.plot(self.last_score_plot[i][0][:threshold], self.last_score_plot[i][1][:threshold], '--%s' % (COLORS[i]))
-            fig.savefig(os.path.join(self.target_dir, "score_plot.png"), dpi=output_dpi)
-            matplotlib.pylab.close(fig)
-            #fig.show()
+                COLORS = ['g', 'b']
+                for i in [0, 1]:
+                    self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
+                    self.score_plot[i][1].append(self.score_plot[i][1][-1])
+                    ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
+                    self.score_plot[i][0].pop()
+                    self.score_plot[i][1].pop()
+                if plot_scope == 'all':
+                    for i in [0, 1]:
+                        threshold = 0
+                        for j in self.last_score_plot[i][0]:
+                            if j < now:
+                                threshold += 1
+                            else:
+                                break
+                        ax.plot(self.last_score_plot[i][0][:threshold], self.last_score_plot[i][1][:threshold], '--%s' % (COLORS[i]))
+
+                fig.savefig(os.path.join(self.target_dir, "score_plot_%s.png" % (plot_scope)), dpi=output_dpi)
+                matplotlib.pylab.close(fig)
+                #fig.show()
 
 def listen_match(match_id, target_dir, old_matches_id):
 
