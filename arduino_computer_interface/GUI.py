@@ -148,6 +148,7 @@ class interfaccia:
                         if this_score != self.cached_score[i]:
                             self.ss.set_score(this_score, i)
                             self.cached_score[i] = this_score
+                self.cache_to_entry()
                         
                         
             if self.work_mode == TEST_MODE:
@@ -373,22 +374,31 @@ class interfaccia:
         self.builder.get_object("slavemode_sensorsenable_blue2").set_active(True)
         self.builder.get_object("slavemode_sensorsenable_red1").set_active(True)
         self.builder.get_object("slavemode_sensorsenable_red2").set_active(True)
+    
+    def cache_to_display(self,*args):
+        if self.connected and self.work_mode == SLAVE_MODE:
+            for i in [0,1]:
+                self.ss.set_score(self.cached_score[i], i)
+    
+    def cache_to_entry(self,*args):
+         self.builder.get_object("slavemode_display_blueentry").set_text(str(self.cached_score[0]))
+         self.builder.get_object("slavemode_display_redentry").set_text(str(self.cached_score[1]))
+    
+    def get_score(self,*args):
+        #core.update()
+        for i in [0, 1]:
+            #self.cached_score[i] = core.score[core.detect_team(core.order[i])]
+            self.cached_score[i] = self.score[i]
+        self.cache_to_entry()
+        self.cache_to_display()
 
-if __name__ == "__main__":
+
+def main():
     app = interfaccia()
 
     window = app.builder.get_object("connection_window")
     window.show_all()
     Gtk.main()
-
-
-
-
-
-
-
-
-def main():
     
     return 0
 
