@@ -88,8 +88,10 @@ def format_time2(total_seconds, abbr):
         if hours > 0 and minutes > 0:
             result += " e "
         
-        if minutes > 0:
-            result += "%d min" % minutes
+        if minutes == 1:
+            result += "1 minuto"
+        elif minutes > 1:
+        	result += "%d minuti" % minutes
         
         singular = 0
         if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):

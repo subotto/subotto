@@ -1,8 +1,6 @@
 ## -*- coding: utf-8 -*-
 
-<table class="statistiche">
-<col width="350" />
-<col width="180" />
+<table>
 
 <caption>Statistiche</caption>
 
