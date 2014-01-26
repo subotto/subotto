@@ -57,7 +57,8 @@ class interfaccia:
         gobject.timeout_add(300, self.loopFunction)
         self.refresh_device_list()
         self.builder.get_object("connection_general_baud").set_value(115200)
-        self.builder.get_object("testmode_general_switch").set_active(False)
+        #self.builder.get_object("testmode_general_switch").set_active(False)
+        
 
     def write_to_log(self,string):
         logBuffer = self.builder.get_object("connection_log_textview").get_buffer()
@@ -104,13 +105,22 @@ class interfaccia:
         object.set_buffer(buffer)
                           
     def loopFunction(self,*args):
-        self.refresh_device_list()
-        self.elaborate_async_events()
-        if (self.work_mode == TEST_MODE) and (self.builder.get_object("testmode_mainsensors_sweep_switch").get_active()):
-            self.probe_blue1()
-            self.probe_blue2()
-            self.probe_red1()
-            self.probe_red2()
+        try:
+            self.refresh_device_list()
+        except:
+            self.write_to_log("Unable to load interfaces list\n")
+        try:
+            self.elaborate_async_events()
+        except:
+            self.write_to_log("Something wrong receiving async events\n")
+        try:
+            if (self.work_mode == TEST_MODE) and (self.builder.get_object("testmode_mainsensors_sweep_switch").get_active()):
+                self.probe_blue1()
+                self.probe_blue2()
+                self.probe_red1()
+                self.probe_red2()
+        except:
+            self.write_to_log("Something wrong probing sensors")
         return True
 
     def elaborate_async_events(self):
@@ -119,8 +129,8 @@ class interfaccia:
             if self.work_mode == SLAVE_MODE:
                 for ev in events:
                     team, var, desc, source = SubottoSerial.ASYNC_DESC[ev]
-                    score[team] += var
-                    print "%s; result is %d -- %d" % (desc, score[0], score[1])
+                    self.score[team] += var
+                    print "%s; result is %d -- %d" % (desc, self.score[0], self.score[1])
                     if var > 0:
                         #core.act_goal(core.order[team], source)
                         print "ordine al core" #TODO
@@ -133,10 +143,13 @@ class interfaccia:
                     #if this_score != cached_score[i]:
                         #ss.set_score(this_score, i)
                         #cached_score[i] = this_score
-                    this_score = score
-                    if this_score != cached_score[i]:
-                        ss.set_score(this_score, i)
-                        this_score = core.score[core.detect_team(core.order[i])]
+                    this_score = self.score[i]
+                    if this_score >= 0:
+                        if this_score != self.cached_score[i]:
+                            self.ss.set_score(this_score, i)
+                            self.cached_score[i] = this_score
+                        
+                        
             if self.work_mode == TEST_MODE:
                 if len(events) != 0:
                     self.write_to_log("Something wrong: received async codes in test mode")
@@ -173,6 +186,9 @@ class interfaccia:
 
     def open_testmode_window(self,*args): #OUTDATED
         self.builder.get_object("testmode_window").show_all()
+    
+    def open_slavemode_window(self,*args): #OUTDATED
+        self.builder.get_object("slavemode_window").show_all()
 
     def send_to_subotto(self,code): #OUTDATED
         print "Invio "+str(code)+" al subotto"
@@ -208,9 +224,11 @@ class interfaccia:
                 self.write_to_log("Something went wront switching to slave mode\n")
             else:
                 self.work_mode = SLAVE_MODE
-                self.builder.get_object("testmode_general_switch").set_active(True)
+                self.builder.get_object("slavemode_general_switch").set_active(False)
+                self.builder.get_object("testmode_general_switch").set_active(False)
         else:
-            self.builder.get_object("testmode_general_switch").set_active(True)
+            self.builder.get_object("testmode_general_switch").set_active(False)
+            self.builder.get_object("slavemode_general_switch").set_active(True)
         
     def switch_to_mastermode(self):
         if self.connected:
@@ -224,9 +242,13 @@ class interfaccia:
                 self.write_to_log("Something went wront switching to master mode\n")
             else:
                 self.work_mode = MASTER_MODE
-                self.builder.get_object("testmode_general_switch").set_active(True)
+                if self.builder.get_object("testmode_general_switch").get_active():
+                    self.builder.get_object("testmode_general_switch").set_active(True)
+                if self.builder.get_object("slavemode_general_switch").get_active():
+                    self.builder.get_object("slavemode_general_switch").set_active(True)
         else:
             self.builder.get_object("testmode_general_switch").set_active(True)
+            self.builder.get_object("slavemode_general_switch").set_active(True)
         
     def switch_to_testmode(self):
         if self.connected:
@@ -241,8 +263,10 @@ class interfaccia:
             else:
                 self.work_mode = TEST_MODE
                 self.builder.get_object("testmode_general_switch").set_active(False)
+                self.builder.get_object("slavemode_general_switch").set_active(False)
         else:
             self.builder.get_object("testmode_general_switch").set_active(True)
+            self.builder.get_object("slavemode_general_switch").set_active(False)
 
     
 
@@ -312,7 +336,43 @@ class interfaccia:
     
         
     # slavemode functions
-
+    
+    def close_slavemode_window(self,*args):
+        self.builder.get_object("slavemode_window").hide()
+    
+    def slavemode_general_switch_activate(self,*args):
+        if not self.builder.get_object("slavemode_general_switch").get_active():
+            self.switch_to_slavemode()
+        else:
+            self.switch_to_mastermode()
+    
+    def send_sensorsenable_config(self,*args):
+        if self.connected and self.work_mode == SLAVE_MODE:
+            if self.builder.get_object("slavemode_sensorsenable_blue1").get_active():
+                self.ss.send_expect(COM_ENABLE_BLUE_NORMAL,SUB_BLUE_NORMAL_ENABLED)
+            else:
+                self.ss.send_expect(COM_DISABLE_BLUE_NORMAL,SUB_BLUE_NORMAL_DISABLED)
+            
+            if self.builder.get_object("slavemode_sensorsenable_blue2").get_active():
+                self.ss.send_expect(COM_ENABLE_BLUE_SUPER,SUB_BLUE_SUPER_ENABLED)
+            else:
+                self.ss.send_expect(COM_DISABLE_BLUE_SUPER,SUB_BLUE_SUPER_DISABLED)
+            
+            if self.builder.get_object("slavemode_sensorsenable_red1").get_active():
+                self.ss.send_expect(COM_ENABLE_RED_NORMAL,SUB_RED_NORMAL_ENABLED)
+            else:
+                self.ss.send_expect(COM_DISABLE_RED_NORMAL,SUB_RED_NORMAL_DISABLED)
+            
+            if self.builder.get_object("slavemode_sensorsenable_red2").get_active():
+                self.ss.send_expect(COM_ENABLE_RED_SUPER,SUB_RED_SUPER_ENABLED)
+            else:
+                self.ss.send_expect(COM_DISABLE_RED_SUPER,SUB_RED_SUPER_DISABLED)
+        
+    def reset_sensorsenable_config(self,*args):
+        self.builder.get_object("slavemode_sensorsenable_blue1").set_active(True)
+        self.builder.get_object("slavemode_sensorsenable_blue2").set_active(True)
+        self.builder.get_object("slavemode_sensorsenable_red1").set_active(True)
+        self.builder.get_object("slavemode_sensorsenable_red2").set_active(True)
 
 if __name__ == "__main__":
     app = interfaccia()
