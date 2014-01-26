@@ -37,7 +37,7 @@ class SubottoSerial:
     def __init__(self, port, speed):
         self.port = port
         self.speed = speed
-        self.serial = serial.Serial(port=port, baudrate=speed, timeout=None)
+        self.serial = serial.Serial(port=port, baudrate=speed, timeout=3)
         self.events = []
         
         #self.serial.nonblocking()
