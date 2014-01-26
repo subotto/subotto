@@ -248,8 +248,11 @@ class Statistics:
                 if self.last_change[ match_id ][ team_id ] is not None:
                     # Aggiorno il tempo di gioco dei giocatori che stanno uscendo
                     delta_time = timestamp - self.last_change[ match_id ][ team_id ]
-                    self.total_time[ event.player_a_id ] += delta_time
-                    self.total_time[ event.player_b_id ] += delta_time
+                    # TODO: ora sono molto addormentato. Mi sembra che il bug sia nelle prossime due righe, che quindi modifico nelle righe seguenti. Infatti, mi pare che stia aggiungendo il tempo delta_time ai giocatori che stanno entrando invece che a quelli che stanno uscendo.
+                    #self.total_time[ event.player_a_id ] += delta_time
+                    #self.total_time[ event.player_b_id ] += delta_time
+                    self.total_time[ self.current_contestants[ match_id ][ team_id ][0] ] += delta_time
+                    self.total_time[ self.current_contestants[ match_id ][ team_id ][1] ] += delta_time
                 
                 # Effettuo il cambio
                 self.current_contestants[ match_id ][ team_id ] = [ event.player_a_id, event.player_b_id ]
@@ -339,7 +342,9 @@ class Statistics:
                 # Aggiorno il tempo di gioco dei giocatori che stanno uscendo
                 delta_time = timestamp - self.last_change[ match_id ][ team_id ]
                 
-                for player_id in [ event.player_a_id, event.player_b_id ]:
+                # TODO: ora sono molto addormentato. Vedi altro todo.
+                #for player_id in [ event.player_a_id, event.player_b_id ]:
+                for player_id in [ self.current_contestants[ match_id ][ team_id ][0], self.current_contestants[ match_id ][ team_id ][1] ]:
                     self.total_time[ player_id ] += delta_time
                     self.played_time[ player_id ] += delta_time
             
