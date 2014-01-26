@@ -544,8 +544,8 @@ class Statistics:
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
                     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
                 elif plot_scope == 'last':
-                    ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=10))
-                    ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=5))
+                    ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
+                    ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
                     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
 
                 # Set limits (not sure how to make it work...)
@@ -558,7 +558,13 @@ class Statistics:
                 for i in [0, 1]:
                     self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
                     self.score_plot[i][1].append(self.score_plot[i][1][-1])
-                    ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
+                    if plot_scope == 'all':
+                        ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
+                    else:
+                        this_score_plot = [None, None]
+                        this_score_plot[0] = [x for x in self.score_plot[i][0] if x > (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30)]
+                        this_score_plot[1] = self.score_plot[i][1][-len(this_score_plot[0]):]
+                        ax.plot(this_score_plot[0], this_score_plot[1], '-%s' % (COLORS[i]))
                     self.score_plot[i][0].pop()
                     self.score_plot[i][1].pop()
                 if plot_scope == 'all':
