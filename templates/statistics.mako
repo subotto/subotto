@@ -28,7 +28,7 @@
 	target = compute_interesting_score(score[0])
 	this_time = compute_linear_projection(score[0], target, elapsed, begin)
 %>
-<td>Orario stimato per il ${target}-esimo gol dei ${teams[0].name}</td>
+<td>Orario stimato per il ${target}-esimo gol<br /> dei ${teams[0].name}</td>
 <td>${this_time}</td>
 </tr>
 
@@ -37,7 +37,7 @@
 	target = compute_interesting_score(score[1])
 	this_time = compute_linear_projection(score[1], target, elapsed, begin)
 %>
-<td>Orario stimato per il ${target}-esimo gol dei ${teams[1].name}</td>
+<td>Orario stimato per il ${target}-esimo gol<br /> dei ${teams[1].name}</td>
 <td>${this_time}</td>
 </tr>
 

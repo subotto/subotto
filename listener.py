@@ -126,7 +126,7 @@ def remount_index_description(score, teams):
         ordered_teams = [ teams[1].name, teams[0].name ]
         if score[0] < score[1]:
             ordered_teams = [ teams[0].name, teams[1].name ]
-        return "gol in pi&ugrave; all'ora che devono segnare i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
+        return "gol in pi&ugrave; all'ora che devono segnare<br /> i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
 
 def compute_interesting_score(score):
     idx = map(lambda x: x > score, INTERESTING_SCORES).index(True)
