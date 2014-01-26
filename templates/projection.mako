@@ -1,9 +1,6 @@
 ## -*- coding: utf-8 -*-
 
 <table>
-
-<caption>Proiezione lineare</caption>
-
 <tr>
 <td>Punteggio stimato a fine partita</td>
 <td>${compute_extimated_score(score, elapsed, length)}</td>

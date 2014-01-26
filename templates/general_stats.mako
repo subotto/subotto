@@ -1,9 +1,6 @@
 ## -*- coding: utf-8 -*-
 
 <table>
-
-<caption>Statistiche</caption>
-
 <tr>
 <td>Differenza reti</td>
 <td>${abs(score[0] - score[1])}</td>
