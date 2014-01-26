@@ -7,10 +7,14 @@ import re
 import datetime
 import codecs
 import time
+import datetime
 from pprint import pprint
 import copy
+
+from numpy import arange
 import matplotlib.pyplot
 import matplotlib.pylab
+import matplotlib.dates
 
 from mako.template import Template
 
@@ -524,9 +528,24 @@ class Statistics:
         
         # Draw the score plot
         if self.match.begin is not None:
-            fig = matplotlib.pyplot.figure()
-            ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+            output_dpi = 72.0
+            output_pixels = (440, 330)
+            output_inches = (float(output_pixels[0]) / output_dpi, float(output_pixels[1]) / output_dpi)
+            fig = matplotlib.pyplot.figure(figsize=output_inches)
+            ax = fig.add_axes([0.1, 0.1, 0.85, 0.85])
             ax.grid(True)
+
+            # Set algorithms to draw ticks and labels on axes
+            ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+            #ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=20))
+            ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
+
+            # Set limits (not sure how to make it work...)
+            #print ax.get_xlim()
+            #print ax.get_ylim()
+            #ax.set_xlim(xmin=0)
+            #ax.set_ylim(ymin=0)
+
             COLORS = ['g', 'b']
             for i in [0, 1]:
                 self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
@@ -542,7 +561,7 @@ class Statistics:
                     else:
                         break
                 ax.plot(self.last_score_plot[i][0][:threshold], self.last_score_plot[i][1][:threshold], '--%s' % (COLORS[i]))
-            fig.savefig(os.path.join(self.target_dir, "score_plot.png"))
+            fig.savefig(os.path.join(self.target_dir, "score_plot.png"), dpi=output_dpi)
             matplotlib.pylab.close(fig)
             #fig.show()
 
