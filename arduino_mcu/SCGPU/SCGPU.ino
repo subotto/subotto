@@ -221,7 +221,7 @@ void slave_main(int input)
       Serial.println(SUB_BLUE_NORMAL_ENABLED);
       break;
     case COM_ENABLE_BLUE_SUPER:
-      blue_normal_enable = 1;
+      blue_super_enable = 1;
       Serial.println(SUB_BLUE_SUPER_ENABLED);
       break;
     case COM_DISABLE_RED_NORMAL:
