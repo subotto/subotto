@@ -2,13 +2,6 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="action1"/>
-  <object class="GtkAdjustment" id="serial_baud">
-    <property name="lower">2400</property>
-    <property name="upper">113636</property>
-    <property name="value">9600</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkWindow" id="connection_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Connection dialog</property>
@@ -34,7 +27,6 @@
                     <property name="progress_pulse_step">1</property>
                     <property name="adjustment">serial_baud</property>
                     <property name="climb_rate">1</property>
-                    <property name="snap_to_ticks">True</property>
                     <property name="numeric">True</property>
                   </object>
                   <packing>
@@ -47,12 +39,11 @@
                 <child>
                   <object class="GtkButton" id="connection_general_close">
                     <property name="label">gtk-disconnect</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="use_stock">True</property>
+                    <signal name="clicked" handler="disconnect" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -64,12 +55,11 @@
                 <child>
                   <object class="GtkButton" id="connection_general_open">
                     <property name="label">gtk-connect</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="use_stock">True</property>
+                    <signal name="clicked" handler="connect" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -127,11 +117,9 @@
             <child>
               <object class="GtkButton" id="connection_test_button">
                 <property name="label" translatable="yes">Test serial connection</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="ask_test" swapped="no"/>
               </object>
               <packing>
@@ -157,7 +145,7 @@
               <object class="GtkImage" id="connection_test_light">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="stock">gtk-no</property>
+                <property name="stock">gtk-dialog-warning</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -180,11 +168,9 @@
             <child>
               <object class="GtkButton" id="connection_open_testmode">
                 <property name="label" translatable="yes">Open test mode window</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="open_testmode_window" swapped="no"/>
               </object>
               <packing>
@@ -197,11 +183,9 @@
             <child>
               <object class="GtkButton" id="connection_open_slavemode">
                 <property name="label" translatable="yes">Open slave mode window</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -225,6 +209,7 @@
               <object class="GtkViewport" id="connection_log_viewport">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="vscroll_policy">natural</property>
                 <child>
                   <object class="GtkTextView" id="connection_log_textview">
                     <property name="visible">True</property>
@@ -243,6 +228,13 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkAdjustment" id="serial_baud">
+    <property name="lower">2400</property>
+    <property name="upper">115200</property>
+    <property name="value">115200</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="testmode_window">
     <property name="can_focus">False</property>
@@ -273,11 +265,9 @@
             </child>
             <child>
               <object class="GtkSwitch" id="testmode_general_switch">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="use_action_appearance">False</property>
-                <signal name="button-press-event" handler="testmode_switch_activate" swapped="no"/>
+                <signal name="button-press-event" handler="testmode_general_switch_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -289,11 +279,9 @@
             <child>
               <object class="GtkButton" id="testmode_general_close">
                 <property name="label">gtk-quit</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
                 <signal name="clicked" handler="close_testmode_window" swapped="no"/>
               </object>
@@ -361,10 +349,8 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="testmode_mainsensors_sweep_switch">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -388,11 +374,10 @@
                 <child>
                   <object class="GtkButton" id="testmode_mainsensors_blue1">
                     <property name="label" translatable="yes">Blue 1</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
+                    <signal name="clicked" handler="probe_blue1" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -404,11 +389,10 @@
                 <child>
                   <object class="GtkButton" id="testmode_mainsensors_blue2">
                     <property name="label" translatable="yes">Blue 2</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
+                    <signal name="clicked" handler="probe_blue2" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -420,11 +404,10 @@
                 <child>
                   <object class="GtkButton" id="testmode_mainsensors_red1">
                     <property name="label" translatable="yes">Red 1</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
+                    <signal name="clicked" handler="probe_red1" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -436,11 +419,10 @@
                 <child>
                   <object class="GtkButton" id="testmode_mainsensors_red2">
                     <property name="label" translatable="yes">Red 2</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
+                    <signal name="clicked" handler="probe_red2" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -565,10 +547,8 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="testmode_backupsensors_sweep_switch">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -592,11 +572,9 @@
                 <child>
                   <object class="GtkButton" id="testmode_backupsensors_blue1">
                     <property name="label" translatable="yes">Blue 1</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -608,11 +586,9 @@
                 <child>
                   <object class="GtkButton" id="testmode_backupsensors_blue2">
                     <property name="label" translatable="yes">Blue 2</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -624,11 +600,9 @@
                 <child>
                   <object class="GtkButton" id="testmode_backupsensors_red1">
                     <property name="label" translatable="yes">Red 1</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -640,11 +614,9 @@
                 <child>
                   <object class="GtkButton" id="testmode_backupsensors_red2">
                     <property name="label" translatable="yes">Red 2</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -795,10 +767,8 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="testmode_gennadymeter_sweep_switch">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>

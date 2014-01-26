@@ -41,6 +41,9 @@ class SubottoSerial:
         self.events = []
         
         #self.serial.nonblocking()
+    
+    def __del__(self):
+        self.serial.close()
 
     # BASIC IO INTERFACE
 
