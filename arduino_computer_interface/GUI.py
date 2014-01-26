@@ -46,7 +46,6 @@ class interfaccia:
 
     work_mode = MASTER_MODE
     connected = False
-    sensors_swap_enable = False
     score = [0, 0]
     cached_score = [None, None]
 
@@ -107,7 +106,7 @@ class interfaccia:
     def loopFunction(self,*args):
         self.refresh_device_list()
         self.elaborate_async_events()
-        if self.builder.get_object("testmode_mainsensors_sweep_switch").get_active():
+        if (self.work_mode == TEST_MODE) and (self.builder.get_object("testmode_mainsensors_sweep_switch").get_active()):
             self.probe_blue1()
             self.probe_blue2()
             self.probe_red1()
@@ -117,7 +116,7 @@ class interfaccia:
     def elaborate_async_events(self):
         if self.connected:
             events = self.ss.receive_events()
-            if self.work_mode is SLAVE_MODE:
+            if self.work_mode == SLAVE_MODE:
                 for ev in events:
                     team, var, desc, source = SubottoSerial.ASYNC_DESC[ev]
                     score[team] += var
@@ -138,11 +137,11 @@ class interfaccia:
                     if this_score != cached_score[i]:
                         ss.set_score(this_score, i)
                         this_score = core.score[core.detect_team(core.order[i])]
-            if self.work_mode is TEST_MODE:
+            if self.work_mode == TEST_MODE:
                 if len(events) != 0:
                     self.write_to_log("Something wrong: received async codes in test mode")
             
-            if self.work_mode is MASTER_MODE:
+            if self.work_mode == MASTER_MODE:
                 if len(events) != 0:
                     self.write_to_log("Something wrong: received async codes in master mode")
                 
@@ -208,7 +207,7 @@ class interfaccia:
             except:
                 self.write_to_log("Something went wront switching to slave mode\n")
             else:
-                work_mode = SLAVE_MODE
+                self.work_mode = SLAVE_MODE
                 self.builder.get_object("testmode_general_switch").set_active(True)
         else:
             self.builder.get_object("testmode_general_switch").set_active(True)
@@ -224,7 +223,7 @@ class interfaccia:
             except:
                 self.write_to_log("Something went wront switching to master mode\n")
             else:
-                work_mode = MASTER_MODE
+                self.work_mode = MASTER_MODE
                 self.builder.get_object("testmode_general_switch").set_active(True)
         else:
             self.builder.get_object("testmode_general_switch").set_active(True)
@@ -240,7 +239,7 @@ class interfaccia:
             except:
                 self.write_to_log("Something went wront switching to test mode\n")
             else:
-                work_mode = TEST_MODE
+                self.work_mode = TEST_MODE
                 self.builder.get_object("testmode_general_switch").set_active(False)
         else:
             self.builder.get_object("testmode_general_switch").set_active(True)
@@ -310,7 +309,7 @@ class interfaccia:
         else:
             self.builder.get_object("testmode_mainsensors_red2_image").set_from_stock("gtk-dialog-warning",Gtk.IconSize.BUTTON)
             
-        
+    
         
     # slavemode functions
 

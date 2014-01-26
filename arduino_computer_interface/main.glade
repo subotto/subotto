@@ -2,6 +2,13 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="action1"/>
+  <object class="GtkAdjustment" id="serial_baud">
+    <property name="lower">2400</property>
+    <property name="upper">115200</property>
+    <property name="value">115200</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="connection_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Connection dialog</property>
@@ -229,13 +236,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkAdjustment" id="serial_baud">
-    <property name="lower">2400</property>
-    <property name="upper">115200</property>
-    <property name="value">115200</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkWindow" id="testmode_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Test Mode</property>
@@ -337,6 +337,7 @@
                 <child>
                   <object class="GtkLabel" id="testmode_mainsensors_sweeptime_label">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Sweep time</property>
                   </object>
@@ -362,6 +363,7 @@
                 <child>
                   <object class="GtkComboBox" id="testmode_mainsensors_sweeptime_combo">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                   </object>
                   <packing>
@@ -505,6 +507,7 @@
             <child>
               <object class="GtkLabel" id="testmode_backupsensors_title">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Backup sensor array</property>
               </object>
@@ -520,7 +523,7 @@
                 <property name="can_focus">False</property>
                 <child>
                   <object class="GtkLabel" id="testmode_backupsensors_sweep_label">
-                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="ypad">4</property>
                     <property name="label" translatable="yes">Sweep</property>
@@ -534,7 +537,7 @@
                 </child>
                 <child>
                   <object class="GtkLabel" id="testmode_backupsensors_sweeptime_label">
-                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Sweep time</property>
                   </object>
@@ -548,6 +551,7 @@
                 <child>
                   <object class="GtkSwitch" id="testmode_backupsensors_sweep_switch">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
@@ -560,6 +564,7 @@
                 <child>
                   <object class="GtkComboBox" id="testmode_backupsensors_sweeptime_combo">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                   </object>
                   <packing>
@@ -573,6 +578,7 @@
                   <object class="GtkButton" id="testmode_backupsensors_blue1">
                     <property name="label" translatable="yes">Blue 1</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                   </object>
@@ -587,6 +593,7 @@
                   <object class="GtkButton" id="testmode_backupsensors_blue2">
                     <property name="label" translatable="yes">Blue 2</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                   </object>
@@ -601,6 +608,7 @@
                   <object class="GtkButton" id="testmode_backupsensors_red1">
                     <property name="label" translatable="yes">Red 1</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                   </object>
@@ -615,6 +623,7 @@
                   <object class="GtkButton" id="testmode_backupsensors_red2">
                     <property name="label" translatable="yes">Red 2</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                   </object>
@@ -628,6 +637,7 @@
                 <child>
                   <object class="GtkImage" id="testmode_backupsensors_blue1_image">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="stock">gtk-dialog-warning</property>
                   </object>
@@ -641,6 +651,7 @@
                 <child>
                   <object class="GtkImage" id="testmode_backupsensors_blue2_image">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="stock">gtk-dialog-warning</property>
                   </object>
@@ -654,6 +665,7 @@
                 <child>
                   <object class="GtkImage" id="testmode_backupsensors_red1_image">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="stock">gtk-dialog-warning</property>
                   </object>
@@ -667,6 +679,7 @@
                 <child>
                   <object class="GtkImage" id="testmode_backupsensors_red2_image">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="stock">gtk-dialog-warning</property>
                   </object>
@@ -699,6 +712,7 @@
             <child>
               <object class="GtkLabel" id="testmode_gennadymeter_title">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Gennady meter</property>
               </object>
@@ -710,12 +724,12 @@
             </child>
             <child>
               <object class="GtkGrid" id="testmode_gennadymeter_sweep_grid">
-                <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="column_spacing">5</property>
                 <child>
                   <object class="GtkLabel" id="testmode_gennadymeter_label_x">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">x axis</property>
                   </object>
@@ -729,6 +743,7 @@
                 <child>
                   <object class="GtkLabel" id="testmode_gennadymeter_label_y">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">y axis</property>
                   </object>
@@ -742,6 +757,7 @@
                 <child>
                   <object class="GtkLabel" id="testmode_gennadymeter_label_z">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">z axis</property>
                   </object>
@@ -755,6 +771,7 @@
                 <child>
                   <object class="GtkLabel" id="testmode_gennadymeter_sweep_label">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Sweep</property>
                   </object>
@@ -768,6 +785,7 @@
                 <child>
                   <object class="GtkSwitch" id="testmode_gennadymeter_sweep_switch">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
@@ -780,6 +798,7 @@
                 <child>
                   <object class="GtkLabel" id="testmode_gennadymeter_sweeptime_label">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Sweep time</property>
                   </object>
@@ -793,6 +812,7 @@
                 <child>
                   <object class="GtkComboBox" id="testmode_gennadymeter_sweeptime_combo">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                   </object>
                   <packing>
@@ -805,6 +825,7 @@
                 <child>
                   <object class="GtkTextView" id="testmode_gennadymeter_value_x">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
@@ -817,6 +838,7 @@
                 <child>
                   <object class="GtkTextView" id="testmode_gennadymeter_value_y">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
@@ -829,6 +851,7 @@
                 <child>
                   <object class="GtkTextView" id="testmode_gennadymeter_value_z">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
@@ -861,7 +884,7 @@
               <object class="GtkLabel" id="testmode_button_title">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Buttons</property>
+                <property name="label" translatable="yes">Buttons (test not supported by MCU)</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -870,10 +893,176 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label1">
+              <object class="GtkGrid" id="testmode_button_grid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">TODO</property>
+                <child>
+                  <object class="GtkLabel" id="testmode_button_sweep_label">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="ypad">4</property>
+                    <property name="label" translatable="yes">Sweep</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="testmode_button_sweeptime_label">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Sweep time</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSwitch" id="testmode_button_sweep_switch">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkComboBox" id="testmode_button_sweeptime_combo">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="testmode_button_bluegoal">
+                    <property name="label" translatable="yes">Blue goal</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="testmode_button_blueundo">
+                    <property name="label" translatable="yes">Blue undo</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="testmode_button_redgoal">
+                    <property name="label" translatable="yes">Red goal</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">3</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="testmode_button_redundo">
+                    <property name="label" translatable="yes">Red undo</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">3</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="testmode_button_bluegoal_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="stock">gtk-dialog-warning</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">4</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="testmode_button_redgoal_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="stock">gtk-dialog-warning</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">5</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="testmode_button_blueundo_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="stock">gtk-dialog-warning</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">4</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="testmode_button_redundo_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="stock">gtk-dialog-warning</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">5</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
