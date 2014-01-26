@@ -1,4 +1,4 @@
 ## -*- coding: utf-8 -*-
 
-${teams[0].name}
+${teams[1].name}
 

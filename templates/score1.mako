@@ -1,4 +1,4 @@
 ## -*- coding: utf-8 -*-
 
-${score[0]}
+${score[1]}
 
