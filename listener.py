@@ -566,7 +566,10 @@ class Statistics:
 
                 # Set algorithms to draw ticks and labels on axes
                 if plot_scope == 'all':
-                    ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+                    if elapsed_time < 8 * 3600:
+                        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=1))
+                    else:
+                        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=2))
                     if elapsed_time < 6 * 3600:
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
                     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
@@ -588,9 +591,12 @@ class Statistics:
                     if plot_scope == 'all':
                         ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
                     else:
-                        this_score_plot = [None, None]
-                        this_score_plot[0] = [x for x in self.score_plot[i][0] if x > (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30)]
-                        this_score_plot[1] = self.score_plot[i][1][-len(this_score_plot[0]):]
+                        plot_begin = max(self.match.begin, (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30))
+                        this_score_plot = [[], []]
+                        this_score_plot[0] += [x for x in self.score_plot[i][0] if x > (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30)]
+                        this_score_plot[1] += self.score_plot[i][1][-len(this_score_plot[0]):]
+                        this_score_plot[0][0:0] = [plot_begin]
+                        this_score_plot[1][0:0] = [this_score_plot[1][0]]
                         ax.plot(this_score_plot[0], this_score_plot[1], '-%s' % (COLORS[i]))
                     self.score_plot[i][0].pop()
                     self.score_plot[i][1].pop()
