@@ -13,7 +13,8 @@
 </tr>
 
 <tr>
- <td>Parziale dall'ultimo cambio</td><td>${teams[0].name} ${partial[0]} - ${partial[1]} ${teams[1].name}</td>
+ <td>Parziale dall'ultimo cambio</td>
+ <td><table class="partial"><tr><td>${teams[0].name}</td><td>${partial[0]}</td></tr><tr><td>${teams[1].name}</td><td>${partial[1]}</td></tr></table></td>
 </tr>
 
 <tr>
