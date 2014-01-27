@@ -240,6 +240,7 @@ class Statistics:
         self.goal_sequence = dict([])        # Match id => Team id => Stack of the sequence of player id
         self.current_contestants = dict([])    # Match id => Team id => Pair of player id
         self.last_change = dict([])            # Match id => Team id => Time of last change
+        self.turn_begin = None				# Beginning of last turn (in the current match)
         
         
         for old_match in old_matches:
@@ -375,8 +376,10 @@ class Statistics:
             self.current_contestants[ match_id ][ team_id ] = [ event.player_a_id, event.player_b_id ]
             if self.last_change[ match_id ][ team_id ] is None:
                 self.last_change[ match_id ][ team_id ] = self.match.begin
+                self.turn_begin = self.match.begin
             else:
                 self.last_change[ match_id ][ team_id ] = timestamp
+                self.turn_begin = timestamp
             
 
         elif event.type == Event.EV_TYPE_GOAL:
@@ -500,6 +503,11 @@ class Statistics:
         kwargs['total_goals'] = self.total_goals
         kwargs['num_goals'] = self.num_goals
         kwargs['participations'] = self.participations
+        
+        turn_end = datetime.datetime.now()
+        if self.match.end is not None:
+        	turn_end = self.match.end
+        kwargs['turn_duration'] = turn_end - self.turn_begin
         
         kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
