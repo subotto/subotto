@@ -13,11 +13,11 @@
 </tr>
 
 <tr>
- <td>Parziale</td><td>${partial[0]} - ${partial[1]}</td>
+ <td>Parziale dall'ultimo cambio</td><td>${teams[0].name} ${partial[0]} - ${partial[1]} ${teams[1].name}</td>
 </tr>
 
 <tr>
- <td>Tempo dall'inizio del turno</td><td>${ format_time2( turn_duration.seconds, 1 )[0] }</td>
+ <td>Tempo trascorso dall'ultimo cambio</td><td>${ format_time2( turn_duration.seconds, 1 )[0] }</td>
 </tr>
 
 <tr><td>Indice di rimonta<br />(${remount_index_description(score, teams)})</td><td>${remount_index(score, elapsed, length)}</td></tr>
