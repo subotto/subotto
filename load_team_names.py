@@ -17,8 +17,13 @@ def main():
     with open(in_filename) as in_file:
         for line in in_file:
             line = line.strip()
-            fname, lname, comment = line.split(',')
-            if comment == '':
+            data = [x.strip() for x in line.split(',')]
+            if len(data) == 3:
+                fname, lname, comment = data
+                if comment == '':
+                    comment = None
+            else:
+                fname, lname = data
                 comment = None
             core.act_add_player_match_from_name(team, fname, lname, comment, bulk=True)
     core.session.commit()
