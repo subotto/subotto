@@ -43,6 +43,13 @@ def format_time(total_seconds):
     hours = total_seconds / 60
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
+def format_time3(total_seconds):
+    seconds = total_seconds % 60
+    total_seconds = total_seconds / 60
+    minutes = total_seconds % 60
+    hours = total_seconds / 60
+    return "%dh %dm" % (hours, minutes)
+
 def format_time2(total_seconds, abbr):
     # Return value: [ str, k ], where str is the formatted time, and k is 0 for "plural" and 1 for "singular"
     total_seconds = int(total_seconds)
@@ -182,12 +189,13 @@ def format_countdown(sched_begin):
         return res
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
-    result = ""
-    result += "Partecipazioni: " + str( participations[ player.id ] ) + "<br />"
-    result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 )[0] + "<br />"
-    result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 )[0] + " in questa partita)<br />"
-    result += "Gol fatti: " + str( total_goals[ player.id ] )
-    result += " (" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
+    result = '<table class="player_stats">'
+    result += '<tr><td>Partecipazioni</td><td>' + str( participations[ player.id ] ) + '</td></tr>'
+    result += '<tr><td>Tempo di gioco</td><td>' + format_time3( int(total_time[ player.id ].total_seconds()) ) + '</td></tr>'
+    result += '<tr class="this_match"><td>in questa partita</td><td>' + format_time3( int(played_time[ player.id ].total_seconds()) ) + '</td></tr>'
+    result += '<tr><td>Gol fatti</td><td>' + str( total_goals[ player.id ] ) + '</td></tr>'
+    result += '<tr class="this_match"><td>in questa partita</td><td>' + str( num_goals[ player.id ] ) + '</td></tr>'
+    result += '</table>'
     
     return result
 
