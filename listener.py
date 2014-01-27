@@ -120,6 +120,8 @@ def format_player(player):
 def compute_extimated_score(score, elapsed, length):
     if elapsed <= 0.1:
         return "-"
+    elif length - elapsed <= 1:
+        return "%d - %d" % (score[0], score[1])
     else:
         return "%d - %d" % ( int(score[0]*length/elapsed), int(score[1]*length/elapsed) )
 
@@ -240,7 +242,7 @@ class Statistics:
         self.goal_sequence = dict([])        # Match id => Team id => Stack of the sequence of player id
         self.current_contestants = dict([])    # Match id => Team id => Pair of player id
         self.last_change = dict([])            # Match id => Team id => Time of last change
-        self.turn_begin = None				# Beginning of last turn (in the current match)
+        self.turn_begin = None                # Beginning of last turn (in the current match)
         
         
         for old_match in old_matches:
@@ -506,7 +508,7 @@ class Statistics:
         
         turn_end = datetime.datetime.now()
         if self.match.end is not None:
-        	turn_end = self.match.end
+            turn_end = self.match.end
         kwargs['turn_duration'] = turn_end - self.turn_begin
         
         kwargs['communicate_status'] = communicate_status
