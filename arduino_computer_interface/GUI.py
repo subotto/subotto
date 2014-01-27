@@ -34,7 +34,12 @@ from gi.repository import Gtk
 import gobject
 gobject.threads_init()
 
+sys.path.insert(0,"..")
+
 from opcodes import *
+
+from core import SubottoCore
+from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 
 from subotto_serial import SubottoSerial
 
@@ -55,6 +60,7 @@ class interfaccia:
         self.builder.add_from_file(filename)
         self.builder.connect_signals(self)
         gobject.timeout_add(300, self.loopFunction)
+        self.core = SubottoCore(1)
         self.refresh_device_list()
         self.builder.get_object("connection_general_baud").set_value(115200)
         #self.builder.get_object("testmode_general_switch").set_active(False)
@@ -132,18 +138,13 @@ class interfaccia:
                     self.score[team] += var
                     print "%s; result is %d -- %d" % (desc, self.score[0], self.score[1])
                     if var > 0:
-                        #core.act_goal(core.order[team], source)
-                        print "ordine al core" #TODO
+                        self.core.act_goal(self.core.order[team], source)
                     elif var < 0:
-                        #core.act_goal_undo(core.order[team], source)
-                        print "ordine al core" #TODO
-                #core.update()
+                        self.core.act_goal_undo(self.core.order[team], source)
+                self.core.update()
                 for i in [0, 1]:
-                    #this_score = core.score[core.detect_team(core.order[i])]
-                    #if this_score != cached_score[i]:
-                        #ss.set_score(this_score, i)
-                        #cached_score[i] = this_score
-                    this_score = self.score[i]
+                    this_score = self.core.score[self.core.detect_team(self.core.order[i])]
+                    #this_score = self.score[i]
                     if this_score >= 0:
                         if this_score != self.cached_score[i]:
                             self.ss.set_score(this_score, i)
@@ -385,10 +386,10 @@ class interfaccia:
          self.builder.get_object("slavemode_display_redentry").set_text(str(self.cached_score[1]))
     
     def get_score(self,*args):
-        #core.update()
+        self.core.update()
         for i in [0, 1]:
-            #self.cached_score[i] = core.score[core.detect_team(core.order[i])]
-            self.cached_score[i] = self.score[i]
+            self.cached_score[i] = self.core.score[self.core.detect_team(self.core.order[i])]
+            #self.cached_score[i] = self.score[i]
         self.cache_to_entry()
         self.cache_to_display()
 
