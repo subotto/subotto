@@ -125,6 +125,7 @@ class Match(Base):
         return sessionlib.object_session(self).query(QueueElement).filter(QueueElement.match == self). \
             filter(QueueElement.team == team).order_by(QueueElement.num).all()
 
+
 class PlayerMatch(Base):
     __tablename__ = 'player_matches'
     __table_args__ = (
@@ -140,6 +141,24 @@ class PlayerMatch(Base):
     player = relationship(Player)
     match = relationship(Match)
     team = relationship(Team)
+
+
+class StatsPlayerMatch(Base):
+    __tablename__ = 'stats_player_matches'
+    
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    team_id = Column(Integer, ForeignKey(Team.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    pos_goals = Column(Integer)
+    neg_goals = Column(Integer)
+    seconds = Column(Integer)
+    turns = Column(Integer)
+    
+    player = relationship(Player)
+    match = relationship(Match)
+    team = relationship(Team)
+
 
 class AdvantagePhase(Base):
     __tablename__ = 'adantage_phases'

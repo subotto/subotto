@@ -18,7 +18,7 @@ import matplotlib.dates
 
 from mako.template import Template
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
+from data import Session, Team, Player, Match, PlayerMatch, Event, StatsPlayerMatch, Base, AdvantagePhase
 
 SLEEP_TIME = 0.5
 INTERESTING_SCORES = [42, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
@@ -95,7 +95,7 @@ def format_time2(total_seconds, abbr):
         if minutes == 1:
             result += "1 minuto"
         elif minutes > 1:
-        	result += "%d minuti" % minutes
+            result += "%d minuti" % minutes
         
         singular = 0
         if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
@@ -186,14 +186,14 @@ def show_player_statistics(player, total_time, played_time, total_goals, num_goa
     result += "Partecipazioni: " + str( participations[ player.id ] ) + "<br />"
     result += "Tempo di gioco: " + format_time2( int(total_time[ player.id ].total_seconds()), 1 )[0] + "<br />"
     result += "(" + format_time2( int(played_time[ player.id ].total_seconds()), 1 )[0] + " in questa partita)<br />"
-    result += "Gol fatti: " + str( total_goals[ player.id ] ) + "<br />"
-    result += "(" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
+    result += "Gol fatti: " + str( total_goals[ player.id ] )
+    result += " (" + str( num_goals[ player.id ] ) + " in questa partita)<br />"
     
     return result
 
 class Statistics:
 
-    def __init__(self, match, old_matches, players, old_player_matches, old_events, target_dir):
+    def __init__(self, match, old_matches, players, old_player_matches, old_events, old_stats_player_matches, target_dir):
         self.match = match
         self.old_matches = old_matches
         self.target_dir = target_dir
@@ -221,8 +221,9 @@ class Statistics:
             self.total_time[ player.id ] = datetime.timedelta(0,0,0)
             self.played_time[ player.id ] = datetime.timedelta(0,0,0)
             self.participations[ player.id ] = 0
-
-        #TODO: aggiornare tutte queste informazioni...
+        
+        self.score_plot = [[[], []], [[], []]]
+        
         
         for player_match in old_player_matches:
             self.participations[ player_match.player_id ] += 1
@@ -231,6 +232,7 @@ class Statistics:
         self.goal_sequence = dict([])        # Match id => Team id => Stack of the sequence of player id
         self.current_contestants = dict([])    # Match id => Team id => Pair of player id
         self.last_change = dict([])            # Match id => Team id => Time of last change
+        
         
         for old_match in old_matches:
             self.goal_sequence[ old_match.id ] = dict([ ( old_match.team_a_id, [] ), ( old_match.team_b_id, [] ) ])
@@ -242,23 +244,20 @@ class Statistics:
         self.last_change[ match.id ] = dict([ ( match.team_a_id, None ), ( match.team_b_id, None ) ])
         
         #pprint( self.last_change )
-
-        self.score_plot = [[[], []], [[], []]]
-
+        
         for event in old_events:
             if event.type == Event.EV_TYPE_CHANGE:
                 match_id = event.match_id
                 team_id = event.team_id
                 timestamp = event.timestamp
                 
+                '''
                 if self.last_change[ match_id ][ team_id ] is not None:
                     # Aggiorno il tempo di gioco dei giocatori che stanno uscendo
                     delta_time = timestamp - self.last_change[ match_id ][ team_id ]
-                    # TODO: ora sono molto addormentato. Mi sembra che il bug sia nelle prossime due righe, che quindi modifico nelle righe seguenti. Infatti, mi pare che stia aggiungendo il tempo delta_time ai giocatori che stanno entrando invece che a quelli che stanno uscendo.
-                    #self.total_time[ event.player_a_id ] += delta_time
-                    #self.total_time[ event.player_b_id ] += delta_time
                     self.total_time[ self.current_contestants[ match_id ][ team_id ][0] ] += delta_time
                     self.total_time[ self.current_contestants[ match_id ][ team_id ][1] ] += delta_time
+                '''
                 
                 # Effettuo il cambio
                 self.current_contestants[ match_id ][ team_id ] = [ event.player_a_id, event.player_b_id ]
@@ -273,8 +272,10 @@ class Statistics:
                 contestants = self.current_contestants[ match_id ][ team_id ]
                 
                 # Segno il gol
+                '''
                 for c in contestants:
                     self.total_goals[ c ] += 1
+                '''
                 
                 self.goal_sequence[ match_id ][ team_id ].append( contestants )
 
@@ -290,9 +291,11 @@ class Statistics:
                 
                 # Tolgo il gol
                 contestants = self.goal_sequence[ match_id ][ team_id ].pop()
+                '''
                 for c in contestants:
                     self.total_goals[ c ] -= 1
-
+                '''
+                
                 if match_id == self.last_match.id:
                     i = 0 if team_id == self.last_match.team_a_id else 1
                     self.last_score[i] -= 1
@@ -307,8 +310,16 @@ class Statistics:
             for team_id in [ old_match.team_a_id, old_match.team_b_id ]:
                 delta_time = old_match.end - self.last_change[ match_id ][ team_id ]
                 
+                '''
                 for player_id in self.current_contestants[ match_id ][ team_id ]:
                     self.total_time[ player_id ] += delta_time
+                '''
+        
+        # Inserting data from table stats_player_matches
+        
+        for stats_player_match in old_stats_player_matches:
+            self.total_time[ stats_player_match.player_id ] += datetime.timedelta(seconds=stats_player_match.seconds)
+            self.total_goals[ stats_player_match.player_id ] += stats_player_match.pos_goals
     
     
     def detect_team(self, team):
@@ -348,8 +359,6 @@ class Statistics:
                 # Aggiorno il tempo di gioco dei giocatori che stanno uscendo
                 delta_time = timestamp - self.last_change[ match_id ][ team_id ]
                 
-                # TODO: ora sono molto addormentato. Vedi altro todo.
-                #for player_id in [ event.player_a_id, event.player_b_id ]:
                 for player_id in [ self.current_contestants[ match_id ][ team_id ][0], self.current_contestants[ match_id ][ team_id ][1] ]:
                     self.total_time[ player_id ] += delta_time
                     self.played_time[ player_id ] += delta_time
@@ -590,8 +599,9 @@ def listen_match(match_id, target_dir, old_matches_id):
     players = session.query(Player).all()
     old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id.in_(old_matches_id)).all()
     old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).order_by(Event.timestamp).all()
+    old_stats_player_matches = session.query(StatsPlayerMatch).filter(StatsPlayerMatch.match_id.in_(old_matches_id)).all()
     
-    stats = Statistics(match, old_matches, players, old_player_matches, old_events, target_dir)
+    stats = Statistics(match, old_matches, players, old_player_matches, old_events, old_stats_player_matches, target_dir)
     last_event_id = 0
     last_player_match_id = 0
     last_timestamp = None
