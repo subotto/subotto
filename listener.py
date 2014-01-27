@@ -193,10 +193,10 @@ def format_countdown(sched_begin):
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = '<table class="player_stats">'
     result += '<tr><td>Partecipazioni</td><td>' + str( participations[ player.id ] ) + '</td></tr>'
-    result += '<tr><td>Tempo di gioco</td><td>' + format_time3( int(total_time[ player.id ].total_seconds()) ) + '</td></tr>'
-    result += '<tr class="this_match"><td>in questa partita</td><td>' + format_time3( int(played_time[ player.id ].total_seconds()) ) + '</td></tr>'
-    result += '<tr><td>Gol fatti</td><td>' + str( total_goals[ player.id ] ) + '</td></tr>'
-    result += '<tr class="this_match"><td>in questa partita</td><td>' + str( num_goals[ player.id ] ) + '</td></tr>'
+    result += '<tr><td>Tempo di gioco</td><td>' + format_time3( int(played_time[ player.id ].total_seconds()) ) + '</td></tr>'
+    result += '<tr class="all_matches"><td>in tutte le edizioni</td><td>' + format_time3( int(total_time[ player.id ].total_seconds()) ) + '</td></tr>'
+    result += '<tr><td>Gol fatti</td><td>' + str( num_goals[ player.id ] ) + '</td></tr>'
+    result += '<tr class="all_matches"><td>in tutte le edizioni</td><td>' + str( total_goals[ player.id ] ) + '</td></tr>'
     result += '</table>'
     
     return result
