@@ -60,7 +60,7 @@ class interfaccia:
         self.builder.add_from_file(filename)
         self.builder.connect_signals(self)
         gobject.timeout_add(300, self.loopFunction)
-        self.core = SubottoCore(1)
+        self.core = SubottoCore(int(sys.argv[1]))
         self.refresh_device_list()
         self.builder.get_object("connection_general_baud").set_value(115200)
         #self.builder.get_object("testmode_general_switch").set_active(False)
@@ -147,7 +147,7 @@ class interfaccia:
                     #this_score = self.score[i]
                     if this_score >= 0:
                         if this_score != self.cached_score[i]:
-                            self.ss.set_score(this_score, i)
+                            self.ss.set_score(this_score, 1-i)
                             self.cached_score[i] = this_score
                 self.cache_to_entry()
                         
@@ -379,7 +379,7 @@ class interfaccia:
     def cache_to_display(self,*args):
         if self.connected and self.work_mode == SLAVE_MODE:
             for i in [0,1]:
-                self.ss.set_score(self.cached_score[i], i)
+                self.ss.set_score(self.cached_score[i], 1-i)
     
     def cache_to_entry(self,*args):
          self.builder.get_object("slavemode_display_blueentry").set_text(str(self.cached_score[0]))
