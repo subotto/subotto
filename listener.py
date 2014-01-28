@@ -609,7 +609,7 @@ class Statistics:
                                 threshold += 1
                             else:
                                 break
-                        ax.plot(self.last_score_plot[i][0][:threshold], self.last_score_plot[i][1][:threshold], '--%s' % (COLORS[i]))
+                        ax.plot(self.last_score_plot[i][0][:threshold] + [now if self.match.end is None else self.match.end], self.last_score_plot[i][1][:threshold] + [self.last_score_plot[i][1][threshold-1]], '--%s' % (COLORS[i]))
 
                 fig.savefig(os.path.join(self.target_dir, "score_plot_%s.png" % (plot_scope)), dpi=output_dpi)
                 matplotlib.pylab.close(fig)
