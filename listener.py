@@ -176,7 +176,7 @@ def format_countdown(sched_begin):
     time_diff = (sched_begin - datetime.datetime.now()).total_seconds()
     
     if time_diff < 0:
-        return "La partita dovrebbe iniziare a momenti!"
+        return "00:00:00"
     
     else:
         return format_time( time_diff )
@@ -503,6 +503,9 @@ class Statistics:
         turn_end = datetime.datetime.now()
         if self.match.end is not None:
             turn_end = self.match.end
+        
+        if self.turn_begin is None and self.match.begin is not None:
+        	self.turn_begin = self.match.begin
         if self.turn_begin is not None:
             kwargs['turn_duration'] = turn_end - self.turn_begin
         
@@ -561,11 +564,11 @@ class Statistics:
 
                 # Set algorithms to draw ticks and labels on axes
                 if plot_scope == 'all':
-                    if elapsed_time < 2 * 3600:
+                    if elapsed_time < 0.5 * 3600:
                         ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
                         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
-                    elif elapsed_time < 6 * 3600:
+                    elif elapsed_time < 4 * 3600:
                         ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=30))
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
                         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
