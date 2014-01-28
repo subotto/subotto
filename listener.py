@@ -180,6 +180,8 @@ def format_countdown(sched_begin):
     
     else:
         r = format_time2( time_diff, 0 )
+        return r[0]
+        '''
         res = ""
         
         if r[1] == 0:
@@ -189,6 +191,7 @@ def format_countdown(sched_begin):
         
         res += r[0] + " all'inizio della partita..."
         return res
+        '''
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = '<table class="player_stats">'
