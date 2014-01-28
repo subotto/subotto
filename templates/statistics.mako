@@ -18,7 +18,7 @@
 </tr>
 
 <tr>
- <td>Tempo trascorso dall'ultimo cambio</td><td>${ format_time2( turn_duration.seconds, 1 )[0] }</td>
+ <td>In campo da</td><td>${ format_time2( turn_duration.seconds, 1 )[0] }</td>
 </tr>
 
 <tr><td>Indice di rimonta<br />(${remount_index_description(score, teams)})</td><td>${remount_index(score, elapsed, length)}</td></tr>
