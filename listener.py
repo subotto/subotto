@@ -509,7 +509,8 @@ class Statistics:
         turn_end = datetime.datetime.now()
         if self.match.end is not None:
             turn_end = self.match.end
-        kwargs['turn_duration'] = turn_end - self.turn_begin
+        if self.turn_begin is not None:
+	        kwargs['turn_duration'] = turn_end - self.turn_begin
         
         kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
