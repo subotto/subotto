@@ -568,7 +568,7 @@ class Statistics:
                         ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
                         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
-                    elif elapsed_time < 6 * 3600:
+                    elif elapsed_time < 4 * 3600:
                         ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=30))
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
                         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
