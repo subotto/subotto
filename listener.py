@@ -567,13 +567,20 @@ class Statistics:
 
                 # Set algorithms to draw ticks and labels on axes
                 if plot_scope == 'all':
-                    if elapsed_time < 8 * 3600:
+                    if elapsed_time < 2 * 3600:
+                        ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
+                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
+                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+                    elif elapsed_time < 6 * 3600:
+                        ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=30))
+                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
+                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+                    elif elapsed_time < 8 * 3600:
                         ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=1))
+                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
                     else:
                         ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=2))
-                    if elapsed_time < 6 * 3600:
-                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
-                    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
+                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
                 elif plot_scope == 'last':
                     ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
                     ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
@@ -601,7 +608,7 @@ class Statistics:
                         ax.plot(this_score_plot[0], this_score_plot[1], '-%s' % (COLORS[i]))
                     self.score_plot[i][0].pop()
                     self.score_plot[i][1].pop()
-                if plot_scope == 'all':
+                if plot_scope == 'all' or elapsed_time < 1800:
                     for i in [0, 1]:
                         threshold = 0
                         for j in self.last_score_plot[i][0]:
@@ -609,7 +616,9 @@ class Statistics:
                                 threshold += 1
                             else:
                                 break
-                        ax.plot(self.last_score_plot[i][0][:threshold] + [now if self.match.end is None else self.match.end], self.last_score_plot[i][1][:threshold] + [self.last_score_plot[i][1][threshold-1]], '--%s' % (COLORS[i]))
+                        ax.plot(self.last_score_plot[i][0][:threshold] + [now if self.match.end is None else self.match.end],
+                                self.last_score_plot[i][1][:threshold] + [self.last_score_plot[i][1][threshold-1]],
+                                '--%s' % (COLORS[i]))
 
                 fig.savefig(os.path.join(self.target_dir, "score_plot_%s.png" % (plot_scope)), dpi=output_dpi)
                 matplotlib.pylab.close(fig)
