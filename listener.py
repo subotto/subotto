@@ -176,7 +176,7 @@ def format_countdown(sched_begin):
     time_diff = (sched_begin - datetime.datetime.now()).total_seconds()
     
     if time_diff < 0:
-        return "La partita dovrebbe iniziare a momenti!"
+        return "00:00:00"
     
     else:
         return format_time( time_diff )
