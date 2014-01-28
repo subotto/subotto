@@ -503,6 +503,9 @@ class Statistics:
         turn_end = datetime.datetime.now()
         if self.match.end is not None:
             turn_end = self.match.end
+        
+        if self.turn_begin is None and self.match.begin is not None:
+        	self.turn_begin = self.match.begin
         if self.turn_begin is not None:
             kwargs['turn_duration'] = turn_end - self.turn_begin
         
