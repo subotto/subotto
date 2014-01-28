@@ -564,7 +564,7 @@ class Statistics:
 
                 # Set algorithms to draw ticks and labels on axes
                 if plot_scope == 'all':
-                    if elapsed_time < 2 * 3600:
+                    if elapsed_time < 0.5 * 3600:
                         ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
                         ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
                         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
