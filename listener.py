@@ -654,5 +654,5 @@ def listen_match(match_id, target_dir, old_matches_id):
 if __name__ == '__main__':
     match_id = int(sys.argv[1])
     target_dir = sys.argv[2]
-    old_matches_id = [1, 2, 3]
+    old_matches_id = [1, 2, 3, 4]
     listen_match(match_id, target_dir, old_matches_id)
