@@ -179,19 +179,7 @@ def format_countdown(sched_begin):
         return "La partita dovrebbe iniziare a momenti!"
     
     else:
-        r = format_time2( time_diff, 0 )
-        return r[0]
-        '''
-        res = ""
-        
-        if r[1] == 0:
-            res += "Mancano "
-        else:
-            res += "Manca "
-        
-        res += r[0] + " all'inizio della partita..."
-        return res
-        '''
+        return format_time( time_diff )
 
 def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
     result = '<table class="player_stats">'
@@ -296,7 +284,8 @@ class Statistics:
                 if match_id == self.last_match.id:
                     i = 0 if team_id == self.last_match.team_a_id else 1
                     self.last_score[i] += 1
-                    self.last_score_plot[i][0].append((event.timestamp - self.last_match.begin) + self.match.begin)
+                    if self.match.begin is not None:
+                        self.last_score_plot[i][0].append((event.timestamp - self.last_match.begin) + self.match.begin)
                     self.last_score_plot[i][1].append(self.last_score[i])
             
             elif event.type == Event.EV_TYPE_GOAL_UNDO:
@@ -313,7 +302,8 @@ class Statistics:
                 if match_id == self.last_match.id:
                     i = 0 if team_id == self.last_match.team_a_id else 1
                     self.last_score[i] -= 1
-                    self.last_score_plot[i][0].pop()
+                    if self.match.begin is not None:
+                        self.last_score_plot[i][0].pop()
                     self.last_score_plot[i][1].pop()
         
         # Bisogna segnare il tempo delle ultime due coppie che hanno giocato!
@@ -457,7 +447,8 @@ class Statistics:
         kwargs['sched_begin'] = self.match.sched_begin
         kwargs['begin'] = self.match.begin
         kwargs['end'] = self.match.end
-        kwargs['elapsed'] = elapsed_time
+        if self.match.begin is not None:
+            kwargs['elapsed'] = elapsed_time
         kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
         kwargs['score'] = self.score
         kwargs['partial'] = self.partial
@@ -513,7 +504,7 @@ class Statistics:
         if self.match.end is not None:
             turn_end = self.match.end
         if self.turn_begin is not None:
-	        kwargs['turn_duration'] = turn_end - self.turn_begin
+            kwargs['turn_duration'] = turn_end - self.turn_begin
         
         kwargs['communicate_status'] = communicate_status
         kwargs['format_time'] = format_time
