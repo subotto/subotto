@@ -403,6 +403,7 @@ class interfaccia:
     def sub_reset(self,*args):
         if self.connected and self.work_mode == SLAVE_MODE:
             self.elaborate_async_events()
+            self.ss.set_master_mode()
             self.ss.send_expect(COM_RESET,SUB_READY)
             time.sleep(1)
             self.ss.set_slave_mode()
