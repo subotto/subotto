@@ -54,6 +54,8 @@ unsigned long red_score = 0;
 
 LedControl lc=LedControl(SPI_MOSI, SPI_CLK,SPI_DISPLAY_LOAD,1);
 
+  
+
 void writeInteger(int number, int display_number)
 //	Scrivi l'intero numero su display (0 o 1)
 //	Gli zeri iniziali vengono buttati via
@@ -72,6 +74,23 @@ void writeInteger(int number, int display_number)
                 number /= 10; 
         }
 }
+
+void init_display()
+{
+  // Inizializzazione del display
+  /*
+   The MAX72XX is in power-saving mode on startup,
+   we have to do a wakeup call
+   */
+  lc.shutdown(0,false);
+  /* Set the brightness to a medium values */
+  lc.setIntensity(0,8);
+  /* and clear the display */
+  lc.clearDisplay(0);
+  writeInteger(0,0);
+  writeInteger(0,1);
+}
+
 
 void setup()
 {
@@ -106,18 +125,7 @@ void setup()
   last_goal = 0;
   last_push = 0;
   
-  // Inizializzazione del display
-  /*
-   The MAX72XX is in power-saving mode on startup,
-   we have to do a wakeup call
-   */
-  lc.shutdown(0,false);
-  /* Set the brightness to a medium values */
-  lc.setIntensity(0,8);
-  /* and clear the display */
-  lc.clearDisplay(0);
-  writeInteger(0,0);
-  writeInteger(0,1);
+  init_display();
   
   Serial.println(SUB_READY);
 }
@@ -240,6 +248,10 @@ void slave_main(int input)
       blue_super_enable = 0;
       Serial.println(SUB_BLUE_SUPER_DISABLED);
       break;    
+    case COM_INIT_DISPLAY:
+      init_display();
+      Serial.println(SUB_INIT_DISPLAY);
+      break;
   }
   
   int result = scan_input();

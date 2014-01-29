@@ -130,3 +130,6 @@ class SubottoSerial:
     def set_score(self, score, team):
         command = 2**14 + score + 2**13 * team
         return self.send_expect(command, command)
+    
+    def init_display(self):
+        return self.send_expect(COM_INIT_DISPLAY, SUB_INIT_DISPLAY)

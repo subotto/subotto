@@ -392,6 +392,12 @@ class interfaccia:
             #self.cached_score[i] = self.score[i]
         self.cache_to_entry()
         self.cache_to_display()
+    
+    def init_display(self,*args):
+        print "init display"
+        if self.connected and self.work_mode == SLAVE_MODE:
+            self.ss.init_display()
+            self.cache_to_display()
 
 
 def main():
