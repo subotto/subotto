@@ -398,6 +398,13 @@ class interfaccia:
         if self.connected and self.work_mode == SLAVE_MODE:
             self.ss.init_display()
             self.cache_to_display()
+    
+    def sub_reset(self,*args):
+        if self.connected and self.work_mode == SLAVE_MODE:
+            self.elaborate_async_events()
+            self.ss.send_expect(COM_RESET,SUB_READY)
+            self.ss.set_slave_mode()
+            self.cache_to_display()
 
 
 def main():

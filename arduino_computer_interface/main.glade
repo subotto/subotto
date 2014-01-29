@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.16.0 on Wed Jan 29 10:06:18 2014 -->
+<!-- Generated with glade 3.16.0 on Wed Jan 29 11:47:42 2014 -->
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="action1"/>
+  <object class="GtkAction" id="action2"/>
   <object class="GtkAdjustment" id="serial_baud">
     <property name="lower">2400</property>
     <property name="upper">115200</property>
@@ -591,7 +592,18 @@ Send to display</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkButton" id="slavemode_reset">
+            <property name="label" translatable="yes">Reset</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="sub_reset" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
         </child>
       </object>
     </child>
