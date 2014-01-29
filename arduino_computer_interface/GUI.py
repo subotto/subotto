@@ -396,6 +396,7 @@ class interfaccia:
     def init_display(self,*args):
         print "init display"
         if self.connected and self.work_mode == SLAVE_MODE:
+            self.elaborate_async_events()
             self.ss.init_display()
             self.cache_to_display()
     
@@ -403,6 +404,7 @@ class interfaccia:
         if self.connected and self.work_mode == SLAVE_MODE:
             self.elaborate_async_events()
             self.ss.send_expect(COM_RESET,SUB_READY)
+            time.sleep(1)
             self.ss.set_slave_mode()
             self.cache_to_display()
 
