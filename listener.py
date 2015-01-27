@@ -105,10 +105,9 @@ def get_linear_projection(score, target, elapsed, begin):
 
 class Statistics:
 
-    def __init__(self, match, old_matches, players, old_player_matches, old_events, old_stats_player_matches, target_dir):
+    def __init__(self, match, old_matches, players, old_player_matches, old_events, old_stats_player_matches):
         self.match = match
         self.old_matches = old_matches
-        self.target_dir = target_dir
         self.last_match = old_matches[-1] if len(old_matches) > 0 else None
         self.last_score_plot = [[[], []], [[], []]]
         self.last_score = [0, 0]
@@ -373,7 +372,6 @@ class Statistics:
         else:
             colors = [None, None]
         
-        
         # Compute turn-related data
         turn_end = datetime.datetime.now()
         if self.match.end is not None:
@@ -477,7 +475,7 @@ class Statistics:
 
 
 
-def listen_match(match_id, target_dir, old_matches_id):
+def listen_match(match_id, old_matches_id):
 
     session = Session()
 
@@ -488,7 +486,7 @@ def listen_match(match_id, target_dir, old_matches_id):
     old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).order_by(Event.timestamp).all()
     old_stats_player_matches = session.query(StatsPlayerMatch).filter(StatsPlayerMatch.match_id.in_(old_matches_id)).all()
     
-    stats = Statistics(match, old_matches, players, old_player_matches, old_events, old_stats_player_matches, target_dir)
+    stats = Statistics(match, old_matches, players, old_player_matches, old_events, old_stats_player_matches)
     last_event_id = 0
     last_player_match_id = 0
     last_timestamp = None
@@ -516,6 +514,5 @@ def listen_match(match_id, target_dir, old_matches_id):
 
 if __name__ == '__main__':
     match_id = int(sys.argv[1])
-    target_dir = sys.argv[2]
     old_matches_id = [1, 2, 3, 4]
-    listen_match(match_id, target_dir, old_matches_id)
+    listen_match(match_id, old_matches_id)
