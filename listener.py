@@ -11,19 +11,30 @@ import datetime
 from pprint import pprint
 import copy
 
+import requests, json
+
 from numpy import arange
 import matplotlib.pyplot
 import matplotlib.pylab
 import matplotlib.dates
 
-from mako.template import Template
+# from mako.template import Template
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, StatsPlayerMatch, Base, AdvantagePhase
+
 
 SLEEP_TIME = 0.5
 INTERESTING_SCORES = [42, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
-def communicate_status(begin, phase, end):
+with open('passwd_web') as fpasswd:
+    PASSWD = fpasswd.read().strip()
+
+
+def format_player(player):
+    return "%s %s" % (player.fname, player.lname)
+
+
+def get_status(begin, phase, end):
     if begin is None:
         return "before"
     
@@ -36,161 +47,61 @@ def communicate_status(begin, phase, end):
     else:
         return "advantage"
 
-def format_time(total_seconds):
-    seconds = total_seconds % 60
-    total_seconds = total_seconds / 60
-    minutes = total_seconds % 60
-    hours = total_seconds / 60
-    return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
-def format_time3(total_seconds):
-    seconds = total_seconds % 60
-    total_seconds = total_seconds / 60
-    minutes = total_seconds % 60
-    hours = total_seconds / 60
-    return "%dh %dm" % (hours, minutes)
-
-def format_time2(total_seconds, abbr):
-    # Return value: [ str, k ], where str is the formatted time, and k is 0 for "plural" and 1 for "singular"
-    total_seconds = int(total_seconds)
-    
-    seconds = total_seconds % 60
-    total_seconds = total_seconds / 60
-    minutes = total_seconds % 60
-    hours = total_seconds / 60
-    
-    result = ""
-    
-    if abbr == 0:
-        if hours == 1:
-            result += "1 ora, "
-        elif hours > 1:
-            result += "%d ore, " % hours
-        
-        if minutes > 0 or hours > 0:
-            # Printing minutes...
-            if minutes == 1:
-                result += "1 minuto e "
-            elif minutes > 1:
-                result += "%d minuti e " % minutes
-        
-        #print seconds
-        
-        if seconds == 1:
-            result += "1 secondo"
-        else:
-            result += "%d secondi" % seconds
-        
-        singular = 0
-        if seconds == 1 and minutes == 0 and hours == 0:
-            singular = 1
-        
-        #print [ result, singular ]
-        
-        return [ result, singular ]
-    
-    
-    if abbr == 1:
-        if hours == 1:
-            result += "1 ora"
-        elif hours > 1:
-            result += "%d ore" % hours
-        
-        if hours > 0 and minutes > 0:
-            result += " e "
-        
-        if minutes == 1:
-            result += "1 minuto"
-        elif minutes > 1:
-            result += "%d minuti" % minutes
-        
-        singular = 0
-        if ( hours == 1 and minutes == 0 ) or ( hours == 0 and minutes == 1 ):
-            singular = 1
-        
-        #result += " %d sec" % seconds
-        
-        return [ result, singular ]
-
-
-def format_player(player):
-    return "%s %s" % (player.fname, player.lname)
-
-
-def compute_extimated_score(score, elapsed, length):
-    if elapsed <= 0.1:
-        return "-"
-    elif length - elapsed <= 1:
-        return "%d - %d" % (score[0], score[1])
+def get_estimated_score(score, elapsed, length):
+    if elapsed is None or elapsed <= 0.1:
+        return [None, None]
+    elif length - elapsed <= 0.1:
+        return score
     else:
-        return "%d - %d" % ( int(score[0]*length/elapsed), int(score[1]*length/elapsed) )
+        return [int(s*length/elapsed) for s in score]
 
-def remount_index(score, elapsed, length):
+
+def get_remount_index(score, elapsed, length):
+    if elapsed is None:
+        return None
+    
     to_go = length - elapsed
     if to_go <= 0.0:
-        return u"&infin;"
+        return "Infinity"
     else:
-        return u"%0.8f" % (float(abs(score[0] - score[1])) / to_go * 60.0 * 60.0)
+        return float(abs(score[0] - score[1])) / to_go * 60.0 * 60.0
 
-def remount_index_description(score, teams):
-    if score[0] == score[1]:
-        return "gol in pi&ugrave; all'ora che deve segnare la squadra in svantaggio per recuperare"
+
+def get_winning_team(teams, score):
+    if score[0] > score[1]:
+        return teams[0].name
+    elif score[0] < score[1]:
+        return teams[1].name
     else:
-        ordered_teams = [ teams[1].name, teams[0].name ]
-        if score[0] < score[1]:
-            ordered_teams = [ teams[0].name, teams[1].name ]
-        return "gol in pi&ugrave; all'ora che devono segnare<br /> i " + ordered_teams[0] + " per recuperare i " + ordered_teams[1]
+        return None
 
-def compute_interesting_score(score):
+def get_losing_team(teams, score):
+    if score[0] > score[1]:
+        return teams[1].name
+    elif score[0] < score[1]:
+        return teams[0].name
+    else:
+        return None
+
+
+def get_interesting_score(score):
     idx = map(lambda x: x > score, INTERESTING_SCORES).index(True)
     return INTERESTING_SCORES[idx]
 
-def compute_linear_projection(score, target, elapsed, begin):
-    # print "Score: %d. Target: %d. Elapsed: %d." % (score, target, elapsed)
+
+def get_linear_projection(score, target, elapsed, begin):
     
-    if elapsed <= 0.1:
-        return "-"
+    if begin is None or elapsed is None or elapsed <= 0.1:
+        return None
     if score == 0:
-        return "&infin;"
+        return "Infinity"
     
-    ratio = score / elapsed
-    
-    # pprint( begin + datetime.timedelta(seconds=float(target-score)/ratio) )
-    
+    ratio = float(score) / elapsed
     return ( begin + datetime.timedelta(seconds=float(target)/ratio) ).strftime("%H:%M:%S")
 
-def format_elapsed_time(total_seconds, begin, end):
-    return format_time(total_seconds)
 
-def format_remaining_time(total_seconds, end, length, phase):
-    if end is not None:
-        return "<td colspan=\"2\">La partita &egrave; terminata</td>"
-    
-    elif phase is None:
-        return "<td>Tempo rimanente:</td><td>"+format_time(length - total_seconds)+"</td>"
-    
-    else:
-        return "<td colspan=\"2\">Vantaggi (ai %d)</td>" % phase.advantage
 
-def format_countdown(sched_begin):
-    time_diff = (sched_begin - datetime.datetime.now()).total_seconds()
-    
-    if time_diff < 0:
-        return "00:00:00"
-    
-    else:
-        return format_time( time_diff )
-
-def show_player_statistics(player, total_time, played_time, total_goals, num_goals, participations):
-    result = '<table class="player_stats">'
-    result += '<tr><td>Partecipazioni</td><td>' + str( participations[ player.id ] ) + '</td></tr>'
-    result += '<tr><td>Tempo di gioco</td><td>' + format_time3( int(played_time[ player.id ].total_seconds()) ) + '</td></tr>'
-    result += '<tr class="all_matches"><td>in tutte le edizioni</td><td>' + format_time3( int(total_time[ player.id ].total_seconds()) ) + '</td></tr>'
-    result += '<tr><td>Gol fatti</td><td>' + str( num_goals[ player.id ] ) + '</td></tr>'
-    result += '<tr class="all_matches"><td>in tutte le edizioni</td><td>' + str( total_goals[ player.id ] ) + '</td></tr>'
-    result += '</table>'
-    
-    return result
 
 class Statistics:
 
@@ -422,51 +333,60 @@ class Statistics:
         elif event.type == Event.EV_TYPE_ADVANTAGE_PHASE:
             self.current_phase = event.phase
 
+
     def new_player_match(self, player_match):
         print >> sys.stderr, "> Received new player match: %r" % (player_match)
         
         # TODO: verificare (sperare) che questa funzione venga chiamata solo se quel player_match non esisteva ancora
         self.participations[ player_match.player_id ] += 1
 
-    def render_template(self, basename, kwargs):
-        template = Template(filename=os.path.join('templates', '%s.mako' % (basename)), output_encoding='utf-8')
-        with codecs.open(os.path.join(self.target_dir, '%s.html' % (basename)), 'w', encoding='utf-8') as fout:
-            fout.write(template.render_unicode(**kwargs))
 
-    def regenerate(self):
-        print >> sys.stderr, "> Regeneration"
+    def send_data(self):
+        print >> sys.stderr, "> Send data"
 
+        # Compute time-related data
         now = datetime.datetime.now()
         if self.match.begin is not None:
+            # La partita è già iniziata
             elapsed_time = (now - self.match.begin).total_seconds()
+            time_to_begin = None
+        else:
+            # La partita deve ancora iniziare
+            elapsed_time = None
+            time_to_begin = (self.match.sched_begin - now).total_seconds()
+        
         if self.match.end is not None:
+            # La partita, oltre che essere iniziata, è anche finita.
             elapsed_time = (self.match.end - self.match.begin).total_seconds()
-
-        # Prepare mako arguments
-        kwargs = {}
-        kwargs['sched_begin'] = self.match.sched_begin
-        kwargs['begin'] = self.match.begin
-        kwargs['end'] = self.match.end
-        if self.match.begin is not None:
-            kwargs['elapsed'] = elapsed_time
-        kwargs['length'] = (self.match.sched_end - self.match.sched_begin).total_seconds()
-        kwargs['score'] = self.score
-        kwargs['partial'] = self.partial
-        kwargs['current_players'] = self.current_players
-        kwargs['teams'] = (self.match.team_a, self.match.team_b)
-        kwargs['phase'] = self.current_phase
+            time_to_end = None
+        else:
+            # La partita non è ancora finita
+            time_to_end = (self.match.sched_end - now).total_seconds()
         
+        if elapsed_time is not None and elapsed_time > 0.01 :
+            goals_per_minute = float(self.score[0] + self.score[1]) * 60.0 / elapsed_time
+        
+        # Compute team-related data
         teams = (self.match.team_a, self.match.team_b)
-        teams_id2pos = { self.match.team_a.id: 0, self.match.team_b.id: 1 }
-        teams_col2pos = [ teams_id2pos[ self.rev_colors[0] ], teams_id2pos[ self.rev_colors[1] ] ]
-        rev_teams = [ teams[ teams_col2pos[0] ], teams[ teams_col2pos[1] ] ]
+        if self.match.begin is not None:
+            colors = [ ['red', 'blue'][self.rev_colors.index(team.id)] for team in teams] # 0 => color of team_a, 1 => color of team_b
+        else:
+            colors = [None, None]
         
-        kwargs['teams_col2pos'] = teams_col2pos    # 0 => red_team_index, 1 => blue_team_index
-        kwargs['rev_teams'] = rev_teams    # 0 => red_team, 1 => blue_team
         
-        # Il tempo di gioco dei current players va aggiornato a mano (anche dopo la fine)!
+        # Compute turn-related data
+        turn_end = datetime.datetime.now()
+        if self.match.end is not None:
+            turn_end = self.match.end
         
-        # Saving the status of current players
+        if self.turn_begin is None and self.match.begin is not None:
+        	self.turn_begin = self.match.begin
+        if self.turn_begin is not None:
+            turn_duration = turn_end - self.turn_begin
+        
+        
+        # Compute (played time)-related data (it must be updated by hand for the current players,
+        # even after the end of the match!)
         old_total_time = dict([])
         old_played_time = dict([])
         
@@ -486,7 +406,7 @@ class Statistics:
                 s = t
             
             if self.match.begin is not None and s is None:
-                print >> "QUALCOSA NON VA!"
+                print "SOMETHING WRONG!"
             
             delta_time = t - s
         
@@ -494,132 +414,68 @@ class Statistics:
                 self.total_time[ player_id ] += delta_time
                 self.played_time[ player_id ] += delta_time
         
-        kwargs['total_time'] = self.total_time
-        kwargs['played_time'] = self.played_time
-        kwargs['total_goals'] = self.total_goals
-        kwargs['num_goals'] = self.num_goals
-        kwargs['participations'] = self.participations
         
-        turn_end = datetime.datetime.now()
-        if self.match.end is not None:
-            turn_end = self.match.end
+        # Compute estimation-related data
+        length = (self.match.sched_end - self.match.sched_begin).total_seconds()
+        estimated_score = get_estimated_score(self.score, elapsed_time, length)
+        remount_index = get_remount_index(self.score, elapsed_time, length)
+        interesting_score = [get_interesting_score(s) for s in self.score]
+        linear_projection = [get_linear_projection(self.score[i], interesting_score[i], elapsed_time, self.match.begin) for i in xrange(2)]
         
-        if self.turn_begin is None and self.match.begin is not None:
-        	self.turn_begin = self.match.begin
-        if self.turn_begin is not None:
-            kwargs['turn_duration'] = turn_end - self.turn_begin
         
-        kwargs['communicate_status'] = communicate_status
-        kwargs['format_time'] = format_time
-        kwargs['format_time2'] = format_time2
-        kwargs['format_player'] = format_player
-        kwargs['compute_extimated_score'] = compute_extimated_score
-        kwargs['remount_index'] = remount_index
-        kwargs['remount_index_description'] = remount_index_description
+        # Send data to the web server
+        data = {
+            'status': get_status(self.match.begin, self.current_phase, self.match.end),
+            'time_to_begin': time_to_begin,
+            'time_to_end': time_to_end,
+            'elapsed_time': elapsed_time,
+            'teams': [
+                {
+                    'id': teams[i].id,
+                    'name': teams[i].name,
+                    'score': self.score[i],
+                    'partial_score': self.partial[i],
+                    'estimated_score': estimated_score[i],
+                    'color': colors[i],
+                    'interesting_score': interesting_score[i],
+                    'linear_projection': linear_projection[i],
+                    'players': [
+                        {
+                            'id': self.current_players[i][j].id,
+                            'fname': self.current_players[i][j].fname,
+                            'lname': self.current_players[i][j].lname,
+                            'total_time': self.total_time[ self.current_players[i][j].id ].total_seconds(),
+                            'played_time': self.played_time[ self.current_players[i][j].id ].total_seconds(),
+                            'total_goals': self.total_goals[ self.current_players[i][j].id ],
+                            'num_goals': self.num_goals[ self.current_players[i][j].id ],
+                            'participations': self.participations[ self.current_players[i][j].id ],
+                        }
+                    for j in xrange(2)],
+                }
+                for i in xrange(2)],
+            'goal_difference': abs(self.score[0] - self.score[1]),
+            'total_goals': self.score[0] + self.score[1],
+            'goals_per_minute': goals_per_minute,
+            'turn_duration': turn_duration.total_seconds(),
+            'remount_index': remount_index,
+            }
         
-        kwargs['compute_interesting_score'] = compute_interesting_score
-        kwargs['compute_linear_projection'] = compute_linear_projection
-        kwargs['format_elapsed_time'] = format_elapsed_time
-        kwargs['format_remaining_time'] = format_remaining_time
-        kwargs['format_countdown'] = format_countdown
-        kwargs['show_player_statistics'] = show_player_statistics
+        headers = {'content-type': 'application/json'}
+        json_data = json.dumps({'action': 'set', 'password': PASSWD, 'data': data})
+        print json_data
+        
+        r = requests.post("http://uz.sns.it/24h/score", data=json_data, headers=headers)
+        print 'Request done', r.status_code
+        print r.text
 
-        # Generate stats dir
-        try:
-            os.mkdir(self.target_dir)
-        except OSError:
-            pass
-
-        # Render templates
-        templates = [ "time", "statistics", "fake", "red_team", "blue_team", "red_score", "blue_score", "red_defender", "red_attacker", "blue_defender", "blue_attacker", "red_defender_stats", "red_attacker_stats", "blue_defender_stats", "blue_attacker_stats", "player00", "player01", "player10", "player11", "player00_stats", "player01_stats", "player10_stats", "player11_stats", "team0", "team1", "score0", "score1" ]
-        if self.match.begin is None:
-            templates = [ "fake", "countdown" ]
         
-        #print >> sys.stderr, "> BEGIN: %r" % self.match.begin
-        #print >> sys.stderr, "> END: %r" % self.match.end
-        
-        for basename in templates:
-            try:
-                self.render_template(basename, kwargs)
-            except Exception:
-                print >> sys.stderr, "> Exception when rendering %s" % (basename)
-                raise
-        
-        
-        # Restoring previous status of current players
+        # Restore previous status of current players
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
             for player_id in self.current_contestants[ self.match.id ][ team_id ]:
                 self.total_time[ player_id ] = old_total_time[ player_id ]
                 self.played_time[ player_id ] = old_played_time[ player_id ]
-        
-        # Draw the score plot
-        if self.match.begin is not None:
-            for plot_scope in ['all', 'last']:
-                output_dpi = 72.0
-                output_pixels = (440, 330)
-                output_inches = (float(output_pixels[0]) / output_dpi, float(output_pixels[1]) / output_dpi)
-                fig = matplotlib.pyplot.figure(figsize=output_inches)
-                ax = fig.add_axes([0.1, 0.1, 0.85, 0.85])
-                ax.grid(True)
 
-                # Set algorithms to draw ticks and labels on axes
-                if plot_scope == 'all':
-                    if elapsed_time < 0.5 * 3600:
-                        ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
-                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
-                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
-                    elif elapsed_time < 4 * 3600:
-                        ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=30))
-                        ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=15))
-                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
-                    elif elapsed_time < 8 * 3600:
-                        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=1))
-                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
-                    else:
-                        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=2))
-                        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H"))
-                elif plot_scope == 'last':
-                    ax.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=5))
-                    ax.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(interval=1))
-                    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
 
-                # Set limits (not sure how to make it work...)
-                #print ax.get_xlim()
-                #print ax.get_ylim()
-                #ax.set_xlim(xmin=0)
-                #ax.set_ylim(ymin=0)
-
-                COLORS = ['g', 'b']
-                for i in [0, 1]:
-                    self.score_plot[i][0].append(now if self.match.end is None else self.match.end)
-                    self.score_plot[i][1].append(self.score_plot[i][1][-1])
-                    if plot_scope == 'all':
-                        ax.plot(self.score_plot[i][0], self.score_plot[i][1], '-%s' % (COLORS[i]))
-                    else:
-                        plot_begin = max(self.match.begin, (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30))
-                        this_score_plot = [[], []]
-                        this_score_plot[0] += [x for x in self.score_plot[i][0] if x > (now if self.match.end is None else self.match.end) - datetime.timedelta(minutes=30)]
-                        this_score_plot[1] += self.score_plot[i][1][-len(this_score_plot[0]):]
-                        this_score_plot[0][0:0] = [plot_begin]
-                        this_score_plot[1][0:0] = [this_score_plot[1][0]]
-                        ax.plot(this_score_plot[0], this_score_plot[1], '-%s' % (COLORS[i]))
-                    self.score_plot[i][0].pop()
-                    self.score_plot[i][1].pop()
-                if plot_scope == 'all' or elapsed_time < 1800:
-                    for i in [0, 1]:
-                        threshold = 0
-                        for j in self.last_score_plot[i][0]:
-                            if j < now:
-                                threshold += 1
-                            else:
-                                break
-                        ax.plot(self.last_score_plot[i][0][:threshold] + [now if self.match.end is None else self.match.end],
-                                self.last_score_plot[i][1][:threshold] + [self.last_score_plot[i][1][threshold-1]],
-                                '--%s' % (COLORS[i]))
-
-                fig.savefig(os.path.join(self.target_dir, "score_plot_%s.png" % (plot_scope)), dpi=output_dpi)
-                matplotlib.pylab.close(fig)
-                #fig.show()
 
 def listen_match(match_id, target_dir, old_matches_id):
 
@@ -650,12 +506,13 @@ def listen_match(match_id, target_dir, old_matches_id):
                 stats.new_event(event)
                 last_timestamp = event.timestamp
                 last_event_id = event.id
-            stats.regenerate()
+            stats.send_data()
 
             time.sleep(SLEEP_TIME)
 
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == '__main__':
     match_id = int(sys.argv[1])
