@@ -458,7 +458,7 @@ class Statistics:
                 self.total_time[ player_id ] = old_total_time[ player_id ]
                 self.played_time[ player_id ] = old_played_time[ player_id ]
         
-        return data
+        self.data = data
 
 
 

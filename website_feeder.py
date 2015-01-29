@@ -47,7 +47,8 @@ def listen_match(match_id, old_matches_id):
                 last_event_id = event.id
             
             # Send data to the web server
-            data = stats.generate_current_data()
+            stats.generate_current_data()
+            data = stats.data
             headers = {'content-type': 'application/json'}
             json_data = json.dumps({'action': 'set', 'password': PASSWD, 'data': data})
             print json_data
