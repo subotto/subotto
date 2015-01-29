@@ -11,23 +11,15 @@ import datetime
 from pprint import pprint
 import copy
 
-import requests, json
-
 from numpy import arange
 import matplotlib.pyplot
 import matplotlib.pylab
 import matplotlib.dates
 
-# from mako.template import Template
-
 from data import Session, Team, Player, Match, PlayerMatch, Event, StatsPlayerMatch, Base, AdvantagePhase
 
 
-SLEEP_TIME = 0.5
 INTERESTING_SCORES = [42, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
-
-with open('passwd_web') as fpasswd:
-    PASSWD = fpasswd.read().strip()
 
 
 def format_player(player):
@@ -111,7 +103,8 @@ class Statistics:
         self.last_match = old_matches[-1] if len(old_matches) > 0 else None
         self.last_score_plot = [[[], []], [[], []]]
         self.last_score = [0, 0]
-
+        
+        self.teams = [self.match.team_a, self.match.team_b]
         self.score = [0, 0]
         self.current_players = [None, None]
         self.partial = [0, 0]
@@ -340,8 +333,8 @@ class Statistics:
         self.participations[ player_match.player_id ] += 1
 
 
-    def send_data(self):
-        print >> sys.stderr, "> Send data"
+    def generate_current_data(self):
+        print >> sys.stderr, "> Generate current data"
 
         # Compute time-related data
         now = datetime.datetime.now()
@@ -366,9 +359,8 @@ class Statistics:
             goals_per_minute = float(self.score[0] + self.score[1]) * 60.0 / elapsed_time
         
         # Compute team-related data
-        teams = (self.match.team_a, self.match.team_b)
         if self.match.begin is not None:
-            colors = [ ['red', 'blue'][self.rev_colors.index(team.id)] for team in teams] # 0 => color of team_a, 1 => color of team_b
+            colors = [ ['red', 'blue'][self.rev_colors.index(team.id)] for team in self.teams] # 0 => color of team_a, 1 => color of team_b
         else:
             colors = [None, None]
         
@@ -421,7 +413,7 @@ class Statistics:
         linear_projection = [get_linear_projection(self.score[i], interesting_score[i], elapsed_time, self.match.begin) for i in xrange(2)]
         
         
-        # Send data to the web server
+        # Create data dictionary
         data = {
             'status': get_status(self.match.begin, self.current_phase, self.match.end),
             'time_to_begin': time_to_begin,
@@ -429,8 +421,8 @@ class Statistics:
             'elapsed_time': elapsed_time,
             'teams': [
                 {
-                    'id': teams[i].id,
-                    'name': teams[i].name,
+                    'id': self.teams[i].id,
+                    'name': self.teams[i].name,
                     'score': self.score[i],
                     'partial_score': self.partial[i],
                     'estimated_score': estimated_score[i],
@@ -458,61 +450,15 @@ class Statistics:
             'remount_index': remount_index,
             }
         
-        headers = {'content-type': 'application/json'}
-        json_data = json.dumps({'action': 'set', 'password': PASSWD, 'data': data})
-        print json_data
-        
-        r = requests.post("http://uz.sns.it/24h/score", data=json_data, headers=headers)
-        print 'Request done', r.status_code
-        print r.text
-
+        print data
         
         # Restore previous status of current players
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
             for player_id in self.current_contestants[ self.match.id ][ team_id ]:
                 self.total_time[ player_id ] = old_total_time[ player_id ]
                 self.played_time[ player_id ] = old_played_time[ player_id ]
+        
+        return data
 
 
 
-def listen_match(match_id, old_matches_id):
-
-    session = Session()
-
-    match = session.query(Match).filter(Match.id == match_id).one()
-    old_matches = session.query(Match).filter(Match.id.in_(old_matches_id)).all()
-    players = session.query(Player).all()
-    old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id.in_(old_matches_id)).all()
-    old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).order_by(Event.timestamp).all()
-    old_stats_player_matches = session.query(StatsPlayerMatch).filter(StatsPlayerMatch.match_id.in_(old_matches_id)).all()
-    
-    stats = Statistics(match, old_matches, players, old_player_matches, old_events, old_stats_player_matches)
-    last_event_id = 0
-    last_player_match_id = 0
-    last_timestamp = None
-
-    try:
-        while True:
-            session.rollback()
-            for player_match in session.query(PlayerMatch).filter(PlayerMatch.match == match).filter(PlayerMatch.id > last_player_match_id).order_by(PlayerMatch.id):
-                stats.new_player_match(player_match)
-                last_player_match_id = player_match.id
-            for event in session.query(Event).filter(Event.match == match).filter(Event.id > last_event_id).order_by(Event.id):
-                if last_timestamp is not None and event.timestamp <= last_timestamp:
-                    print >> sys.stderr, "> Timestamp monotonicity error at %s!\n" % (event.timestamp)
-                    #sys.exit(1)
-                stats.new_event(event)
-                last_timestamp = event.timestamp
-                last_event_id = event.id
-            stats.send_data()
-
-            time.sleep(SLEEP_TIME)
-
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == '__main__':
-    match_id = int(sys.argv[1])
-    old_matches_id = [1, 2, 3, 4]
-    listen_match(match_id, old_matches_id)
