@@ -450,7 +450,7 @@ class Statistics:
             'remount_index': remount_index,
             }
         
-        print data
+        # print data
         
         # Restore previous status of current players
         for team_id in [ self.match.team_a_id, self.match.team_b_id ]:
