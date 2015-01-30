@@ -419,8 +419,8 @@ class Statistics:
             'time_to_begin': time_to_begin,
             'time_to_end': time_to_end,
             'elapsed_time': elapsed_time,
-            'teams': [
-                {
+            'teams': {
+                self.teams[i].id: {
                     'id': self.teams[i].id,
                     'name': self.teams[i].name,
                     'score': self.score[i],
@@ -442,7 +442,7 @@ class Statistics:
                         }
                     for j in xrange(2)],
                 }
-                for i in xrange(2)],
+                for i in xrange(2)},
             'goal_difference': abs(self.score[0] - self.score[1]),
             'total_goals': self.score[0] + self.score[1],
             'goals_per_minute': goals_per_minute,
