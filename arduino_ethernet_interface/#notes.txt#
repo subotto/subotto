@@ -12,5 +12,5 @@ self.core.update()
 get score
 self.core.score[self.core.detect_team(self.core.order[i])]
 
-detect if 
+detect if which team has color self.core.order[i]
 self.core.detect_team(self.core.order[i])

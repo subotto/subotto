@@ -23,7 +23,6 @@
 #  
 
 import sys
-#import serial
 import socket
 import os
 import time
@@ -44,11 +43,6 @@ from opcodes import *
 from core import SubottoCore
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 
-#from subotto_serial import SubottoSerial
-
-#TEST_MODE = 2
-#SLAVE_MODE = 1
-#MASTER_MODE = 0
 
 
 
@@ -57,13 +51,32 @@ class ArdCon():
 
     BUFFER_RCV_LENGTH = 2
     TIMEOUT = 0.001
+    ARD_TEAM = ["RED", "BLUE"]
+    EVENT = ["VOID", "GOAL", "SUPERGOAL", "PLUS_ONE", "MINUS_ONE"]
+    CORE_EVENT = {
+        "RED":{
+            "VOID":None,
+            "GOAL":Event.EV_SOURCE_CELL_RED_PLAIN,
+            "SUPERGOAL":Event.EV_SOURCE_CELL_RED_SUPER,
+            "PLUS_ONE":Event.EV_SOURCE_BUTTON_RED_GOAL,
+            "MINUS_ONE":Event.EV_SOURCE_BUTTON_RED_UNDO
+        },
+        "BLUE":{
+            "VOID":None,
+            "GOAL":Event.EV_SOURCE_CELL_BLUE_PLAIN,
+            "SUPERGOAL":Event.EV_SOURCE_CELL_BLUE_SUPER,
+            "PLUS_ONE":Event.EV_SOURCE_BUTTON_BLUE_GOAL,
+            "MINUS_ONE":Event.EV_SOURCE_BUTTON_BLUE_UNDO
+        }
+    }
+    UNDO_EVENT = [CORE_EVENT[team]["MINUS_ONE"] for team in ARD_TEAM]
 
 
     # Initialize with socket
     def __init__(self,sock,debugLog):
         self.s = sock
         self.debugLog = debugLog
-        self.debugLog("Creating ac class")
+        self.debugLog("prova")
 
 
     # Send an int to the Arduino
@@ -79,7 +92,7 @@ class ArdCon():
         return {
             "score": score,
             "team": team,
-            "event": EVENTS[(rcv[0] & 0x70) >> 4]
+            "event": EVENT[(rcv[0] & 0x70) >> 4]
         }
 
     # Receive data from Arduino; return false as the second element if the socket is closed
@@ -120,7 +133,9 @@ class ArdCon():
             self.sendNumber(0x4)
         else:
             self.sendNumber(0x6)
-        data = self.ac.receiveData()
+        (data,isConnected) = self.receiveData()
+        if (not isConnected) or (data == None):
+            return None
         if data["event"] != "VOID":
             self.debugLog("ERROR: non void event received")
         return data
@@ -130,10 +145,14 @@ class ArdCon():
 # This class contains the implementation of the interface
 class Interface:
 
+    _numDebugebugLines = 0
+
+    DEVICE = ["arduino","core"]
+
     connected = False
     toDisconnect = False
-    score = [0, 0]
-    cached_score = [None, None]
+    score = {dev:[0,0] for dev in DEVICE}
+    lastToScore = {dev:None for dev in DEVICE}
 
     def __init__(self):
         filename = "main.glade"
@@ -147,34 +166,102 @@ class Interface:
         self.consoleView = self.builder.get_object("console")
         self.consoleView.set_model(self.debugConsole)
         self.consoleView.insert_column(Gtk.TreeViewColumn("Debug Log", Gtk.CellRendererText(), text=0),0)
+
+        self.scoreTextView = {
+            "arduino":{"RED":self.builder.get_object("redArduinoScore"),
+                       "BLUE":self.builder.get_object("blueArduinoScore")},
+            "core":{"RED":self.builder.get_object("redCoreScore"),
+                    "BLUE":self.builder.get_object("blueCoreScore")}
+        }
+        self.lastToScoreBar = {
+            "arduino":{"RED":self.builder.get_object("redArduinoLastToScore"),
+                       "BLUE":self.builder.get_object("blueArduinoLastToScore")},
+            "core":{"RED":self.builder.get_object("redCoreLastToScore"),
+                    "BLUE":self.builder.get_object("blueCoreLastToScore")},
+        }
+
+        self.core = SubottoCore(int(sys.argv[1]))
+        for i in [0,1]:
+            self.score["core"][i] = self.getCoreScore(i)
        
         GObject.timeout_add(300, self.loopFunction)
         self.core = SubottoCore(int(sys.argv[1]))
-        
+    
+
+    # === core communication ===
+
+    # get score from the core
+    def getCoreScore(self,i):
+        return self.core.score[self.core.detect_team(self.core.order[i])]
+
+    # send an event received from arduino
+    def sendEventToCore(self,data):
+        team = self.ac.ARD_TEAM.index(data["team"])
+        scoreChange = data["score"] - self.score["arduino"][team]
+        self.score["arduino"][team] = data["score"]
+        event = self.ac.CORE_EVENT[data["event"]]
+        if event == None:
+            debugLog("WARNING!!! VOID event received on receiving")
+        elif event in self.ac.UNDO_EVENT:
+            self.core.act_goal_undo(self.core.order[team], event)
+        else:
+            self.core.act_goal(self.core.order[team], event)
+            self.lastToScore = team
+
+
+    # === arduino communication ===
+
+    # get arduino score
+    def getArduinoScore(self,i):
+        data = self.ac.askData(self.ac.ARD_TEAM[i])
+        if data == None:
+            self.debugLog("No response from Arduino while asking data")
+            return None
+        return data["score"]
+
+    # set arduino score
+    def setArduinoScore(self,team,score):
+        scoreChange = score - self.score["arduino"][team]
+        self.ac.sendMessage(self.ac.ARD_TEAM[team],scoreChange)
+
+
+    # === thread controller ===
 
     # the function that keeps controlling the sensors
     def run(self):
         try:
             while self.connected:
                 time.sleep(0)
-                self.ac.debugLog("Connected!")
                 (rcv,isSocketOpen) = self.ac.receiveData()
                 if (isSocketOpen) and (rcv != None):
-                    self.ac.debugLog(str(rcv))
+                    self.ac.debugLog("data received:" + str(rcv))
+                    data = self.ac.dataFromBuff(rcv)
+                    self.sendEventToCore(data)
             self.connect = False
             self.toDisconnect = True
         except:
             self.connect = False
             self.toDisconnect = True
 
+    # === control functions ===
 
     def debugLog(self,string):
+        self._numDebugebugLines += 1
         self.debugConsole.append([string])
 
 
-    def onSizeAllocate(self,*args):
+    # === event handlers ===
+    def onConsoleShow(self,*args):
         adj = self.consoleView.get_vadjustment()
-        adj.set_value( adj.get_upper() - adj.get_page_size())
+        adj.set_value( adj.get_page_size() )
+
+
+    def onSizeAllocate(self,*args):
+        numDebugLines = self._numDebugebugLines
+        self._numDebugebugLines = 0
+        adj = self.consoleView.get_vadjustment()
+        if adj.get_value() >= adj.get_upper() - adj.get_page_size() - numDebugLines * adj.get_step_increment():
+            adj.set_value( adj.get_upper() - adj.get_page_size() )
 
 
     def onConnection(self,*args):
@@ -192,7 +279,13 @@ class Interface:
                 self.debugLog("Connected!")
                 self.s.send(PWD)
                 self.connected = True
+                self.debugLog("Creating arduino controller object...")
                 self.ac = ArdCon(self.s,self.debugLog)
+                self.debugLog("Arduino controller object Created!")
+                self.debugLog("Asking Arduino data...")
+                for i in [0,1]:
+                    self.score["arduino"][i] = self.getArduinoScore(i)
+                self.debugLog("Arduino data received!")
                 self.controlThread = threading.Thread(target=self.run)
                 self.controlThread.start()
                 self.connectionWindow.hide()
@@ -212,6 +305,7 @@ class Interface:
             self.connected = False
             self.debugLog("Disconnected\n")
     
+
     def onDestroyWindow(self,*args):
         try:
             del(self.ac)
@@ -223,7 +317,7 @@ class Interface:
 
     def loopFunction(self,*args):
         if self.connected:
-            self.controlScore()
+            self.updateScore()
         elif self.toDisconnect:
             self.disconnect()
         else:
@@ -233,32 +327,30 @@ class Interface:
 
 
 
-    def controlScore(self):
-        (rcv,isSocketOpen) = self.ac.receiveData()
-        if not isSocketOpen:
-            self.disconnect()
-        if rcv != None:
-            debugLog(str(rcv))
-            self.updateScore(rcv)
-
-
-    def updateScore(self,rcv):
-        ## DA DEFINIRE
-        debugLog("Sono le 3 e mezza di notte, lo finirò domani...")
-
-
-
-    def ask_test(self,*args):
-        self.debugLog("ask_test: da implementare")
-
-
-    def getScore(self,*args):
-        self.core.update()
-        for i in [0, 1]:
-            self.cached_score[i] = self.core.score[self.core.detect_team(self.core.order[i])]
-            self.cached_score[i] = self.score[i]
-        self.cache_to_entry()
-        self.cache_to_display()
+    def updateScore(self):
+        for i in [0,1]:
+            self.score["core"][i] = self.getCoreScore(i)
+            if self.score["arduino"][i] == None:
+                self.debugLog("Arduino score unknown")
+                self.setLastToScore = None
+            else:
+                if self.score["core"][i] != self.score["arduino"][i]:
+                    # server takes priority over arduino
+                    self.setArduinoScore(i,self.score["core"][i])
+                    self.lastToScore = None
+            self.updateView(i)
+            
+    def updateView(self,team):
+        for dev in self.DEVICE:
+            score = self.score[dev][team]
+            if score == None:
+                self.scoreTextView[dev][self.ac.ARD_TEAM[team]].set_text("Unknown")
+            else:
+                self.scoreTextView[dev][self.ac.ARD_TEAM[team]].set_text(str(score))
+            if self.lastToScore[dev] == team:
+                self.lastToScoreBar[dev][self.ac.ARD_TEAM[team]].set_fraction(1)
+            else:
+                self.lastToScoreBar[dev][self.ac.ARD_TEAM[team]].set_fraction(0)
     
 
 
