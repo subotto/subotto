@@ -1,0 +1,16 @@
+
+
+segna un goal
+self.core.act_goal(self.core.order[team], source)
+
+rimuovi un goal
+self.core.act_goal_undo(self.core.order[team], source)
+
+update core
+self.core.update()
+
+get score
+self.core.score[self.core.detect_team(self.core.order[i])]
+
+detect if 
+self.core.detect_team(self.core.order[i])
