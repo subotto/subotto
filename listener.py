@@ -357,6 +357,8 @@ class Statistics:
         
         if elapsed_time is not None and elapsed_time > 0.01 :
             goals_per_minute = float(self.score[0] + self.score[1]) * 60.0 / elapsed_time
+        else:
+            goals_per_minute = None
         
         # Compute team-related data
         if self.match.begin is not None:
@@ -373,6 +375,8 @@ class Statistics:
         	self.turn_begin = self.match.begin
         if self.turn_begin is not None:
             turn_duration = turn_end - self.turn_begin
+        else:
+            turn_duration = None
         
         
         # Compute (played time)-related data (it must be updated by hand for the current players,
@@ -440,13 +444,13 @@ class Statistics:
                             'num_goals': self.num_goals[ self.current_players[i][j].id ],
                             'participations': self.participations[ self.current_players[i][j].id ],
                         }
-                    for j in xrange(2)],
+                    for j in xrange(2)] if self.current_players != [None, None] else None,
                 }
                 for i in xrange(2)},
             'goal_difference': abs(self.score[0] - self.score[1]),
             'total_goals': self.score[0] + self.score[1],
             'goals_per_minute': goals_per_minute,
-            'turn_duration': turn_duration.total_seconds(),
+            'turn_duration': turn_duration.total_seconds() if turn_duration is not None else None,
             'remount_index': remount_index,
             }
         
