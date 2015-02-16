@@ -11,11 +11,6 @@ import datetime
 from pprint import pprint
 import copy
 
-from numpy import arange
-import matplotlib.pyplot
-import matplotlib.pylab
-import matplotlib.dates
-
 from data import Session, Team, Player, Match, PlayerMatch, Event, StatsPlayerMatch, Base, AdvantagePhase
 
 
