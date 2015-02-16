@@ -76,7 +76,14 @@ class ArdCon():
     def __init__(self,sock,debugLog):
         self.s = sock
         self.debugLog = debugLog
-        self.debugLog("prova")
+        self.ATC_SIGNAL = {
+            "score": lambda msg: ((msg[0] & 0xF)<<8) + msg[1],
+            "team": lambda msg: "BLUE" if msg[0] & 0x80 else "RED",
+            "event": lambda msg: EVENT[(msg[0] & 0x70) >> 4]
+        }
+        self.CTA_SIGNAL = {
+            "askData": lambda team: self.sendNumber(0x4) if team == "RED" else self.sendNumber(0x6)
+        }
 
 
     # Send an int to the Arduino
@@ -87,12 +94,10 @@ class ArdCon():
     # Elaborate the data received from arduino
     def dataFromBuff(self,rcv):
         rcv = map(ord, rcv)
-        score = ((rcv[0] & 0xF)<<8) + rcv[1]
-        team = "BLUE" if rcv[0] & 0x80 else "RED"
         return {
-            "score": score,
-            "team": team,
-            "event": EVENT[(rcv[0] & 0x70) >> 4]
+            "score": self.ATC_SIGNAL["score"](rcv),
+            "team": self.ATC_SIGNAL["team"](rcv),
+            "event": self.ATC_SIGNAL["event"](rcv)
         }
 
     # Receive data from Arduino; return false as the second element if the socket is closed
@@ -114,8 +119,8 @@ class ArdCon():
         else:
             return (None,True)
 
-    # Send a score change message to the Arduino
-    def sendMessage (self, team, score_change ):
+    # Send a score change command to the Arduino
+    def sendScoreCommand (self, team, score_change ):
         if team == "RED":
             msg = 0
         else:
@@ -126,18 +131,23 @@ class ArdCon():
             score_change = - score_change
         for i in range(score_change):
             self.sendNumber(msg)
-        
+    
+    # Send a sensor activation/deactivation command to the arduino
+    def sendSensorCommand (self, team, event, toActivate):
+        command = 16
+        command += 8 if team =="RED" else 0
+        command += self.EVENT.index(event) - 1
+        command += 1 if toActivate else 0
+        self.sendNumber(command)
+    
     # Asks Arduino the score
     def askData(self,team):
-        if team == "RED":
-            self.sendNumber(0x4)
-        else:
-            self.sendNumber(0x6)
+        self.CTA_SIGNAL["askData"](team)
         (data,isConnected) = self.receiveData()
         if (not isConnected) or (data == None):
             return None
         if data["event"] != "VOID":
-            self.debugLog("ERROR: non void event received")
+            self.debugLog("ERROR: non void event received from Arduino while asking data")
         return data
 
 
@@ -148,6 +158,7 @@ class Interface:
     _numDebugebugLines = 0
 
     DEVICE = ["arduino","core"]
+    MAX_NUM_CONSOLE_ROWS = 100
 
     connected = False
     toDisconnect = False
@@ -179,6 +190,22 @@ class Interface:
             "core":{"RED":self.builder.get_object("redCoreLastToScore"),
                     "BLUE":self.builder.get_object("blueCoreLastToScore")},
         }
+        self.sensorSwitch = {
+            "RED":{
+                "VOID":None,
+                "GOAL":self.builder.get_object("redGoalSwitch"),
+                "SUPERGOAL":self.builder.get_object("redSupergoalSwitch"),
+                "PLUS_ONE":self.builder.get_object("redAddButtonSwitch"),
+                "MINUS_ONE":self.builder.get_object("redUndoButtonSwitch")
+            },
+            "BLUE":{
+                "VOID":None,
+                "GOAL":self.builder.get_object("blueGoalSwitch"),
+                "SUPERGOAL":self.builder.get_object("blueSupergoalSwitch"),
+                "PLUS_ONE":self.builder.get_object("blueAddButtonSwitch"),
+                "MINUS_ONE":self.builder.get_object("blueUndoButtonSwitch")
+            }
+        }
 
         self.core = SubottoCore(int(sys.argv[1]))
         for i in [0,1]:
@@ -206,7 +233,7 @@ class Interface:
             self.core.act_goal_undo(self.core.order[team], event)
         else:
             self.core.act_goal(self.core.order[team], event)
-            self.lastToScore = team
+            self.lastToScore["core"] = team
 
 
     # === arduino communication ===
@@ -222,7 +249,7 @@ class Interface:
     # set arduino score
     def setArduinoScore(self,team,score):
         scoreChange = score - self.score["arduino"][team]
-        self.ac.sendMessage(self.ac.ARD_TEAM[team],scoreChange)
+        self.ac.sendScoreCommand(self.ac.ARD_TEAM[team],scoreChange)
 
 
     # === thread controller ===
@@ -248,6 +275,8 @@ class Interface:
     def debugLog(self,string):
         self._numDebugebugLines += 1
         self.debugConsole.append([string])
+        if len(self.debugConsole) > self.MAX_NUM_CONSOLE_ROWS:
+            self.debugConsole.remove(self.debugConsole.get_iter_first())
 
 
     # === event handlers ===
@@ -262,6 +291,16 @@ class Interface:
         adj = self.consoleView.get_vadjustment()
         if adj.get_value() >= adj.get_upper() - adj.get_page_size() - numDebugLines * adj.get_step_increment():
             adj.set_value( adj.get_upper() - adj.get_page_size() )
+
+
+    def onSwitchNotify(self,*args):
+        if self.connected:
+            for team in self.ac.ARD_TEAM:
+                for event in self.ac.EVENT:
+                    if args[0] == self.sensorSwitch[team][event]:
+                        toActivate = self.sensorSwitch[team][event].get_active()
+                        self.ac.sendSensorCommand(team,event,toActivate)
+                        self.debugLog("switch " + str(team) + " " + str(event) + " was turned " + str(toActivate))
 
 
     def onConnection(self,*args):
@@ -332,12 +371,12 @@ class Interface:
             self.score["core"][i] = self.getCoreScore(i)
             if self.score["arduino"][i] == None:
                 self.debugLog("Arduino score unknown")
-                self.setLastToScore = None
+                self.lastToScore["arduino"] = None
             else:
                 if self.score["core"][i] != self.score["arduino"][i]:
                     # server takes priority over arduino
                     self.setArduinoScore(i,self.score["core"][i])
-                    self.lastToScore = None
+                    self.lastToScore["arduino"] = None
             self.updateView(i)
             
     def updateView(self,team):
