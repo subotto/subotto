@@ -81,7 +81,7 @@ class ArdCon():
             "event": lambda msg: self.EVENT[(msg[0] & 0x70) >> 4]
         }
         self.CTA_SIGNAL = {
-            "askData": lambda team: self.sendNumber(0x4) if team == "RED" else self.sendNumber(0x6)
+            "askData": lambda team: self.sendNumber(64) if team == "RED" else self.sendNumber(192)
         }
 
 
@@ -93,7 +93,6 @@ class ArdCon():
     # Elaborate the data received from arduino
     def dataFromBuff(self,rcv):
         rcv = map(ord, rcv)
-        print rcv
         return {
             "score": self.ATC_SIGNAL["score"](rcv),
             "team": self.ATC_SIGNAL["team"](rcv),
@@ -113,23 +112,29 @@ class ArdCon():
     # Send a score change command to the Arduino
     def sendScoreCommand (self, team, score_change ):
         if team == "RED":
-            msg = 0
+            baseMsg = 0
         else:
-            msg = 2
-        if score_change > 0:
-            msg += 1
-        else:
+            baseMsg = 128
+        if score_change < 0:
+            baseMsg += 32
             score_change = - score_change
-        for i in range(score_change):
-            self.sendNumber(msg)
+        i = 0
+        while score_change != 0:
+            if score_change & 1:
+                self.sendNumber(baseMsg + i)
+            score_change = score_change >> 1
+            i += 1
     
     # Send a sensor activation/deactivation command to the arduino
     def sendSensorCommand (self, team, event, toActivate):
-        command = 16
-        command += 8 if team =="BLUE" else 0
-        command += (self.EVENT.index(event)-1) << 1
-        command += 0 if toActivate else 1
-        self.sendNumber(command)
+        if team == "RED":
+            baseMsg = 72
+        else:
+            baseMsg = 200
+        baseMsg += (self.EVENT.index(event)-1) << 1
+        if not toActivate:
+            baseMsg += 1
+        self.sendNumber(baseMsg)
     
     # Asks Arduino the score
     def askData(self,team):
@@ -266,7 +271,6 @@ class Interface:
                 self.s.close()
             except:
                 pass
-            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connectionWindow.show()
             self.connected = False
             self.debugLog("Disconnected\n")
