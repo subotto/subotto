@@ -524,6 +524,7 @@
                           <object class="GtkSwitch" id="redGoalSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -537,6 +538,7 @@
                           <object class="GtkSwitch" id="redSupergoalSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -550,6 +552,7 @@
                           <object class="GtkSwitch" id="redAddButtonSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -563,6 +566,7 @@
                           <object class="GtkSwitch" id="redUndoButtonSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -663,6 +667,7 @@
                           <object class="GtkSwitch" id="blueGoalSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -676,6 +681,7 @@
                           <object class="GtkSwitch" id="blueSupergoalSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -689,6 +695,7 @@
                           <object class="GtkSwitch" id="blueAddButtonSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>
@@ -702,6 +709,7 @@
                           <object class="GtkSwitch" id="blueUndoButtonSwitch">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="active">True</property>
                             <signal name="notify" handler="onSwitchNotify" swapped="no"/>
                           </object>
                           <packing>

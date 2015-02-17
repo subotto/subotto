@@ -27,18 +27,17 @@ import socket
 import os
 import time
 import select
-import threading
+#import threading
+import traceback
 
-import glob
+#import glob
 
-from gi.repository import Gtk 
-
-from gi.repository import GObject
-GObject.threads_init()
+from gi.repository import Gtk, GObject, GLib
+#GObject.threads_init()
 
 sys.path.insert(0,"..")
 
-from opcodes import *
+#from opcodes import *
 
 from core import SubottoCore
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
@@ -79,7 +78,7 @@ class ArdCon():
         self.ATC_SIGNAL = {
             "score": lambda msg: ((msg[0] & 0xF)<<8) + msg[1],
             "team": lambda msg: "BLUE" if msg[0] & 0x80 else "RED",
-            "event": lambda msg: EVENT[(msg[0] & 0x70) >> 4]
+            "event": lambda msg: self.EVENT[(msg[0] & 0x70) >> 4]
         }
         self.CTA_SIGNAL = {
             "askData": lambda team: self.sendNumber(0x4) if team == "RED" else self.sendNumber(0x6)
@@ -94,6 +93,7 @@ class ArdCon():
     # Elaborate the data received from arduino
     def dataFromBuff(self,rcv):
         rcv = map(ord, rcv)
+        print rcv
         return {
             "score": self.ATC_SIGNAL["score"](rcv),
             "team": self.ATC_SIGNAL["team"](rcv),
@@ -102,22 +102,13 @@ class ArdCon():
 
     # Receive data from Arduino; return false as the second element if the socket is closed
     def receiveData(self):
-        try:
-            rlist, _, _ = select.select([self.s], [], [], self.TIMEOUT)
-        except:
-            self.debugLog ("Socket closed.")
-            return (None,False)
-        if rlist:
-            try:
-                rcv = self.s.recv(self.BUFFER_RCV_LENGTH)
-                while len(rcv) < self.BUFFER_RCV_LENGTH:
-                    rcv += self.s.recv(self.BUFFER_RCV_LENGTH)
-                    return (self.dataFromBuff(rcv),True)
-            except:
-                self.debugLog ("Socket closed.")
-                return (None,False)
-        else:
-            return (None,True)
+        rlist, _, _ = select.select([self.s], [], [], 0)
+        if len(rlist):
+            rcv = ""
+            while len(rcv) < self.BUFFER_RCV_LENGTH:
+                rcv += self.s.recv(self.BUFFER_RCV_LENGTH - len(rcv))
+            return self.dataFromBuff(rcv)
+        return None
 
     # Send a score change command to the Arduino
     def sendScoreCommand (self, team, score_change ):
@@ -135,20 +126,14 @@ class ArdCon():
     # Send a sensor activation/deactivation command to the arduino
     def sendSensorCommand (self, team, event, toActivate):
         command = 16
-        command += 8 if team =="RED" else 0
-        command += self.EVENT.index(event) - 1
-        command += 1 if toActivate else 0
+        command += 8 if team =="BLUE" else 0
+        command += (self.EVENT.index(event)-1) << 1
+        command += 0 if toActivate else 1
         self.sendNumber(command)
     
     # Asks Arduino the score
     def askData(self,team):
         self.CTA_SIGNAL["askData"](team)
-        (data,isConnected) = self.receiveData()
-        if (not isConnected) or (data == None):
-            return None
-        if data["event"] != "VOID":
-            self.debugLog("ERROR: non void event received from Arduino while asking data")
-        return data
 
 
 
@@ -164,6 +149,9 @@ class Interface:
     toDisconnect = False
     score = {dev:[0,0] for dev in DEVICE}
     lastToScore = {dev:None for dev in DEVICE}
+
+
+    # === init function ===
 
     def __init__(self):
         filename = "main.glade"
@@ -213,97 +201,35 @@ class Interface:
        
         GObject.timeout_add(300, self.loopFunction)
         self.core = SubottoCore(int(sys.argv[1]))
-    
 
-    # === core communication ===
-
-    # get score from the core
-    def getCoreScore(self,i):
-        return self.core.score[self.core.detect_team(self.core.order[i])]
-
-    # send an event received from arduino
-    def sendEventToCore(self,data):
-        team = self.ac.ARD_TEAM.index(data["team"])
-        scoreChange = data["score"] - self.score["arduino"][team]
-        self.score["arduino"][team] = data["score"]
-        event = self.ac.CORE_EVENT[data["event"]]
-        if event == None:
-            debugLog("WARNING!!! VOID event received on receiving")
-        elif event in self.ac.UNDO_EVENT:
-            self.core.act_goal_undo(self.core.order[team], event)
-        else:
-            self.core.act_goal(self.core.order[team], event)
-            self.lastToScore["core"] = team
-
-
-    # === arduino communication ===
-
-    # get arduino score
-    def getArduinoScore(self,i):
-        data = self.ac.askData(self.ac.ARD_TEAM[i])
-        if data == None:
-            self.debugLog("No response from Arduino while asking data")
-            return None
-        return data["score"]
-
-    # set arduino score
-    def setArduinoScore(self,team,score):
-        scoreChange = score - self.score["arduino"][team]
-        self.ac.sendScoreCommand(self.ac.ARD_TEAM[team],scoreChange)
-
-
-    # === thread controller ===
-
-    # the function that keeps controlling the sensors
-    def run(self):
-        try:
-            while self.connected:
-                time.sleep(0)
-                (rcv,isSocketOpen) = self.ac.receiveData()
-                if (isSocketOpen) and (rcv != None):
-                    self.ac.debugLog("data received:" + str(rcv))
-                    data = self.ac.dataFromBuff(rcv)
-                    self.sendEventToCore(data)
-            self.connect = False
-            self.toDisconnect = True
-        except:
-            self.connect = False
-            self.toDisconnect = True
 
     # === control functions ===
 
+    # write on the console
     def debugLog(self,string):
         self._numDebugebugLines += 1
         self.debugConsole.append([string])
-        if len(self.debugConsole) > self.MAX_NUM_CONSOLE_ROWS:
-            self.debugConsole.remove(self.debugConsole.get_iter_first())
+        #if len(self.debugConsole) > self.MAX_NUM_CONSOLE_ROWS:
+        #    self.debugConsole.remove(self.debugConsole.get_iter_first())
 
 
-    # === event handlers ===
-    def onConsoleShow(self,*args):
-        adj = self.consoleView.get_vadjustment()
-        adj.set_value( adj.get_page_size() )
+    # === main loop ===
 
-
-    def onSizeAllocate(self,*args):
-        numDebugLines = self._numDebugebugLines
-        self._numDebugebugLines = 0
-        adj = self.consoleView.get_vadjustment()
-        if adj.get_value() >= adj.get_upper() - adj.get_page_size() - numDebugLines * adj.get_step_increment():
-            adj.set_value( adj.get_upper() - adj.get_page_size() )
-
-
-    def onSwitchNotify(self,*args):
+    def loopFunction(self,*args):
         if self.connected:
-            for team in self.ac.ARD_TEAM:
-                for event in self.ac.EVENT:
-                    if args[0] == self.sensorSwitch[team][event]:
-                        toActivate = self.sensorSwitch[team][event].get_active()
-                        self.ac.sendSensorCommand(team,event,toActivate)
-                        self.debugLog("switch " + str(team) + " " + str(event) + " was turned " + str(toActivate))
+            self.updateScore()
+        elif self.toDisconnect:
+            self.disconnect()
+        else:
+            self.debugLog("Not connected")
+        self.core.update()
+        return True
 
 
-    def onConnection(self,*args):
+    # === connection/disconnection functions ===
+
+    # connect to socket
+    def connect(self):
         if not self.connected:    
             try:
                 self.debugLog("Getting data..")
@@ -323,50 +249,47 @@ class Interface:
                 self.debugLog("Arduino controller object Created!")
                 self.debugLog("Asking Arduino data...")
                 for i in [0,1]:
-                    self.score["arduino"][i] = self.getArduinoScore(i)
-                self.debugLog("Arduino data received!")
-                self.controlThread = threading.Thread(target=self.run)
-                self.controlThread.start()
+                    self.getArduinoScore(i)
                 self.connectionWindow.hide()
             except:
+                traceback.print_exc()
                 self.debugLog("Connection failed\n")
             else:
                 self.connected = True
                 self.debugLog("Connection successful\n")
-            
-    
-    def disconnect(self,*args):
+
+    # disconnect from socket
+    def disconnect(self):
         self.toDisconnect = False
         if self.connected:
-            self.s.close()
+            try:
+                self.s.close()
+            except:
+                pass
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connectionWindow.show()
             self.connected = False
             self.debugLog("Disconnected\n")
-    
 
-    def onDestroyWindow(self,*args):
+
+    def readEvents(self):
         try:
-            del(self.ac)
-            disconnect()
+            rcv = self.ac.receiveData()
+            while rcv is not None:
+                self.sendEventToCore(rcv)
+                rcv = self.ac.receiveData()
         except:
-            pass
-        sys.exit(0)
+            traceback.print_exc()
+            self.connected = False
+            self.toDisconnect = True
+            self.debugLog("Disconnected")
 
 
-    def loopFunction(self,*args):
-        if self.connected:
-            self.updateScore()
-        elif self.toDisconnect:
-            self.disconnect()
-        else:
-            self.debugLog("Not connected")
-        self.core.update()
-        return True
+    # === update functions ===
 
-
-
+    # asks the score to arduino and the core; updates arduino score
     def updateScore(self):
+        self.readEvents()
         for i in [0,1]:
             self.score["core"][i] = self.getCoreScore(i)
             if self.score["arduino"][i] == None:
@@ -378,7 +301,8 @@ class Interface:
                     self.setArduinoScore(i,self.score["core"][i])
                     self.lastToScore["arduino"] = None
             self.updateView(i)
-            
+
+    # update scores on the main window
     def updateView(self,team):
         for dev in self.DEVICE:
             score = self.score[dev][team]
@@ -390,7 +314,83 @@ class Interface:
                 self.lastToScoreBar[dev][self.ac.ARD_TEAM[team]].set_fraction(1)
             else:
                 self.lastToScoreBar[dev][self.ac.ARD_TEAM[team]].set_fraction(0)
+
+
+    # === core communication ===
+
+    # get score from the core
+    def getCoreScore(self,i):
+        return self.core.score[self.core.detect_team(self.core.order[i])]
+
+    # send an event received from arduino
+    def sendEventToCore(self,data):
+        team = self.ac.ARD_TEAM.index(data["team"])
+        self.score["arduino"][team] = data["score"]
+        event = self.ac.CORE_EVENT[data["team"]][data["event"]]
+        if event is None:
+            pass
+        elif event in self.ac.UNDO_EVENT:
+            self.core.act_goal_undo(self.core.order[team], event)
+        else:
+            self.core.act_goal(self.core.order[team], event)
+            self.lastToScore["core"] = team
+            self.lastToScore["arduino"] = team
+
+
+    # === arduino communication ===
+
+    # get arduino score
+    def getArduinoScore(self,i):
+        self.ac.askData(self.ac.ARD_TEAM[i])
+
+    # set arduino score
+    def setArduinoScore(self,team,score):
+        scoreChange = score - self.score["arduino"][team]
+        self.ac.sendScoreCommand(self.ac.ARD_TEAM[team],scoreChange)
+        self.getArduinoScore(team)
+
     
+    # === event handlers ===
+
+    # called when the console shows
+    def onConsoleShow(self,*args):
+        adj = self.consoleView.get_vadjustment()
+        adj.set_value( adj.get_page_size() )
+
+    # called when a new line is added to the console
+    def onSizeAllocate(self,*args):
+        numDebugLines = self._numDebugebugLines
+        self._numDebugebugLines = 0
+        adj = self.consoleView.get_vadjustment()
+        if adj.get_value() >= adj.get_upper() - adj.get_page_size() - numDebugLines * adj.get_step_increment():
+            adj.set_value( adj.get_upper() - adj.get_page_size() )
+
+    # called when a switch is switched
+    def onSwitchNotify(self,*args):
+        if self.connected:
+            for team in self.ac.ARD_TEAM:
+                for event in self.ac.EVENT:
+                    if args[0] == self.sensorSwitch[team][event]:
+                        toActivate = self.sensorSwitch[team][event].get_active()
+                        self.ac.sendSensorCommand(team,event,toActivate)
+                        self.debugLog("switch " + str(team) + " " + str(event) + " was turned " + str(toActivate))
+
+    # called when the connection button is hit
+    def onConnection(self,*args):
+        self.debugLog("Connecting...")
+        self.connect()
+
+    # called when the main window is closed
+    def onDestroyWindow(self,*args):
+        try:
+            del(self.ac)
+            disconnect()
+        except:
+            pass
+        sys.exit(0)
+    
+
+
 
 
 def main():
