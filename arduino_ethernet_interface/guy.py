@@ -27,17 +27,11 @@ import socket
 import os
 import time
 import select
-#import threading
 import traceback
 
-#import glob
-
 from gi.repository import Gtk, GObject, GLib
-#GObject.threads_init()
 
 sys.path.insert(0,"..")
-
-#from opcodes import *
 
 from core import SubottoCore
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
@@ -266,20 +260,21 @@ class Interface:
     # disconnect from socket
     def disconnect(self):
         self.toDisconnect = False
-        if self.connected:
-            try:
-                self.s.close()
-            except:
-                pass
-            self.connectionWindow.show()
-            self.connected = False
-            self.debugLog("Disconnected\n")
+        #if not self.connected:
+        try:
+            self.s.close()
+        except:
+            pass
+        self.connectionWindow.show()
+        self.connected = False
+        self.debugLog("Disconnected\n")
 
 
     def readEvents(self):
         try:
             rcv = self.ac.receiveData()
             while rcv is not None:
+                self.debugLog(str(rcv))
                 self.sendEventToCore(rcv)
                 rcv = self.ac.receiveData()
         except:
@@ -388,8 +383,9 @@ class Interface:
     def onDestroyWindow(self,*args):
         try:
             del(self.ac)
-            disconnect()
+            self.disconnect()
         except:
+            traceback.print_exc()
             pass
         sys.exit(0)
     
