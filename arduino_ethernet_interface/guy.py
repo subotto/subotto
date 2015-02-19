@@ -49,15 +49,15 @@ class ArdCon():
     CORE_EVENT = {
         "RED":{
             "VOID":None,
-            "GOAL":Event.EV_SOURCE_CELL_RED_PLAIN,
-            "SUPERGOAL":Event.EV_SOURCE_CELL_RED_SUPER,
+            "GOAL":Event.EV_SOURCE_CELL_BLUE_PLAIN,
+            "SUPERGOAL":Event.EV_SOURCE_CELL_BLUE_SUPER,
             "PLUS_ONE":Event.EV_SOURCE_BUTTON_RED_GOAL,
             "MINUS_ONE":Event.EV_SOURCE_BUTTON_RED_UNDO
         },
         "BLUE":{
             "VOID":None,
-            "GOAL":Event.EV_SOURCE_CELL_BLUE_PLAIN,
-            "SUPERGOAL":Event.EV_SOURCE_CELL_BLUE_SUPER,
+            "GOAL":Event.EV_SOURCE_CELL_RED_PLAIN,
+            "SUPERGOAL":Event.EV_SOURCE_CELL_RED_SUPER,
             "PLUS_ONE":Event.EV_SOURCE_BUTTON_BLUE_GOAL,
             "MINUS_ONE":Event.EV_SOURCE_BUTTON_BLUE_UNDO
         }
