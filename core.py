@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import datetime 
+import datetime
 import os
 from select import select
 now=datetime.datetime.now
@@ -220,10 +220,10 @@ class SubottoCore:
                 self.session.commit()
 
     def easy_get_red_team(self):
-        return self.score[0]
+        return self.order[0]
 
     def easy_get_blue_team(self):
-        return self.score[1]
+        return self.order[1]
 
     def easy_get_red_score(self):
         return self.score[self.detect_team(self.easy_get_red_team())]

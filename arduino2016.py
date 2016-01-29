@@ -34,21 +34,28 @@ class Connection(SocketServer.BaseRequestHandler):
         fd = self.request.makefile('r+b', 0)
         actions = {
             CODE_NOOP: lambda: None,
-            CODE_CELL_RED_PLAIN: core.act_red_goal_cell,
-            CODE_CELL_RED_SUPER: core.act_red_supergoal_cell,
-            CODE_CELL_BLUE_PLAIN: core.act_blue_goal_cell,
-            CODE_CELL_BLUE_SUPER: core.act_blue_supergoal_cell,
-            CODE_BUTTON_RED_GOAL: core.act_red_goal_button,
-            CODE_BUTTON_RED_UNDO: core.act_red_goalundo_button,
-            CODE_BUTTON_BLUE_GOAL: core.act_blue_goal_button,
-            CODE_BUTTON_BLUE_UNDO: core.act_blue_goalundo_button,
+            CODE_CELL_RED_PLAIN: core.easy_act_red_goal_cell,
+            CODE_CELL_RED_SUPER: core.easy_act_red_supergoal_cell,
+            CODE_CELL_BLUE_PLAIN: core.easy_act_blue_goal_cell,
+            CODE_CELL_BLUE_SUPER: core.easy_act_blue_supergoal_cell,
+            CODE_BUTTON_RED_GOAL: core.easy_act_red_goal_button,
+            CODE_BUTTON_RED_UNDO: core.easy_act_red_goalundo_button,
+            CODE_BUTTON_BLUE_GOAL: core.easy_act_blue_goal_button,
+            CODE_BUTTON_BLUE_UNDO: core.easy_act_blue_goalundo_button,
             }
         while running:
-            code = ord(fd.read(1))
+            code_str = fd.read(1)
+            if code_str == '':
+                break
+            code = ord(code_str)
+            print >> sys.stderr, "Received code: %d" % (code)
             # Do something with the code
             with core_lock:
                 core.update()
-                actions[code]()
+                try:
+                    actions[code]()
+                except KeyError:
+                    print >> sys.stderr, "Wrong code"
             red_score = core.easy_get_red_score()
             blue_score = core.easy_get_blue_score()
             fd.write(struct.pack(">HH", red_score, blue_score))
