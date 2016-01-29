@@ -218,3 +218,39 @@ class SubottoCore:
             self.session.add(player_match)
             if not bulk:
                 self.session.commit()
+
+    def easy_get_red_team(self):
+        return self.score[0]
+
+    def easy_get_blue_team(self):
+        return self.score[1]
+
+    def easy_get_red_score(self):
+        return self.score[self.detect_team(self.easy_get_red_team())]
+
+    def easy_get_blue_score(self):
+        return self.score[self.detect_team(self.easy_get_blue_team())]
+
+    def easy_act_red_goal_cell(self):
+        self.act_goal(self.easy_get_blue_team(), source=Event.EV_SOURCE_CELL_RED_PLAIN)
+
+    def easy_act_red_supergoal_cell(self):
+        self.act_goal(self.easy_get_blue_team(), source=Event.EV_SOURCE_CELL_RED_SUPER)
+
+    def easy_act_red_goal_button(self):
+        self.act_goal(self.easy_get_read_team(), source=Event.EV_SOURCE_BUTTON_RED_GOAL)
+
+    def easy_act_red_goalundo_button(self):
+        self.act_goal_undo(self.easy_get_red_team(), source=Event.EV_SOURCE_BUTTON_RED_UNDO)
+
+    def easy_act_blue_goal_cell(self):
+        self.act_goal(self.easy_get_red_team(), source=Event.EV_SOURCE_CELL_BLUE_PLAIN)
+
+    def easy_act_blue_supergoal_cell(self):
+        self.act_goal(self.easy_get_red_team(), source=Event.EV_SOURCE_CELL_BLUE_SUPER)
+
+    def easy_act_blue_goal_button(self):
+        self.act_goal(self.easy_get_blue_team(), source=Event.EV_SOURCE_BUTTON_BLUE_GOAL)
+
+    def easy_act_blue_goalundo_button(self):
+        self.act_goal_undo(self.easy_get_blue_team(), source=Event.EV_SOURCE_BUTTON_BLUE_UNDO)
