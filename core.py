@@ -238,7 +238,7 @@ class SubottoCore:
         self.act_goal(self.easy_get_blue_team(), source=Event.EV_SOURCE_CELL_RED_SUPER)
 
     def easy_act_red_goal_button(self):
-        self.act_goal(self.easy_get_read_team(), source=Event.EV_SOURCE_BUTTON_RED_GOAL)
+        self.act_goal(self.easy_get_red_team(), source=Event.EV_SOURCE_BUTTON_RED_GOAL)
 
     def easy_act_red_goalundo_button(self):
         self.act_goal_undo(self.easy_get_red_team(), source=Event.EV_SOURCE_BUTTON_RED_UNDO)

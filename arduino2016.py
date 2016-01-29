@@ -30,6 +30,8 @@ CODE_BUTTON_BLUE_UNDO = 6
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
     def handle(self):
+        # TODO: peer name
+        print >> sys.stderr, "Connection received"
         global running, core, core_lock
         fd = self.request.makefile('r+b', 0)
         actions = {
@@ -60,6 +62,7 @@ class Connection(SocketServer.BaseRequestHandler):
             blue_score = core.easy_get_blue_score()
             fd.write(struct.pack(">HH", red_score, blue_score))
         fd.close()
+        print >> sys.stderr, "Connection lost"
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
