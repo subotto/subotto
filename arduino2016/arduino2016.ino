@@ -9,8 +9,11 @@
 #define DEBUG 0
 #define TXID 1
 #define RXID 2
-#define DELAY_ETH_TIME 10000 //milliseconds
+#define DELAY_ETH_TIME 1000 //milliseconds
 #define MAX_TRY 5
+
+#define BRIGHTNESS 30
+#define ERROR_TIMEOUT 3*1000
 
 byte mac[] = { 90, 162, 218, 13, 78, 107};
 byte server_ip[]={172, 22, 0, 141};
@@ -25,9 +28,12 @@ SevSeg rossi;
 
 char C=0;
 int z=10;
-int counterrossi = 0;
-int counterblu = 0; //rischio di overflow
+int counterrossi = 10000;
+int counterblu = 10000; //rischio di overflow
 int soglia=950; //varibile importantissima !!
+long int last_contact = 0;
+long int last_connection_retry = 0;
+int loop_num = 0;
 char wait = 0;
 
   //qui ci metto le varibili che conterranno i pin delle fotocellule
@@ -79,49 +85,31 @@ char wait = 0;
 }*/
 
 void receive_data() {
-  unit8_t data[4];
+  byte data[4];
+  if (!client.connected()) return;
   if (client.available() >= 4) {
     int i;
     for (i = 0; i < 4; i++) {
       data[i] = client.read();
     }
     counterrossi=data[0]*256+data[1];
-    counterblu = data[2]*256+data[3];    
+    counterblu = data[2]*256+data[3];
+    last_contact = millis();
   }
 }
 
 void Send(uint8_t data)
 {
-  if(tentativi>MAX_TRY)return;
-  Serial.println("Provo a collegarmi");
-  if (client.connect(server_ip, porta)) {
-    tentativi=0;
-    #if DEBUG
-    Serial.println("connesso, ora mando al server "+String(data));
-    #endif
-    
     client.write(data);
     
     #if DEBUG
-    Serial.println("benone! connessione riuscita, aspettiamo risposta");
+    Serial.println("benone! invio riuscito");
     #endif
-    
-    uint8_t messaggio[4]={0};
-    GetServerMessage(messaggio, 4);
-    Serial.println("Cavolo si che ci passi");
-  }
-  else
-  {
-    tentativi++;
-  #if DEBUG
-  Serial.println("malaccio!");
-  #endif
-  }
 }
 
 
 
-void LeggiPunteggio()
+/*void LeggiPunteggio()
 {
  counterrossi=EEPROM.read(0)*256+EEPROM.read(1);
  counterblu=EEPROM.read(2)*256+EEPROM.read(3);
@@ -132,18 +120,18 @@ void ScriviPunteggio(){
  EEPROM.write(1,counterrossi%256);
  EEPROM.write(2,counterblu/256);
  EEPROM.write(3,counterblu%256);
-}
+}*/
 
 void SMS()
 {
-  ScriviPunteggio();
+  //ScriviPunteggio();
   Send(wait);
 }
 
-void zero(){
+/*void zero(){
   counterblu=0;
   counterrossi=0;
-}
+}*/
 
 //prende i nuovi valori dei punteggi
   
@@ -154,6 +142,9 @@ void setup() {
   /*inizializzo i parametri relativi ai diplay a 7 segmenti */
   //start dell'ethernet
   if(Ethernet.begin(mac)==0){if(DEBUG)Serial.println("non connesso!");}
+  /*
+    In produzione, usare begin(mac, ip, dns, gateway, subnet); gli indirizzi sono tutti array di 4 byte.
+  */
   #if DEBUG
   else Serial.println("connesso");
   #endif
@@ -169,9 +160,9 @@ void setup() {
   byte segmentPins[] = {38, 40, 42, 44, 46, 48, A15, 25};  // pin di Arduino che pilatano i segmenti
   
   blu.begin(COMMON_CATHODE, numDigits, digitPinsblu, segmentPins);
-  blu.setBrightness(10);
+  blu.setBrightness(BRIGHTNESS);
   rossi.begin(COMMON_CATHODE, numDigits, digitPinsrossi , segmentPins);
-  rossi.setBrightness(10);
+  rossi.setBrightness(BRIGHTNESS);
 
 
   /*inizializzo i pin dei pulsanti*/
@@ -181,15 +172,41 @@ void setup() {
   pinMode(rossomeno,INPUT);  //rosso -
   pinMode(reset,INPUT);
   pinMode(A15, OUTPUT);//perchè si!
-  LeggiPunteggio();
-  Send(0);
+  //LeggiPunteggio();
+  //Send(0);
+  client.connect(server_ip, porta);
+  receive_data();
+  last_contact = millis();
+  last_connection_retry = millis();
 }
 
 
 
 void loop() {  
+  loop_num++;
+  // Controllo della connessione
+  Ethernet.maintain();
+  if (((!client.connected()) || (millis() - last_contact >= ERROR_TIMEOUT)) && (millis() - last_connection_retry >= DELAY_ETH_TIME)) {
+    Serial.println(client.connected());
+    Serial.println(millis());
+    Serial.println(last_contact);
+    Serial.println(last_connection_retry);
+    counterrossi = 10000;
+    counterblu = 10000;
+    int res;
+    client.stop();
+    res = client.connect(server_ip, porta);
+    if (DEBUG) {
+      Serial.print("connessione persa, riprovo; errore: ");
+      Serial.println(res);
+    }
+    last_contact = millis();
+    last_connection_retry = millis();
+  }
+  receive_data();
+  
   //tutto il necessario per il debug
-  if(DEBUG){
+  /*if(DEBUG){
   Serial.print(analogRead(blup));Serial.print("  ");
   Serial.print(analogRead(blus));Serial.print("  ");
   Serial.print(analogRead(rossop));Serial.print("  ");
@@ -199,52 +216,52 @@ void loop() {
   Serial.print(digitalRead(rossopiu));Serial.print("  ");
   Serial.print(digitalRead(rossomeno));Serial.print("  ");
   Serial.println(digitalRead(reset));
-  }
+  }*/
   //controllo tutti i possibili input
   if(analogRead(blup)>soglia) {
     if(!wait){
-    counterblu++; wait=1;
+    wait=1;
     }
    if(DEBUG)C++;
   }
   else if(analogRead(blus)>soglia) {
     if(!wait){
-      counterblu++; wait=2;
+      wait=2;
       }
       if(DEBUG)C++;
     }
   else if(analogRead(rossop)>soglia ) {
   if(!wait){
-    counterrossi++; wait=3;
+    wait=3;
     } //poco probabile
     if(DEBUG)C++;
   }
   else if(analogRead(rossos)>soglia ) {
     if(!wait){
-      counterrossi++; wait=4;
+      wait=4;
     }
     if(DEBUG)C++;
   } //idem     
   else if(digitalRead(blupiu)==HIGH) {    
     if(!wait){
-      counterblu++; wait=5;
+      wait=5;
     }
     if(DEBUG)C++;
    }
   else if(digitalRead(blumeno)==HIGH ) {    if(!wait){
-      counterblu--; wait=6;
+      wait=6;
     }
     if(DEBUG)C++;
    }
   else if(digitalRead(rossopiu)==HIGH) {    
     if(!wait){
-      counterrossi++; wait=7;
+      wait=7;
     }
     if(DEBUG)C++;
    }
   else if(digitalRead(rossomeno)==HIGH ) {    
     if(!wait){
-      counterrossi--; wait=8;
+      wait=8;
     }
     if(DEBUG)C++;
    }
@@ -266,12 +283,4 @@ void loop() {
   blu.refreshDisplay();
   rossi.setNumber(counterrossi,0);
   rossi.refreshDisplay();
-  
-  //vado a vedere se qualcosa è cambiata comunque
-  int t=millis();
-  if(t-tempo>DELAY_ETH_TIME)
-  {
-    Send(0);
-    tempo=t;
-  }
 }

@@ -7,6 +7,7 @@ import SocketServer
 import time
 import threading
 import struct
+import select
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 from core import SubottoCore
@@ -46,23 +47,27 @@ class Connection(SocketServer.BaseRequestHandler):
             CODE_BUTTON_BLUE_UNDO: core.easy_act_blue_goalundo_button,
             }
         while running:
-            code_str = fd.read(1)
-            if code_str == '':
-                break
-            code = ord(code_str)
-            print >> sys.stderr, "Received code: %d" % (code)
-            # Do something with the code
+            ready_r, ready_w, ready_x = select.select([fd], [], [], 1.0)
+            if fd in ready_r:
+                code_str = fd.read(1)
+                if code_str == '':
+                    break
+                code = ord(code_str)
+                print >> sys.stderr, "Received code: %d" % (code)
+                # Do something with the code
+                with core_lock:
+                    try:
+                        actions[code]()
+                    except KeyError:
+                        print >> sys.stderr, "Wrong code"
             with core_lock:
                 core.update()
-                try:
-                    actions[code]()
-                except KeyError:
-                    print >> sys.stderr, "Wrong code"
             red_score = core.easy_get_red_score()
             blue_score = core.easy_get_blue_score()
             fd.write(struct.pack(">HH", red_score, blue_score))
         fd.close()
-        print >> sys.stderr, "Connection lost"
+        self.request.shutdown(socket.SHUT_RDWR)
+        print >> sys.stderr, "Connection closed"
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
