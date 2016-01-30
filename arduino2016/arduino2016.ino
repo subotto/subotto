@@ -47,7 +47,7 @@ char wait = 0;
 
 
 
-int GetServerMessage(uint8_t*messaggio, int bufflen)
+/*int GetServerMessage(uint8_t*messaggio, int bufflen)
 {
     int j=0;
     int risposta=1;
@@ -76,6 +76,18 @@ int GetServerMessage(uint8_t*messaggio, int bufflen)
     }
     client.stop();
     return 1;
+}*/
+
+void receive_data() {
+  unit8_t data[4];
+  if (client.available() >= 4) {
+    int i;
+    for (i = 0; i < 4; i++) {
+      data[i] = client.read();
+    }
+    counterrossi=data[0]*256+data[1];
+    counterblu = data[2]*256+data[3];    
+  }
 }
 
 void Send(uint8_t data)
@@ -96,8 +108,6 @@ void Send(uint8_t data)
     
     uint8_t messaggio[4]={0};
     GetServerMessage(messaggio, 4);
-    counterrossi=messaggio[0]*256+messaggio[1];
-    counterblu = messaggio[2]*256+messaggio[3];
     Serial.println("Cavolo si che ci passi");
   }
   else
