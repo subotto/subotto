@@ -16,7 +16,7 @@
 #define ERROR_TIMEOUT 3*1000
 
 byte mac[] = { 90, 162, 218, 13, 78, 107};
-byte server_ip[]={172, 22, 0, 141};
+byte server_ip[]={192, 168, 111, 243};
 int porta=2204;
 //ip del server da interrogare
 EthernetClient client;
