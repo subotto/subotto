@@ -98,6 +98,7 @@ class Statistics:
         self.last_match = old_matches[-1] if len(old_matches) > 0 else None
         self.last_score_plot = [[[], []], [[], []]]
         self.last_score = [0, 0]
+        self.players = { player.id: player for player in players }
         
         self.teams = [self.match.team_a, self.match.team_b]
         self.score = [0, 0]
@@ -112,6 +113,8 @@ class Statistics:
         self.total_time = dict([])    # Map from player.id to the total number of seconds played ever
         self.played_time = dict([])    # Map from player.id to the number of seconds played in this 24-hours tournament
         self.participations = dict([])    # Map from player.id to the number of 24-hours played
+        self.neg_goals = dict([])
+        self.neg_total_goals = dict([])
         
         # Informazioni sui singoli giocatori...
         for player in players:
@@ -328,6 +331,7 @@ class Statistics:
         if player_match.player_id not in self.participations:
             self.participations[ player_match.player_id ] = 0
         self.participations[ player_match.player_id ] += 1
+        self.players[ player_match.player_id ] = player_match.player
 
 
     def generate_current_data(self):
@@ -405,6 +409,15 @@ class Statistics:
                 self.total_time[ player_id ] += delta_time
                 self.played_time[ player_id ] += delta_time
         
+        # Print statistics
+        for id, player in self.players.iteritems():
+            if self.played_time[id] > datetime.timedelta(seconds=3600):
+                print player.format_name()
+                print 'Tempo totale:', self.total_time[id]
+                print 'Tempo in questa partita:', self.played_time[id]
+                print 'Gol totali:', self.total_goals[id]
+                print 'Gol in questa partita:', self.num_goals[id]
+                print
         
         # Compute estimation-related data
         length = (self.match.sched_end - self.match.sched_begin).total_seconds()
