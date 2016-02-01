@@ -325,6 +325,8 @@ class Statistics:
         print >> sys.stderr, "> Received new player match: %r" % (player_match)
         
         # TODO: verificare (sperare) che questa funzione venga chiamata solo se quel player_match non esisteva ancora
+        if player_match.player_id not in self.participations:
+            self.participations[ player_match.player_id ] = 0
         self.participations[ player_match.player_id ] += 1
 
 
