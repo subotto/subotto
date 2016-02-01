@@ -4,6 +4,7 @@
 import sys
 import time
 import requests, json
+import traceback
 
 from listener import Statistics
 from data import Session, Team, Player, Match, PlayerMatch, Event, StatsPlayerMatch, Base, AdvantagePhase
@@ -52,10 +53,14 @@ def listen_match(match_id, old_matches_id, post_url):
             headers = {'content-type': 'application/json'}
             json_data = json.dumps({'action': 'set', 'password': PASSWD, 'data': data})
             print json_data
-            
-            r = requests.post(post_url, data=json_data, headers=headers)
-            print 'Request done', r.status_code
-            print r.text
+
+            try:
+                r = requests.post(post_url, data=json_data, headers=headers)
+                print 'Request done', r.status_code
+                print r.text
+            except:
+                print >> sys.stderr, "Exception caught, continuing..."
+                traceback.print_exc()
 
 
             time.sleep(SLEEP_TIME)
