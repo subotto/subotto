@@ -1,6 +1,6 @@
 /* Codice per l'Arduino dentro il SUBOTTO */
 
-#include "SevSeg.h"
+#include <SevSeg.h>
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Ethernet.h>
@@ -16,7 +16,7 @@
 #define ERROR_TIMEOUT 3*1000
 
 byte mac[] = { 90, 162, 218, 13, 78, 107};
-byte server_ip[]={192, 168, 111, 243};
+byte server_ip[]={192, 168, 111, 77};
 int porta=2204;
 //ip del server da interrogare
 EthernetClient client;
