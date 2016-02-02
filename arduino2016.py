@@ -31,7 +31,7 @@ CODE_BUTTON_BLUE_UNDO = 6
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
     def handle(self):
-        # TODO: peer name
+        # TODO: print peer name
         print >> sys.stderr, "Connection received"
         global running, core, core_lock
         fd = self.request.makefile('r+b', 0)
