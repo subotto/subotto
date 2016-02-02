@@ -1,0 +1,21 @@
+HOW TO SET THINGS ON THE DATABASE
+---------------------------------
+
+ * Set sched_begin and sched_end well in advance of the match. They
+   are required for the initial countdown.
+
+ * Do NOT set begin or end before resp. the beginning and the end of
+   the match. If they are set, this means that the match has already
+   begun or ended.
+
+ * Set name, team_*_id, year and place. Do not forget team_*_id and
+   year, because they are used by the match managing software or by
+   the live feeder.
+
+ * team_*_captain and team_*_deputy can be set after the match.
+
+ * When the match begins, set begin. When it ends, set end.
+
+
+In website_feeder.py set match_id and old_matches_id. Do not include
+match_id in old_matches_id.
