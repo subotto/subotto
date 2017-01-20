@@ -19,3 +19,7 @@ HOW TO SET THINGS ON THE DATABASE
 
 In website_feeder.py set match_id and old_matches_id. Do not include
 match_id in old_matches_id.
+
+PROBABLY: For 24web, the matches that are listed in the past editions
+statistics are those which have all the year, captains and deputies
+fields set.
