@@ -28,6 +28,8 @@ CODE_BUTTON_RED_UNDO = 8
 CODE_BUTTON_BLUE_GOAL = 5
 CODE_BUTTON_BLUE_UNDO = 6
 
+IGNORE_CODES = []
+
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
     def handle(self):
@@ -54,12 +56,14 @@ class Connection(SocketServer.BaseRequestHandler):
                     break
                 code = ord(code_str)
                 print >> sys.stderr, "Received code: %d" % (code)
-                # Do something with the code
-                with core_lock:
-                    try:
-                        actions[code]()
-                    except KeyError:
-                        print >> sys.stderr, "Wrong code"
+                if code not in IGNORE_CODES:
+                    with core_lock:
+                        try:
+                            actions[code]()
+                        except KeyError:
+                            print >> sys.stderr, "Wrong code"
+                else:
+                    print >> sys.stderr, "Ignore command because of configuration"
             with core_lock:
                 core.update()
             red_score = core.easy_get_red_score()
