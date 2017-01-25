@@ -343,12 +343,12 @@ class Statistics:
             # La partita è già iniziata
             elapsed_time = (now - self.match.begin).total_seconds()
             time_to_begin = None
-            match_begin = (self.match.begin - datetime.datetime(1970, 1, 1)).total_seconds()
+            match_begin = None
         else:
             # La partita deve ancora iniziare
             elapsed_time = None
             time_to_begin = (self.match.sched_begin - now).total_seconds()
-            match_begin = None
+            match_begin = (self.match.begin - datetime.datetime(1970, 1, 1)).total_seconds()
         
         if self.match.end is not None:
             # La partita, oltre che essere iniziata, è anche finita.
