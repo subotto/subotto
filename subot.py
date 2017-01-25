@@ -20,6 +20,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+
+
 class Scores_handler:	
 	def __init__(self):
 		self.score = {}
@@ -27,13 +29,14 @@ class Scores_handler:
 		self.response = {'idx':0}
 	
 	def update(self):
-		r = requests.post("https://uz.sns.it/24oretest/score",json={'action':'get'},headers={'Content-Type':'application/json'})       
+		r = requests.post("https://uz.sns.it/24ore/score",json={'action':'get'},headers={'Content-Type':'application/json'})       
 		if r.status_code == 200:
 			self.score = r.json()
 			self.response['gol'] = self.score['teams']['1']['name']+": "+`self.score['teams']['1']['score']`+"\n"+self.score['teams']['2']['name']+": "+`self.score['teams']['2']['score']`+"\n\nDifferenza reti: "+`self.score['goal_difference']`+"\nIndice di rimonta: "+("{0:.2f}".format(self.score['remount_index']) if self.score['remount_index'] != "Infinity" else "Infinito")
 			self.response['idx'] += 1
 			self.response['time'] = "Tempo trascorso: "+hsec(self.score['elapsed_time'])+"\nTempo mancante: "+hsec(self.score['time_to_end'])
-			self.response['players'] = self.score['teams']['1']['players'][0]['fname']+" "+self.score['teams']['1']['players'][0]['lname']+"\n"+self.score['teams']['1']['players'][1]['fname']+" "+self.score['teams']['1']['players'][1]['lname']+"\n\n"+self.score['teams']['2']['players'][0]['fname']+" "+self.score['teams']['2']['players'][0]['lname']+"\n"+self.score['teams']['2']['players'][1]['fname']+" "+self.score['teams']['2']['players'][1]['lname']+"\n\nIn corso da "+hsec(self.score['turn_duration']) if self.score['teams']['2']['players'] != None else "N/D"
+			self.response['players'] = self.score['teams']['1']['name']+" ("+`self.score['teams']['1']['partial_score']`+")\n"+self.score['teams']['1']['players'][0]['fname']+" "+self.score['teams']['1']['players'][0]['lname']+"\n"+self.score['teams']['1']['players'][1]['fname']+" "+self.score['teams']['1']['players'][1]['lname']+"\n\n"+self.score['teams']['2']['name']+" ("+`self.score['teams']['2']['partial_score']`+")\n"+self.score['teams']['2']['players'][0]['fname']+" "+self.score['teams']['2']['players'][0]['lname']+"\n"+self.score['teams']['2']['players'][1]['fname']+" "+self.score['teams']['2']['players'][1]['lname']+"\n\nIn corso da "+hsec(self.score['turn_duration']) if self.score['teams']['2']['players'] != None else "N/D"
+	
 		
 	def resp(self, cosa):
 		def fun(bot, update):
@@ -71,7 +74,7 @@ def h24_all(sh):
 	
 
 def get_plot_data(year,last=0):
-         r = requests.post("https://uz.sns.it/24oretest/score",json={'action':'getevents','year':`year`},headers={'Content-Type':'application/json'})
+         r = requests.post("https://uz.sns.it/24ore/score",json={'action':'getevents','year':`year`},headers={'Content-Type':'application/json'})
          if (r.status_code != 200):
                  return None
          data = r.json()
