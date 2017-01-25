@@ -412,14 +412,14 @@ class Statistics:
                 self.played_time[ player_id ] += delta_time
         
         # Print statistics
-        for id, player in self.players.iteritems():
-            if self.played_time[id] > datetime.timedelta(seconds=3600):
-                print player.format_name()
-                print 'Tempo totale:', self.total_time[id]
-                print 'Tempo in questa partita:', self.played_time[id]
-                print 'Gol totali:', self.total_goals[id]
-                print 'Gol in questa partita:', self.num_goals[id]
-                print
+        #for id, player in self.players.iteritems():
+        #    if self.played_time[id] > datetime.timedelta(seconds=3600):
+        #        print player.format_name()
+        #        print 'Tempo totale:', self.total_time[id]
+        #        print 'Tempo in questa partita:', self.played_time[id]
+        #        print 'Gol totali:', self.total_goals[id]
+        #        print 'Gol in questa partita:', self.num_goals[id]
+        #        print
         
         # Compute estimation-related data
         length = (self.match.sched_end - self.match.sched_begin).total_seconds()
