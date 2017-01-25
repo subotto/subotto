@@ -75,9 +75,9 @@ class Player(Base):
 
     def format_name(self):
         if self.comment is None:
-            return "%s %s" % (self.fname, self.lname)
+            return "%s %s" % (self.lname, self.fname)
         else:
-            return "%s %s (%s)" % (self.fname, self.lname, self.comment)
+            return "%s %s (%s)" % (self.lname, self.fname, self.comment)
 
     @classmethod
     def get_or_create(cls, session, fname, lname, comment):
