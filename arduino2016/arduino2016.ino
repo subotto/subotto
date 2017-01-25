@@ -30,7 +30,7 @@ char C=0;
 int z=10;
 int counterrossi = 10000;
 int counterblu = 10000; //rischio di overflow
-int soglia=920; //varibile importantissima !!
+int soglia=940; //varibile importantissima !!
 long int last_contact = 0;
 long int last_connection_retry = 0;
 int loop_num = 0;
@@ -206,7 +206,7 @@ void loop() {
   receive_data();
   
   //tutto il necessario per il debug
-  /*if(DEBUG){
+if(DEBUG){
   Serial.print(analogRead(blup));Serial.print("  ");
   Serial.print(analogRead(blus));Serial.print("  ");
   Serial.print(analogRead(rossop));Serial.print("  ");
@@ -216,7 +216,7 @@ void loop() {
   Serial.print(digitalRead(rossopiu));Serial.print("  ");
   Serial.print(digitalRead(rossomeno));Serial.print("  ");
   Serial.println(digitalRead(reset));
-  }*/
+  }
   //controllo tutti i possibili input
   if(analogRead(blup)>soglia) {
     if(!wait){
