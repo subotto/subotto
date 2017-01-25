@@ -12,7 +12,7 @@
 #define DELAY_ETH_TIME 1000 //milliseconds
 #define MAX_TRY 5
 
-#define BRIGHTNESS 30
+#define BRIGHTNESS 40
 #define ERROR_TIMEOUT 3*1000
 
 byte mac[] = { 90, 162, 218, 13, 78, 107};
@@ -30,7 +30,10 @@ char C=0;
 int z=10;
 int counterrossi = 10000;
 int counterblu = 10000; //rischio di overflow
-int soglia=940; //varibile importantissima !!
+int sogliabp=920; //varibile importantissima !!
+int sogliabs=800;
+int sogliarp=920;
+int sogliars=800;
 long int last_contact = 0;
 long int last_connection_retry = 0;
 int loop_num = 0;
@@ -218,25 +221,25 @@ if(DEBUG){
   Serial.println(digitalRead(reset));
   }
   //controllo tutti i possibili input
-  if(analogRead(blup)>soglia) {
+  if(analogRead(blup)>sogliabp) {
     if(!wait){
     wait=1;
     }
    if(DEBUG)C++;
   }
-  else if(analogRead(blus)>soglia) {
+  else if(analogRead(blus)>sogliabs) {
     if(!wait){
       wait=2;
       }
       if(DEBUG)C++;
     }
-  else if(analogRead(rossop)>soglia ) {
+  else if(analogRead(rossop)>sogliarp ) {
   if(!wait){
     wait=3;
     } //poco probabile
     if(DEBUG)C++;
   }
-  else if(analogRead(rossos)>soglia ) {
+  else if(analogRead(rossos)>sogliars ) {
     if(!wait){
       wait=4;
     }
