@@ -13,6 +13,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import math
+from copy import copy
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -27,21 +28,31 @@ class Scores_handler:
 		self.score = {}
 		self.lastmsg = {'gol': {}, 'time': {}, 'players': {}, 'idx': {}}
 		self.response = {'idx':0}
-	
+                self.ids = []
+                
 	def update(self):
-		r = requests.post("https://uz.sns.it/24ore/score",json={'action':'get'},headers={'Content-Type':'application/json'})       
+		r = requests.post("https://uz.sns.it/24ore/score",json={'action':'get'},headers={'Content-Type':'application/json'})
 		if r.status_code == 200:
 			self.score = r.json()
-			self.response['gol'] = self.score['teams']['1']['name']+": "+`self.score['teams']['1']['score']`+"\n"+self.score['teams']['2']['name']+": "+`self.score['teams']['2']['score']`+"\n\nDifferenza reti: "+`self.score['goal_difference']`+"\nIndice di rimonta: "+("{0:.2f}".format(self.score['remount_index']) if self.score['remount_index'] != "Infinity" else "Infinito")
+			self.response['gol'] = self.score['teams']['1']['name']+": "+`self.score['teams']['1']['score']`+"\n"+\
+                                               self.score['teams']['2']['name']+": "+`self.score['teams']['2']['score']`+"\n\n"+\
+                                               "Differenza reti: "+`self.score['goal_difference']`+"\n"+\
+                                               "Indice di rimonta: "+("{0:.2f}".format(self.score['remount_index']) if self.score['remount_index'] != "Infinity" else "Infinito")
 			self.response['idx'] += 1
-			self.response['time'] = "Tempo trascorso: "+hsec(self.score['elapsed_time'])+"\nTempo mancante: "+hsec(self.score['time_to_end'])
-			self.response['players'] = self.score['teams']['1']['name']+" ("+`self.score['teams']['1']['partial_score']`+")\n"+self.score['teams']['1']['players'][0]['fname']+" "+self.score['teams']['1']['players'][0]['lname']+"\n"+self.score['teams']['1']['players'][1]['fname']+" "+self.score['teams']['1']['players'][1]['lname']+"\n\n"+self.score['teams']['2']['name']+" ("+`self.score['teams']['2']['partial_score']`+")\n"+self.score['teams']['2']['players'][0]['fname']+" "+self.score['teams']['2']['players'][0]['lname']+"\n"+self.score['teams']['2']['players'][1]['fname']+" "+self.score['teams']['2']['players'][1]['lname']+"\n\nIn corso da "+hsec(self.score['turn_duration']) if self.score['teams']['2']['players'] != None else "N/D"
-	
-		
+			self.response['time'] = "Tempo trascorso: "+hsec(self.score['elapsed_time'])+"\n"+\
+                                                "Tempo mancante: "+hsec(self.score['time_to_end'])
+			self.response['players'] = self.score['teams']['1']['name']+" ("+`self.score['teams']['1']['partial_score']`+")\n"+\
+                                                   self.score['teams']['1']['players'][0]['fname']+" "+self.score['teams']['1']['players'][0]['lname']+"\n"+\
+                                                   self.score['teams']['1']['players'][1]['fname']+" "+self.score['teams']['1']['players'][1]['lname']+"\n\n"+\
+                                                   self.score['teams']['2']['name']+" ("+`self.score['teams']['2']['partial_score']`+")\n"+\
+                                                   self.score['teams']['2']['players'][0]['fname']+" "+self.score['teams']['2']['players'][0]['lname']+"\n"+\
+                                                   self.score['teams']['2']['players'][1]['fname']+" "+self.score['teams']['2']['players'][1]['lname']+"\n\n"+\
+                                                   "In corso da "+hsec(self.score['turn_duration']) if self.score['teams']['2']['players'] != None else "N/D"
 	def resp(self, cosa):
 		def fun(bot, update):
-			logger.info(`update.message.from_user.id`+" requested: "+cosa)
-			self.lastmsg[cosa][update.message.from_user.id] = update.message.reply_text(self.response[cosa])
+			logger.info(`update.message.from_user.id`+"("+str(update.message.from_user.username)+") requested: "+cosa)
+			self.lastmsg[cosa][`update.message.from_user.id`+""] = update.message.reply_text(self.response[cosa])
+                        #print self.lastmsg
 		return fun
 
 
@@ -102,7 +113,7 @@ def get_plot_data(year,last=0):
 
 
 def h24_plot(bot, update):
-	logger.info(`update.message.from_user.id`+" requested: plot")
+	logger.info(`update.message.from_user.id`+"("+str(update.message.from_user.username)+") requested: plot")
 
 	new = get_plot_data(2017)
 	old = get_plot_data(2016,new['time'])
@@ -132,17 +143,24 @@ def hsec(seconds,nosec=False):
 		return "%d:%02d:%02d" % (h, m, s)
 
 def send_updates(sh):
-	def myjob(bot, job):	
+	def myjob(bot, job):
 		sh.update()
 		for i in ['gol','players','time']:
-			last = sh.lastmsg[i]
-			resp = sh.response[i]
-			for j in last:
-				if (last[j].text != resp):
-					try:
-						last[j].edit_text(resp)
-					except TelegramError as e:
-						e = None #logger.warn(e)
+			last = copy(sh.lastmsg[i])
+			resp = copy(sh.response[i])
+			try:
+				for j in last:
+					if (last[j].text != resp):
+						try:
+							last[j].edit_text(resp)
+                                                except TelegramError as e:
+                                                        # Usually it's a <message hasn't changed> error
+                                                        #logger.warning("TelegramError Exception Raised")
+                                                        #logger.warning(str(e))
+                                                        pass
+			except RuntimeError as e:
+                                print "Runtime Exception Raised"
+                                logger.warning(str(e))
 	return myjob
 
 
@@ -150,7 +168,7 @@ def send_updates(sh):
 def main():
     f = open("telegram_token","r")
     token = f.readline().strip()
-	
+
     # Create the EventHandler and pass it your bot's token.
     updater = Updater(token)
     j = updater.job_queue
@@ -158,6 +176,7 @@ def main():
     sh = Scores_handler()
     sh.update()
 
+    
     job_minute = Job(send_updates(sh), 1.0)
     j.put(job_minute, next_t=0.0)
 
