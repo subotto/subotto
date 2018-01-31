@@ -343,10 +343,12 @@ class Statistics:
             # La partita è già iniziata
             elapsed_time = (now - self.match.begin).total_seconds()
             time_to_begin = None
+            match_begin = None
         else:
             # La partita deve ancora iniziare
             elapsed_time = None
             time_to_begin = (self.match.sched_begin - now).total_seconds()
+            match_begin = (self.match.sched_begin - datetime.datetime(1970, 1, 1)).total_seconds()
         
         if self.match.end is not None:
             # La partita, oltre che essere iniziata, è anche finita.
@@ -410,14 +412,14 @@ class Statistics:
                 self.played_time[ player_id ] += delta_time
         
         # Print statistics
-        for id, player in self.players.iteritems():
-            if self.played_time[id] > datetime.timedelta(seconds=3600):
-                print player.format_name()
-                print 'Tempo totale:', self.total_time[id]
-                print 'Tempo in questa partita:', self.played_time[id]
-                print 'Gol totali:', self.total_goals[id]
-                print 'Gol in questa partita:', self.num_goals[id]
-                print
+        #for id, player in self.players.iteritems():
+        #    if self.played_time[id] > datetime.timedelta(seconds=3600):
+        #        print player.format_name()
+        #        print 'Tempo totale:', self.total_time[id]
+        #        print 'Tempo in questa partita:', self.played_time[id]
+        #        print 'Gol totali:', self.total_goals[id]
+        #        print 'Gol in questa partita:', self.num_goals[id]
+        #        print
         
         # Compute estimation-related data
         length = (self.match.sched_end - self.match.sched_begin).total_seconds()
@@ -432,6 +434,7 @@ class Statistics:
             'status': get_status(self.match.begin, self.current_phase, self.match.end),
             'time_to_begin': time_to_begin,
             'time_to_end': time_to_end,
+            'match_begin': match_begin,
             'elapsed_time': elapsed_time,
             'teams': {
                 self.teams[i].id: {
