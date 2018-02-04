@@ -3,3 +3,4 @@
 passwd*
 database_url*
 telegram_token
+tmp/
