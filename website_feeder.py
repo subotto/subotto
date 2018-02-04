@@ -27,7 +27,7 @@ def listen_match(match_id, old_matches_id, post_url):
     old_player_matches = session.query(PlayerMatch).filter(PlayerMatch.match_id.in_(old_matches_id)).all()
     old_events = session.query(Event).filter(Event.match_id.in_(old_matches_id)).order_by(Event.timestamp).all()
     old_stats_player_matches = session.query(StatsPlayerMatch).filter(StatsPlayerMatch.match_id.in_(old_matches_id)).all()
-    
+
     stats = Statistics(match, old_matches, players, old_player_matches, old_events, old_stats_player_matches)
     last_event_id = 0
     last_player_match_id = 0
@@ -46,7 +46,7 @@ def listen_match(match_id, old_matches_id, post_url):
                 stats.new_event(event)
                 last_timestamp = event.timestamp
                 last_event_id = event.id
-            
+
             # Send data to the web server
             stats.generate_current_data()
             data = stats.data
@@ -75,6 +75,6 @@ if __name__ == '__main__':
     except IndexError:
         print "Missing POST URL. Maybe it is http://uz.sns.it/24ore/score ??"
         sys.exit(1)
-    match_id = 12
-    old_matches_id = [1, 2, 3, 4, 7, 8, 10]
+    match_id = 14
+    old_matches_id = [1, 2, 3, 4, 7, 8, 10, 12]
     listen_match(match_id, old_matches_id, post_url)
