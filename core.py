@@ -24,6 +24,22 @@ def act_init_match(session, name, team_a, team_b, sched_begin, sched_end):
     session.commit()
     return match.id
 
+def start_actually_match(session,match_id):
+    match = session.query(Match).filter(Match.id == match_id).one()
+    hnow = datetime.datetime.now()
+    match.begin = hnow
+    match.year = hnow.year
+    session.commit()
+    return hnow
+
+def end_actually_match(session,match_id):
+    match = session.query(Match).filter(Match.id == match_id).one()
+    hnow = datetime.datetime.now()
+    match.end = hnow
+    session.commit()
+    return hnow
+
+
 class SubottoCore:
 
     def __init__(self, match_id):
