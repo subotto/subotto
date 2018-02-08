@@ -16,7 +16,7 @@
 #define ERROR_TIMEOUT 3*1000
 
 byte mac[] = { 90, 162, 218, 13, 78, 107};
-byte server_ip[]={192, 168, 111, 73};
+byte server_ip[]={192, 168, 111, 103};
 int porta=2204;
 //ip del server da interrogare
 EthernetClient client;
@@ -40,17 +40,17 @@ int loop_num = 0;
 char wait = 0;
 
   //qui ci metto le varibili che conterranno i pin delle fotocellule
-  byte blup=A1;
-  byte blus=A3;
-  byte rossop=A0;
-  byte rossos=A2;
+  byte blup=A8;
+  byte blus=A10;
+  byte rossop=A9;
+  byte rossos=A11;
   
   
   //pulsanti
-  byte blupiu=5;
-  byte blumeno=4;
-  byte rossopiu=7;
-  byte rossomeno=6; //molto probabile
+  byte blupiu=16; //16
+  byte blumeno=15; //15
+  byte rossopiu=14; //14
+  byte rossomeno=17; //17
   byte reset=8;
   
 
@@ -107,6 +107,7 @@ void Send(uint8_t data)
     
     #if DEBUG
     Serial.println("benone! invio riuscito");
+    Serial.println(data);
     #endif
 }
 
@@ -160,7 +161,7 @@ void setup() {
   byte numDigits = 4; // numero di cifre da con trollare per diplay  
   byte digitPinsblu[] = {30, 32, 34, 36}; // pin di Arduino che controllano le cifre del diplay dei blu
   byte digitPinsrossi[] = {22 , 24, 26, 28}; // come sopra per i rossi
-  byte segmentPins[] = {38, 40, 42, 44, 46, 48, A15, 25};  // pin di Arduino che pilatano i segmenti
+  byte segmentPins[] = {38, 40, 42, 44, 46, 48, A15, 25};  // pin di Arduino che pilotano i segmenti
   
   blu.begin(COMMON_CATHODE, numDigits, digitPinsblu, segmentPins);
   blu.setBrightness(BRIGHTNESS);
@@ -272,6 +273,7 @@ if(DEBUG){
     //si, lo facciamo quando finiamo il pooling
     SMS();
     if(DEBUG){
+      Serial.println(wait);
       if(z<4000){
         EEPROM.write(z,wait);
         Serial.println("scrivo :"+String((int)wait)+" in "+String((int)C));
