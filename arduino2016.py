@@ -30,6 +30,10 @@ CODE_BUTTON_BLUE_UNDO = 6
 
 IGNORE_CODES = []
 
+def timezone(): 
+	t = int(time.time())
+	return (t%10<5)
+
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
     def handle(self):
@@ -52,6 +56,7 @@ class Connection(SocketServer.BaseRequestHandler):
             CODE_BUTTON_BLUE_GOAL: core.easy_act_blue_goal_button,
             CODE_BUTTON_BLUE_UNDO: core.easy_act_blue_goalundo_button,
             }
+        last_gol = time.time()
         while running:
             ready_r, ready_w, ready_x = select.select([fd], [], [], 1.0)
             if fd in ready_r:
@@ -64,14 +69,21 @@ class Connection(SocketServer.BaseRequestHandler):
                     with core_lock:
                         try:
                             actions[code]()
+                            if(code!=0):
+								last_gol = time.time()
                         except KeyError:
                             print >> sys.stderr, "Wrong code"
                 else:
                     print >> sys.stderr, "Ignore command because of configuration"
             with core_lock:
                 core.update()
-            red_score = core.easy_get_red_score()
-            blue_score = core.easy_get_blue_score()
+            if (time.time()-last_gol)<5:
+                red_score = core.easy_get_red_part()
+                blue_score = core.easy_get_blue_part()
+            else:
+                red_score = core.easy_get_red_score()
+                blue_score = core.easy_get_blue_score()
+            print red_score, blue_score
             fd.write(struct.pack(">HH", red_score, blue_score))
         fd.close()
         self.request.shutdown(socket.SHUT_RDWR)

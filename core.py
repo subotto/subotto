@@ -49,6 +49,7 @@ class SubottoCore:
         self.order = [None, None]
         self.queues = [[], []]
         self.score = [0, 0]
+        self.partial = [0, 0]
         self.players = [[None, None], [None, None]]
         self.listeners = []
 
@@ -80,12 +81,15 @@ class SubottoCore:
 
         elif event.type == Event.EV_TYPE_CHANGE:
             self.players[self.detect_team(event.team)] = [event.player_a, event.player_b]
+            self.partial = [0, 0]
 
         elif event.type == Event.EV_TYPE_GOAL:
             self.score[self.detect_team(event.team)] += 1
+            self.partial[self.detect_team(event.team)] += 1
 
         elif event.type == Event.EV_TYPE_GOAL_UNDO:
             self.score[self.detect_team(event.team)] -= 1
+            self.partial[self.detect_team(event.team)] -= 1
 
         elif event.type == Event.EV_TYPE_ADVANTAGE_PHASE:
             pass
@@ -246,6 +250,12 @@ class SubottoCore:
 
     def easy_get_blue_score(self):
         return self.score[self.detect_team(self.easy_get_blue_team())]
+        
+    def easy_get_red_part(self):
+        return self.partial[self.detect_team(self.easy_get_red_team())]
+
+    def easy_get_blue_part(self):
+        return self.partial[self.detect_team(self.easy_get_blue_team())]
 
     def easy_act_red_goal_cell(self):
         self.act_goal(self.easy_get_blue_team(), source=Event.EV_SOURCE_CELL_RED_PLAIN)
