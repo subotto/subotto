@@ -30,7 +30,7 @@ CODE_BUTTON_BLUE_UNDO = 6
 
 IGNORE_CODES = []
 
-def timezone(): 
+def timezone():
 	t = int(time.time())
 	return (t%10<5)
 
@@ -44,7 +44,7 @@ class Connection(SocketServer.BaseRequestHandler):
         actions = {
             CODE_NOOP: lambda: None,
             CODE_CELL_RED_PLAIN: core.easy_act_red_goal_cell,
-            CODE_CELL_RED_SUPER: core.easy_act_red_supergoal_cell,
+            CODE_CELL_RED_SUPER: None, #core.easy_act_red_supergoal_cell,
             CODE_CELL_BLUE_PLAIN: core.easy_act_blue_goal_cell,
             CODE_CELL_BLUE_SUPER: core.easy_act_blue_supergoal_cell,
             #CODE_BUTTON_RED_GOAL: lambda: None,
@@ -68,9 +68,10 @@ class Connection(SocketServer.BaseRequestHandler):
                 if code not in IGNORE_CODES:
                     with core_lock:
                         try:
-                            actions[code]()
-                            if(code!=0):
-								last_gol = time.time()
+							if time.time()-last_gol > 0.8:
+								actions[code]()
+								if(code!=0):
+									last_gol = time.time()
                         except KeyError:
                             print >> sys.stderr, "Wrong code"
                 else:
