@@ -1,4 +1,24 @@
 
+general:
+
+ * Soyuz, which runs many services, (database, subtracker endpoint,
+   24web, AFS, feeder) is globally overloaded; it is not clear which
+   (if any) single service is faulty, although 24web and the feeder
+   are good candidates.
+
+subtracker:
+
+ * During 2018 we experience random crashes, which we did not see in
+   2017 (essentially the same program, although on a different
+   hardware).
+
+24web:
+
+ * Would be nice to implement last partial result (not only current),
+   perhaps trying to fix common turn change problems.
+ * "(gol in più all'ora che devono segnare i Fisici per recuperare i
+   Fisici)"
+
 gui.py:
 
  * Advantage phases
