@@ -18,8 +18,17 @@ subtracker:
    perhaps trying to fix common turn change problems.
  * "(gol in più all'ora che devono segnare i Fisici per recuperare i
    Fisici)"
+ * Show turns queue (it is useful to know who plays next)
 
 gui.py:
 
  * Advantage phases
  * Beginning and ending of the match
+
+photocells:
+ * Didn't work well in 2018.
+ 
+subuttons:
+ * At some point in 2018 they produced multiple events with one single press.
+   This was fixed limiting the number of almost-simultaneous events to one,
+   but the cause of the problem is unknown.
