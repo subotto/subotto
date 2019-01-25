@@ -75,6 +75,6 @@ if __name__ == '__main__':
     except IndexError:
         print "Missing POST URL. Maybe it is http://uz.sns.it/24ore/score ??"
         sys.exit(1)
-    match_id = 14
-    old_matches_id = [1, 2, 3, 4, 7, 8, 10, 12]
+    match_id = 16
+    old_matches_id = [1, 2, 3, 4, 7, 8, 10, 12, 14]
     listen_match(match_id, old_matches_id, post_url)
