@@ -13,6 +13,7 @@ from data import Session, Team, Player, Match, PlayerMatch, Event, Base, Advanta
 from core import SubottoCore
 
 running = True
+dry_run = True
 
 # Always hold this lock to access the core
 core_lock = threading.Lock()
@@ -30,27 +31,32 @@ CODE_BUTTON_BLUE_UNDO = 6
 
 IGNORE_CODES = []
 
+allowed_IPs = ['127.0.0.1']
+
+
 def timezone():
-	t = int(time.time())
-	return (t%10<5)
+    t = int(time.time())
+    return (t % 10 < 5)
+
 
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
     def handle(self):
         # TODO: print peer name
         print >> sys.stderr, "Connection received"
+        addr = self.client_address
+        print >> sys.stderr, addr
+        if !dry_run and addr[0] not in allowed_IPs:
+            self.request.shutdown(socket.SHUT_RDWR)
+            return
         global running, core, core_lock
         fd = self.request.makefile('r+b', 0)
         actions = {
             CODE_NOOP: lambda: None,
             CODE_CELL_RED_PLAIN: core.easy_act_red_goal_cell,
-            CODE_CELL_RED_SUPER: None, #core.easy_act_red_supergoal_cell,
+            CODE_CELL_RED_SUPER: core.easy_act_red_supergoal_cell,
             CODE_CELL_BLUE_PLAIN: core.easy_act_blue_goal_cell,
             CODE_CELL_BLUE_SUPER: core.easy_act_blue_supergoal_cell,
-            #CODE_BUTTON_RED_GOAL: lambda: None,
-            #CODE_BUTTON_RED_UNDO: lambda: None,
-            #CODE_BUTTON_BLUE_GOAL: lambda: None,
-            #CODE_BUTTON_BLUE_UNDO: lambda: None,
             CODE_BUTTON_RED_GOAL: core.easy_act_red_goal_button,
             CODE_BUTTON_RED_UNDO: core.easy_act_red_goalundo_button,
             CODE_BUTTON_BLUE_GOAL: core.easy_act_blue_goal_button,
@@ -68,23 +74,26 @@ class Connection(SocketServer.BaseRequestHandler):
                 if code not in IGNORE_CODES:
                     with core_lock:
                         try:
-							if time.time()-last_gol > 0.8:
-								actions[code]()
-								if(code!=0):
-									last_gol = time.time()
+                            if time.time()-last_gol > 0.8:
+                                if dry_run:
+                                    print >> sys.stdout, "fun: %s" % str(actions[code])
+                                else:
+                                    actions[code]()
+                                if(code != 0):
+                                    last_gol = time.time()
                         except KeyError:
                             print >> sys.stderr, "Wrong code"
                 else:
                     print >> sys.stderr, "Ignore command because of configuration"
             with core_lock:
                 core.update()
-            if (time.time()-last_gol)<5:
+            if (time.time()-last_gol) < 5:
                 red_score = core.easy_get_red_part()
                 blue_score = core.easy_get_blue_part()
             else:
                 red_score = core.easy_get_red_score()
                 blue_score = core.easy_get_blue_score()
-            print red_score, blue_score
+            print >> sys.stdout, red_score, blue_score
             fd.write(struct.pack(">HH", red_score, blue_score))
         fd.close()
         self.request.shutdown(socket.SHUT_RDWR)
@@ -98,6 +107,9 @@ def main():
     match_id = int(sys.argv[1])
     listen_addr = sys.argv[2]
     listen_port = int(sys.argv[3])
+    arduino_ip = sys.argv[4]
+
+    allowed_IPs.append(arduino_ip)
 
     core = SubottoCore(match_id)
     with core_lock:
