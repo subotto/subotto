@@ -5,25 +5,25 @@
 #define DEBUG 1
 
 // pin delle fotocellule
-#define BLUE_PHOTO_GOAL 37 // gol normale
-#define BLUE_PHOTO_SUPERGOAL 39 // supergoal
+#define BLUE_PHOTO_GOAL 39 // gol normale
+#define BLUE_PHOTO_SUPERGOAL 37 // supergoal
 #define RED_PHOTO_GOAL 41
 #define RED_PHOTO_SUPERGOAL 43
 
 // pin dei display
-#define CLK_RED 50
-#define DIO_RED 51
-#define CLK_BLUE 52
-#define DIO_BLUE 53
+#define CLK_RED 52
+#define DIO_RED 53
+#define CLK_BLUE 50
+#define DIO_BLUE 51
 
 #define BRIGHTNESS 7
 
 // pulsanti
-#define BLUE_BUTTON_ADD 16
-#define BLUE_BUTTON_REMOVE 15
-#define RED_BUTTON_ADD 14
+#define BLUE_BUTTON_ADD 15
+#define BLUE_BUTTON_REMOVE 14
+#define RED_BUTTON_ADD 16
 #define RED_BUTTON_REMOVE 17
-#define RESET 8
+#define RESET 7
 
 #define numpins 9
 
@@ -36,7 +36,7 @@ TM1637Display disp_rosso(CLK_RED, DIO_RED);
 class Controller {
     int pins[numpins] = {BLUE_PHOTO_GOAL, BLUE_PHOTO_SUPERGOAL, RED_PHOTO_GOAL, RED_PHOTO_SUPERGOAL, BLUE_BUTTON_ADD, BLUE_BUTTON_REMOVE, RED_BUTTON_ADD, RED_BUTTON_REMOVE, RESET};
     bool state[numpins] = {false,false,false,false,false,false,false,false,false};
-    int points_red = 9999;
+    int points_red = 8888;
     int points_blue = 9999;
 
     void act(int pin) {
@@ -49,6 +49,7 @@ class Controller {
             case BLUE_BUTTON_REMOVE: points_blue--; break;
             case RED_BUTTON_ADD: points_red++; break;
             case RED_BUTTON_REMOVE: points_red--; break;
+            case RESET: points_red = points_blue = 0; break;
             default: break;
         }
     }
@@ -99,7 +100,7 @@ void setup() {
   pinMode(BLUE_BUTTON_REMOVE,INPUT_PULLUP);
   pinMode(RED_BUTTON_ADD,INPUT_PULLUP);
   pinMode(RED_BUTTON_REMOVE,INPUT_PULLUP);
-  pinMode(RESET,INPUT);
+  pinMode(RESET,INPUT_PULLUP);
 
   // inizializzo le fotocellule in ingresso, grazie ai lock-in saranno digitali
   pinMode(BLUE_PHOTO_GOAL, INPUT_PULLUP);
