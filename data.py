@@ -145,7 +145,7 @@ class PlayerMatch(Base):
 
 class StatsPlayerMatch(Base):
     __tablename__ = 'stats_player_matches'
-    
+
     id = Column(Integer, primary_key=True)
     player_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
@@ -154,7 +154,7 @@ class StatsPlayerMatch(Base):
     neg_goals = Column(Integer)
     seconds = Column(Integer)
     turns = Column(Integer)
-    
+
     player = relationship(Player)
     match = relationship(Match)
     team = relationship(Team)
@@ -216,6 +216,10 @@ class Event(Base):
     red_team = relationship(Team, primaryjoin="Team.id == Event.red_team_id")
     blue_team = relationship(Team, primaryjoin="Team.id == Event.blue_team_id")
     phase = relationship(AdvantagePhase)
+
+
+    def __repr__(self):
+        return "{} {} @ {}, {}".format(self.type, self.source, self.match_id, self.timestamp)
 
     def check_type(self):
         must_none = []

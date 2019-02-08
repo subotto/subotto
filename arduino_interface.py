@@ -8,12 +8,13 @@ import time
 import threading
 import struct
 import select
+import argparse
 
 from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 from core import SubottoCore
 
 running = True
-dry_run = True
+dry_run = False
 
 # Always hold this lock to access the core
 core_lock = threading.Lock()
@@ -46,10 +47,11 @@ class Connection(SocketServer.BaseRequestHandler):
         print >> sys.stderr, "Connection received"
         addr = self.client_address
         print >> sys.stderr, addr
-        if !dry_run and addr[0] not in allowed_IPs:
+        global running, core, core_lock, allowed_IPs
+        if addr[0] not in allowed_IPs:
+            print >> sys.stderr, "shutting down", allowed_IPs
             self.request.shutdown(socket.SHUT_RDWR)
             return
-        global running, core, core_lock
         fd = self.request.makefile('r+b', 0)
         actions = {
             CODE_NOOP: lambda: None,
@@ -103,22 +105,30 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
 def main():
-    global running, core, core_lock
-    match_id = int(sys.argv[1])
-    listen_addr = sys.argv[2]
-    listen_port = int(sys.argv[3])
-    arduino_ip = sys.argv[4]
+    global running, core, core_lock, allowed_IPs, dry_run
 
-    allowed_IPs.append(arduino_ip)
+    parser = argparse.ArgumentParser(description='Arduino interface')
+    parser.add_argument('match_id', type=int, help='The id of the match to connect to')
+    parser.add_argument('--listen_addr', default='0.0.0.0', help='The address the listener server listens to')
+    parser.add_argument('--listen_port', default=2204, type=int, help='The address the listener server listens to')
+    parser.add_argument('arduino_ip', help='The ip of the allowed Arduino')
+    parser.add_argument('--dry-run', action='store_true', help='Test run')
 
-    core = SubottoCore(match_id)
+    args = parser.parse_args()
+
+    allowed_IPs.append(args.arduino_ip)
+    dry_run = args.dry_run
+
+    core = SubottoCore(args.match_id)
     with core_lock:
         core.update()
 
     # Initialize ConnectionServer
-    server = ThreadedTCPServer((listen_addr, listen_port), Connection)
+    server = ThreadedTCPServer((args.listen_addr, args.listen_port), Connection)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
+
+    print >> sys.stdout, "Started server on {}:{}".format(args.listen_addr, args.listen_port)
 
     # Do things
     try:
