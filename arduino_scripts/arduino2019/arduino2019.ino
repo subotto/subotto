@@ -28,9 +28,9 @@
 
 // pulsanti
 #define BLUE_BUTTON_ADD 15
-#define BLUE_BUTTON_REMOVE 14
+#define BLUE_BUTTON_REMOVE 17
 #define RED_BUTTON_ADD 16
-#define RED_BUTTON_REMOVE 17
+#define RED_BUTTON_REMOVE 14
 
 #define numpins 9
 
