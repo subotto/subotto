@@ -142,6 +142,25 @@ class PlayerMatch(Base):
     match = relationship(Match)
     team = relationship(Team)
 
+class StatsTurn(Base):
+    __tablename__ = 'stats_turns'
+
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey(Match.id, onupdate="CASCADE",
+                                          ondelete="CASCADE"), nullable=False)
+    p00_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE",
+                                        ondelete="CASCADE"), nullable=False)
+    p01_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE",
+                                        ondelete="CASCADE"), nullable=False)
+    p10_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE",
+                                        ondelete="CASCADE"), nullable=False)
+    p11_id = Column(Integer, ForeignKey(Player.id, onupdate="CASCADE",
+                                        ondelete="CASCADE"), nullable=False)
+    score_a = Column(Integer)
+    score_b = Column(Integer)
+    begin = Column(DateTime)
+    end = Column(DateTime)
+
 
 class StatsPlayerMatch(Base):
     __tablename__ = 'stats_player_matches'
