@@ -8,6 +8,7 @@ from core import SubottoCore
 
 import sys
 import logging
+import csv
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,52 +20,122 @@ class Turn:
     """A single turn, ie. the time between two consecutive swaps"""
 
     def __init__(self, players, score, begin, end):
-        self.players = players
-        self.score = score
+        self.players = players[:]
+        self.score = score[:]
         self.begin = begin
         self.end = end
 
     def __str__(self):
         return "Turn: {} - {}".format(self.begin, self.end)
 
-    def toTuple(self):
+    def get_tuple(self):
         """Get a tuple from this instance
 
         The tuple contains (in order) begin timestamp, end timestamp, ids of
         the two team 1 players, ids of the two team 2 players, team 1 score,
         team 2 score
         """
-        pass
-        # echo $turn->begin . "," . $turn->end . ", " . $turn->players["1"][0] . "," . $turn->players["1"][1] . "," . $turn->players["2"][0] . "," . $turn->players["2"][1] . "," . $turn->score[1] . "," . $turn->score[2] . "\n";
-
-
-def load_goals(session, match_id):
-    """Get the list of goals of a single match from the DB
-
-    Return a tuple of lists. At indexes 1, 2 (teams' ids) there are lists
-    containing timestamps of each goal of that team not undone.
-    """
-    goals = (None, [], [])
-    # SELECT * FROM events WHERE match_id = $i AND type IN ('goal', 'goal_undo') ORDER BY timestamp
-    events = session.query(Event).filter_by(match_id=match_id).filter(
-        Event.type.in_(("goal", "goal_undo"))).order_by(Event.timestamp).all()
-    for goal in events:
-        if goal.type == "goal":
-            goals[goal.team_id].append(goal.timestamp)
-        elif goal.type == "goal_undo":
-            try:
-                goals[goal.team_id].pop()
-            except IndexError:
-                logger.warning("Annulato goal alla squadra {} che non ne aveva: evento ignorato".format(
-                        goal.team_id))
-        else:
-            logger.warning("Trovato evento che non è né un goal né un goal_undo: evento ignorato")
-    return goals
+        return (self.begin, self.end, self.players[1][0], self.players[1][1],
+                self.players[2][0], self.players[2][1], self.score[1],
+                self.score[2])
 
 def usage():
     """Print usage and exit"""
-    print "Usage: {} match_id".format(sys.argv[0])
+    print "Usage: {} match_id [filename]".format(sys.argv[0])
     sys.exit(1)
+
+class TurnsLoader:
+    """Creates the list of turns"""
+
+    def __init__(self, session, match_id, match=None):
+        if match is not None:
+            self.match = match
+        else:
+            self.match = session.query(Match).filter_by(id=match_id).one()
+        self.load_goals(session)
+        self.changes = session.query(Event).filter_by(
+            match_id=self.match.id, type="change").order_by(
+            Event.timestamp).all()
+        self.turns = []
+        self.current_players = [None, None, None]
+        for _ in range(2):
+            self.current_players[self.changes[0].team_id] = (
+                self.changes[0].player_a_id, self.changes[0].player_b_id)
+            self.changes.pop(0)
+        self.goal_idxes = [None, 0, 0]
+        self.score = [None, 0, 0]
+        self.begin = self.match.begin
+
+    def load_goals(self, session):
+        """Get the list of goals of a single match from the DB
+
+        Set the field goals to a tuple of lists. At indexes 1, 2 (teams' ids)
+        there are lists containing timestamps of each goal of that team not
+        undone.
+        """
+        self.goals = (None, [], [])
+        # SELECT * FROM events WHERE match_id = $i AND type IN ('goal', 'goal_undo') ORDER BY timestamp
+        events = session.query(Event).filter_by(
+            match_id=self.match.id).filter(
+            Event.type.in_(("goal", "goal_undo"))).order_by(
+            Event.timestamp).all()
+        for goal in events:
+            if goal.type == "goal":
+                self.goals[goal.team_id].append(goal.timestamp)
+            elif goal.type == "goal_undo":
+                try:
+                    self.goals[goal.team_id].pop()
+                except IndexError:
+                    logger.warning("Annulato goal alla squadra {} che non ne aveva: evento ignorato".format(
+                            goal.team_id))
+            else:
+                logger.warning("Trovato evento che non è né un goal né un goal_undo: evento ignorato")
+
+    def create_next_turn(self, change):
+        """Crea il turno successivo, facendolo finire al timestamp passato.
+
+        Questa funzione aggiorna lo stato dell'oggetto.
+        """
+        for k in (1, 2):
+            while (self.goal_idxes[k] < len(self.goals[k])
+                    and self.goals[k][self.goal_idxes[k]] < change.timestamp):
+                self.score[k] += 1
+                self.goal_idxes[k] += 1
+        if self.score[1] == 0 and self.score[2] == 0:
+            # It isn't a real turn
+            self.current_players[change.team_id] = (
+                change.player_a_id, change.player_b_id)
+        else:
+            # It's a real turn
+            new_turn = Turn(
+                self.current_players, self.score, self.begin, change.timestamp)
+            self.begin = change.timestamp
+            self.current_players[change.team_id] = (
+                change.player_a_id, change.player_b_id)
+            self.score = [None, 0, 0]
+            return new_turn
+
+    def create_last_turn(self):
+        """Crea l'ultimo turno della 24ore"""
+        fake_change = Event()
+        fake_change.timestamp = self.match.end
+        fake_change.team_id = fake_change.player_a_id = fake_change.player_b_id = 1
+        return self.create_next_turn(fake_change)
+
+    @staticmethod
+    def append_maybe(l, e):
+        """Append element e to list l only if e is not None"""
+        if e is not None:
+            l.append(e)
+
+    def create_turns_list(self):
+        """Crea la lista di tutti i turni di una 24h"""
+        turns = []
+        for change in self.changes:
+            TurnsLoader.append_maybe(turns, self.create_next_turn(change))
+        TurnsLoader.append_maybe(turns, self.create_last_turn())
+        return turns
+
 
 if __name__ == "__main__":
     try:
@@ -72,42 +143,18 @@ if __name__ == "__main__":
     except IndexError, ValueError:
         usage()
     session = Session()
-
     match = session.query(Match).filter_by(id=match_id).one()
-    goals = load_goals(session, match_id)
-    changes = session.query(Event).filter_by(
-        match_id=match_id, type="change").order_by(Event.timestamp).all()
-    turns = []
-    current_players = [None, None, None]
-    for j in range(2):
-        current_players[changes[j].team_id] = (changes[j].player_a_id, changes[j].player_b_id)
-    changes.pop(0)
-    changes.pop(0)
-    goal_idxes = [None, 0, 0]
-    score = [None, 0, 0]
-    begin = match.begin
 
-    for change in changes:
-        # guardo cosa succede prima di questo cambio
-        for k in (1, 2):
-            while (goal_idxes[k] < len(goals[k])
-                    and goals[k][goal_idxes[k]] < change.timestamp):
-                score[k] += 1
-                goal_idxes[k] += 1
-        if score[1] == 0 and score[2] == 0:
-            # It isn't a real turn
-            current_players[change.team_id] = (change.player_a_id, change.player_b_id)
-        else:
-            # It's a real turn
-            end = change.timestamp
-            turns.append(Turn(current_players, score, begin, end))
+    turns = TurnsLoader(session, match_id, match=match).create_turns_list()
 
-            begin = end
-            current_players[change.team_id] = (change.player_a_id, change.player_b_id)
-            score = [None, 0, 0]
-    # Add the last turn
-    turns.append(Turn(current_players, score, begin, match.end))
-    for turn in turns:
-        print(turn)
-
+    # Write to csv
+    filename = sys.argv[2] if len(sys.argv) > 2 else "turns{}.csv".format(
+        match.begin.year)
+    with open(filename, "wb") as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=",",
+                            quotechar="'", quoting=csv.QUOTE_MINIMAL)
+        for turn in turns:
+            csvwriter.writerow(turn.get_tuple())
+    # It's readonly on the db
+    session.rollback()
     session.close()
