@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Script to update statistics of a 24h."""
 
-from data import Session, Match, StatsPlayerMatch
+from data import Session, StatsPlayerMatch
 from find_turns import Turn
 
 import sys
@@ -59,37 +59,44 @@ if __name__ == "__main__":
     session = Session()
     players = {}
 
-    # Load turns from csv file
-    turns = []
-    with open(filename, "rb") as csvfile:
-        csvreader = csv.reader(csvfile, delimiter=",", quotechar="'")
-        for row in csvreader:
-            turn = Turn.from_csv_line(row)
-            turns.append(turn)
+    try:
+        # Load turns from csv file
+        turns = []
+        with open(filename, "rb") as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=",", quotechar="'")
+            for row in csvreader:
+                turn = Turn.from_csv_line(row)
+                turns.append(turn)
+                for team in (1, 2):
+                    for player_id in turn.players[team]:
+                        if player_id not in players:
+                            players[player_id] = PlayerInfo(player_id, team)
+        # print(turns)
+
+        # Process turns
+        final_score = [None, 0, 0]
+        for turn in turns:
             for team in (1, 2):
+                other_team = 1 if team == 2 else 2
+                final_score[team] += turn.score[team]
                 for player_id in turn.players[team]:
-                    if player_id not in players:
-                        players[player_id] = PlayerInfo(player_id, team)
-    # print(turns)
+                    players[player_id].pos_goals += turn.score[team]
+                    players[player_id].neg_goals += turn.score[other_team]
+                    players[player_id].turns += 1
+                    players[player_id].seconds += turn.duration()
+        print(players.values())
 
-    # Process turns
-    final_score = [None, 0, 0]
-    for turn in turns:
-        for team in (1, 2):
-            other_team = 1 if team == 2 else 2
-            final_score[team] += turn.score[team]
-            for player_id in turn.players[team]:
-                players[player_id].pos_goals += turn.score[team]
-                players[player_id].neg_goals += turn.score[other_team]
-                players[player_id].turns += 1
-                players[player_id].seconds += turn.duration()
-    print(players.values())
+        # Actual writing on the db
+        # session.add_all(map(lambda turn: turn.get_stats_turn(match_id),
+        #                     turns))
+        # session.add_all(map(lambda pl: pl.get_player_match(match_id),
+        #                     players.values()))
+        # session.commit()
+    except Exception as e:
+        # If anything goes wrong abort operations on the db and propagate the
+        # exception
+        logger.error("Errore nell'elaborazione: annullo ogni operazione sul DB")
+        session.rollback()
+        raise e
 
-    # Actual writing on the db
-    # session.add_all(map(lambda turn: turn.get_stats_turn(match_id), turns))
-    # session.add_all(map(lambda pl: pl.get_player_match(match_id),
-    #                     players.values()))
-
-    # It's readonly on the db
-    session.rollback()
     session.close()

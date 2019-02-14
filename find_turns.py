@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Script to create the turns file of a 24h."""
 
-from data import Session, Event, Match, StatsTurn
+from data import Session, Event, Match, StatsTurn, Player
 
 import sys
 import logging
@@ -20,11 +20,25 @@ class Turn:
 
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
-    def __init__(self, players, score, begin, end):
+    def __init__(self, players, score, begin, end,
+                 pl_names=None, all_names=None):
+        """Create a new Turn.
+
+        The constructor requires that at least one of pl_names and all_names is
+        not None to get names of the players from them.
+        """
         self.players = players[:]
         self.score = score[:]
         self.begin = begin
         self.end = end
+        # Get player's names
+        if pl_names is None:
+            self.pl_names = [list(map(lambda p: all_names[p],
+                                      ps))
+                             if ps is not None else None
+                             for ps in self.players]
+        else:
+            self.pl_names = pl_names[:]
 
     @staticmethod
     def from_csv_line(line):
@@ -39,9 +53,13 @@ class Turn:
         players = (None,
                    (int(line[2]), int(line[3])),
                    (int(line[4]), int(line[5])))
+        pl_names = (None,
+                    (line[8], line[9]),
+                    (line[10], line[11]))
         return Turn(players, score,
                     datetime.datetime.strptime(line[0], Turn.DATETIME_FORMAT),
-                    datetime.datetime.strptime(line[1], Turn.DATETIME_FORMAT))
+                    datetime.datetime.strptime(line[1], Turn.DATETIME_FORMAT),
+                    pl_names=pl_names)
 
     def __str__(self):
         return "Turn: {} - {}".format(self.begin, self.end)
@@ -51,7 +69,7 @@ class Turn:
 
     def duration(self):
         """Compute duration of this turn in seconds."""
-        return (self.end - self.begin).total_seconds()
+        return int((self.end - self.begin).total_seconds())
 
     def get_tuple(self):
         """Get a tuple from this instance.
@@ -64,7 +82,12 @@ class Turn:
                 self.end.strftime(Turn.DATETIME_FORMAT),
                 self.players[1][0], self.players[1][1],
                 self.players[2][0], self.players[2][1],
-                self.score[1], self.score[2])
+                self.score[1], self.score[2],
+                self.pl_names[1][0].encode("utf-8"),
+                self.pl_names[1][1].encode("utf-8"),
+                self.pl_names[2][0].encode("utf-8"),
+                self.pl_names[2][1].encode("utf-8"),
+                )
 
     def get_stats_turn(self, match_id):
         """Get a DB StatsTurn object for this instance."""
@@ -79,6 +102,7 @@ class TurnsLoader:
     """Creates the list of turns."""
 
     def __init__(self, session, match_id, match=None):
+        """Create a new instance taking informations also from the DB."""
         if match is not None:
             self.match = match
         else:
@@ -96,6 +120,9 @@ class TurnsLoader:
         self.goal_idxes = [None, 0, 0]
         self.score = [None, 0, 0]
         self.begin = self.match.begin
+        self.all_names = {}
+        for pl in session.query(Player).all():
+            self.all_names[pl.id] = pl.format_name()
 
     def load_goals(self, session):
         """Get the list of goals of a single match from the DB.
@@ -139,8 +166,8 @@ class TurnsLoader:
                 change.player_a_id, change.player_b_id)
         else:
             # It's a real turn
-            new_turn = Turn(
-                self.current_players, self.score, self.begin, change.timestamp)
+            new_turn = Turn(self.current_players, self.score, self.begin,
+                            change.timestamp, all_names=self.all_names)
             self.begin = change.timestamp
             self.current_players[change.team_id] = (
                 change.player_a_id, change.player_b_id)
@@ -172,7 +199,7 @@ class TurnsLoader:
 
 def usage():
     """Print usage and exit."""
-    print "Usage: {} match_id [filename]".format(sys.argv[0])
+    print("Usage: {} match_id [filename]".format(sys.argv[0]))
     sys.exit(1)
 
 
