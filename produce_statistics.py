@@ -35,7 +35,7 @@ class PlayerInfo():
 
     def get_player_match(self, match_id):
         """Get a DB StatsPlayerMatch object for this instance."""
-        return StatsPlayerMatch(player_id=self.player_id,
+        return StatsPlayerMatch(player_id=self.id,
                                 match_id=match_id,
                                 team_id=self.team,
                                 pos_goals=self.pos_goals,
