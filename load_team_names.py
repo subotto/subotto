@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import datetime
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
-from core import SubottoCore, act_init_match
+from data import Team
+from core import SubottoCore
+
 
 def main():
     match_id = int(sys.argv[1])
@@ -27,6 +27,7 @@ def main():
                 comment = None
             core.act_add_player_match_from_name(team, fname, lname, comment, bulk=True)
     core.session.commit()
+
 
 if __name__ == '__main__':
     main()

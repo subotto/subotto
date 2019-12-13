@@ -3,41 +3,28 @@
 
 import sys
 import datetime
-import os
-from select import select
-now=datetime.datetime.now
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase, QueueElement
+from data import Session, Team, Player, Match, PlayerMatch, Event, QueueElement
 
-def act_init_match(session, name, team_a, team_b, sched_begin, sched_end):
+
+def act_init_match(name, team_a_name, team_b_name, sched_begin, sched_end):
+    session = Session()
     match = Match()
     match.sched_begin = sched_begin
     match.sched_end = sched_end
     match.begin = None
     match.end = None
     match.name = name
+
+    team_a = session.query(Team).filter(Team.name == team_a_name).one()
+    team_b = session.query(Team).filter(Team.name == team_b_name).one()
     match.team_a = team_a
     match.team_b = team_b
     session.add(match)
     session.commit()
     return match.id
-
-def start_actually_match(session,match_id):
-    match = session.query(Match).filter(Match.id == match_id).one()
-    hnow = datetime.datetime.now()
-    match.begin = hnow
-    match.year = hnow.year
-    session.commit()
-    return hnow
-
-def end_actually_match(session,match_id):
-    match = session.query(Match).filter(Match.id == match_id).one()
-    hnow = datetime.datetime.now()
-    match.end = hnow
-    session.commit()
-    return hnow
 
 
 class SubottoCore:
@@ -115,7 +102,7 @@ class SubottoCore:
         for event in self.session.query(Event).filter(Event.match == self.match).filter(Event.id > self.last_event_id).order_by(Event.id):
             if self.last_timestamp is not None and event.timestamp <= self.last_timestamp:
                 print >> sys.stderr, "> Timestamp monotonicity error at %s!\n" % (event.timestamp)
-                #sys.exit(1)
+                # sys.exit(1)
             self.new_event(event)
             self.last_timestamp = event.timestamp
             self.last_event_id = event.id
@@ -126,7 +113,7 @@ class SubottoCore:
             self.queues[idx] = []
             for queue_element in self.match.get_queue(team):
                 if queue_element.num != this_num:
-                    printf >> sys.stderr, "> Error: queues are inconsistent"
+                    print >> sys.stderr, "> Error: queues are inconsistent"
                 this_num += 1
                 self.queues[idx].append((queue_element.player_a, queue_element.player_b))
 
@@ -134,7 +121,7 @@ class SubottoCore:
         return True
 
     def act_event(self, event, source=None):
-        event.timestamp = now()
+        event.timestamp = datetime.datetime.now()
         event.match = self.match
         if source is None:
             event.source = Event.EV_SOURCE_MANUAL
@@ -218,14 +205,17 @@ class SubottoCore:
             begin = datetime.datetime.now()
         self.match.begin = begin
         self.session.commit()
+        print >> sys.stderr, "> Started match {} at {}".format(self.match_id, begin)
 
     def act_end_match(self, end=None):
         if end is None:
             end = datetime.datetime.now()
         self.match.end = end
         self.session.commit()
+        print >> sys.stderr, "> Ended match {} at {}".format(self.match_id, end)
 
     def act_add_player_match_from_name(self, team, fname, lname, comment=None, bulk=False):
+        # TODO: move this in data.py
         player = Player.get_or_create(self.session, fname, lname, comment)
         try:
             player_match = self.session.query(PlayerMatch).filter(PlayerMatch.match == self.match). \
@@ -250,7 +240,7 @@ class SubottoCore:
 
     def easy_get_blue_score(self):
         return self.score[self.detect_team(self.easy_get_blue_team())]
-        
+
     def easy_get_red_part(self):
         return self.partial[self.detect_team(self.easy_get_red_team())]
 

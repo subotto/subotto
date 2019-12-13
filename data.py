@@ -8,8 +8,6 @@ from sqlalchemy.schema import Index
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import session as sessionlib
 
-import datetime
-
 try:
     with open('database_url') as fdata:
         database_url = fdata.readline().strip()
@@ -17,15 +15,17 @@ except IOError:
     with open('passwd') as fpasswd:
         database_url = 'postgresql://subotto:%s@soyuz.uz.sns.it/subotto' % (fpasswd.read().strip())
 db = create_engine(database_url, echo=False)
-#db = create_engine('sqlite:///subotto.sqlite', echo=True)
+# db = create_engine('sqlite:///subotto.sqlite', echo=True)
 Session = sessionmaker(db)
 Base = declarative_base(db)
+
 
 class Team(Base):
     __tablename__ = 'teams'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
+
 
 NAME_MAP = {('Fabrizio', 'bianchi'): ('Fabrizio', 'Bianchi', None),
             ('Giulio', 'bresciani'): ('Giulio', 'Bresciani', None),
@@ -60,6 +60,7 @@ NAME_MAP = {('Fabrizio', 'bianchi'): ('Fabrizio', 'Bianchi', None),
             ('', '*AltroMat'): ('??', '??', 'Matematico'),
             ('', '*AltroFis'): ('??', '??', 'Fisico'),
             }
+
 
 class Player(Base):
     __tablename__ = 'players'
@@ -102,6 +103,7 @@ class Player(Base):
             session.add(player)
             return player
 
+
 class Match(Base):
     __tablename__ = 'matches'
 
@@ -141,6 +143,7 @@ class PlayerMatch(Base):
     player = relationship(Player)
     match = relationship(Match)
     team = relationship(Team)
+
 
 class StatsTurn(Base):
     __tablename__ = 'stats_turns'
@@ -190,6 +193,7 @@ class AdvantagePhase(Base):
     match = relationship(Match,
                          backref=backref("phases"))
 
+
 class Event(Base):
     __tablename__ = 'events'
     __table_args__ = (
@@ -236,7 +240,6 @@ class Event(Base):
     blue_team = relationship(Team, primaryjoin="Team.id == Event.blue_team_id")
     phase = relationship(AdvantagePhase)
 
-
     def __repr__(self):
         return "{} {} @ {}, {}".format(self.type, self.source, self.match_id, self.timestamp)
 
@@ -282,6 +285,7 @@ class Event(Base):
 
         return True
 
+
 class QueueElement(Base):
 
     __tablename__ = 'queue'
@@ -302,7 +306,8 @@ class QueueElement(Base):
     player_a = relationship(Player, primaryjoin="Player.id == QueueElement.player_a_id")
     player_b = relationship(Player, primaryjoin="Player.id == QueueElement.player_b_id")
 
-if __name__ == '__main__':
+
+def initialize_db():
     session = Session()
     Base.metadata.create_all(db)
 
@@ -313,11 +318,9 @@ if __name__ == '__main__':
     session.add(t1)
     session.add(t2)
 
-    # m = Match()
-    # m.team_a = t1
-    # m.team_b = t2
-    # m.sched_begin = datetime.datetime.now()
-    # m.sched_end = datetime.datetime.now()
-    # session.add(m)
-
     session.commit()
+
+
+if __name__ == '__main__':
+    # initialize_db()
+    pass

@@ -10,7 +10,6 @@ import struct
 import select
 import argparse
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 from core import SubottoCore
 
 running = True
@@ -101,8 +100,10 @@ class Connection(SocketServer.BaseRequestHandler):
         self.request.shutdown(socket.SHUT_RDWR)
         print >> sys.stderr, "Connection closed"
 
+
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
+
 
 def main():
     global running, core, core_lock, allowed_IPs, dry_run
@@ -143,6 +144,7 @@ def main():
     server.shutdown()
     server.server_close()
     server_thread.join()
+
 
 if __name__ == '__main__':
     main()

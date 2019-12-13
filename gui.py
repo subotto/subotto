@@ -2,22 +2,20 @@
 
 
 import sys
-import datetime 
-import os
-from select import select
-now=datetime.datetime.now
 
-from data import Session, Team, Player, Match, PlayerMatch, Event, Base, AdvantagePhase
 from core import SubottoCore
 
-#try:
-import gi
-# make sure you use gtk+-2.0
-from gi.repository import Gtk
-#except:
-#    print "Could not load GTK2 packages"
-#    sys.exit()
-debuglevel=0
+try:
+    import gi
+    # make sure you use gtk+-2.0
+    from gi.repository import Gtk
+except ImportError:
+    print "Could not load GTK2 packages"
+    sys.exit()
+
+debuglevel = 0
+
+
 def debug(string, level):
     if debuglevel >= level:
         print string
@@ -25,30 +23,30 @@ def debug(string, level):
 
 class SquadraSubotto(object):
 
-    def __init__ (self, team, core, glade_file="subotto24.glade"):
+    def __init__(self, team, core, glade_file="subotto24.glade"):
         self.team = team
         self.core = core
-        self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(glade_file,["box_team","im_queue_promote","im_gol_plus","im_gol_minus",
-                                                       "im_to_queue", "im_swap_up", "im_swap_down", "im_add_player",
-                                                       "im_delete_queue", "window_new_player"])
+        self.builder = Gtk.Builder()
+        self.builder.add_objects_from_file(glade_file, ["box_team", "im_queue_promote", "im_gol_plus", "im_gol_minus",
+                                                        "im_to_queue", "im_swap_up", "im_swap_down", "im_add_player",
+                                                        "im_delete_queue", "window_new_player"])
         self.core.listeners.append(self)
 
-        self.box=self.builder.get_object("box_team")
-        self.name_gtk=self.builder.get_object("name_team")
+        self.box = self.builder.get_object("box_team")
+        self.name_gtk = self.builder.get_object("name_team")
         self.name_gtk.set_text(self.team.name)
         self.builder.connect_signals(self)
 
         self.player_list = []
         self.player_map = {}
-        self.combo_players=Gtk.ListStore(int, str)
+        self.combo_players = Gtk.ListStore(int, str)
         combo_renderer = Gtk.CellRendererText()
         self.builder.get_object("combo_queue_att").set_model(self.combo_players)
         self.builder.get_object("combo_queue_att").pack_start(combo_renderer, True)
-        self.builder.get_object("combo_queue_att").add_attribute(combo_renderer, 'text',1)
+        self.builder.get_object("combo_queue_att").add_attribute(combo_renderer, 'text', 1)
         self.builder.get_object("combo_queue_dif").set_model(self.combo_players)
         self.builder.get_object("combo_queue_dif").pack_start(combo_renderer, True)
-        self.builder.get_object("combo_queue_dif").add_attribute(combo_renderer, 'text',1)
+        self.builder.get_object("combo_queue_dif").add_attribute(combo_renderer, 'text', 1)
         self.combos = [self.builder.get_object("combo_queue_att"),
                        self.builder.get_object("combo_queue_dif")]
 
@@ -130,10 +128,10 @@ class SquadraSubotto(object):
     def on_btn_new_player_cancel_clicked(self, widget):
         self.window_new_player.set_visible(False)
 
-    def on_btn_gol_plus_clicked (self, widget):
+    def on_btn_gol_plus_clicked(self, widget):
         self.goal_incr()
 
-    def on_btn_gol_minus_clicked (self, widget):
+    def on_btn_gol_minus_clicked(self, widget):
         self.goal_decr()
 
     def on_btn_to_queue_clicked(self, widget):
@@ -172,7 +170,7 @@ class SquadraSubotto(object):
         # Write active players
         players = self.core.players[self.core.detect_team(self.team)]
         if players != [None, None]:
-            for i in (("name_current_att",0),("name_current_dif",1)):
+            for i in (("name_current_att", 0), ("name_current_dif", 1)):
                 self.builder.get_object(i[0]).set_text(players[i[1]].format_name())
 
         # Write queue
@@ -204,17 +202,17 @@ class SquadraSubotto(object):
 
 class Subotto24GTK(object):
 
-    team=dict()
-    team_slot=dict()
+    team = dict()
+    team_slot = dict()
 
-    def __init__ (self, core, glade_file="subotto24.glade"):
-        self.builder=Gtk.Builder()
-        self.builder.add_objects_from_file(glade_file,["window_subotto_main","im_team_switch"])
+    def __init__(self, core, glade_file="subotto24.glade"):
+        self.builder = Gtk.Builder()
+        self.builder.add_objects_from_file(glade_file, ["window_subotto_main", "im_team_switch"])
         self.core = core
         self.core.listeners.append(self)
 
-        self.window=self.builder.get_object("window_subotto_main")
-        
+        self.window = self.builder.get_object("window_subotto_main")
+
         self.team_slot = [self.builder.get_object("box_red_slot"),
                           self.builder.get_object("box_blue_slot")]
         self.teams = [SquadraSubotto(self.core.match.team_a, core),
@@ -243,17 +241,17 @@ class Subotto24GTK(object):
                     self.team_slot[i].add(self.order[i].box)
                 else:
                     self.order[i].box.reparent(self.team_slot[i])
-            
-    def on_window_destroy (self, widget):
+
+    def on_window_destroy(self, widget):
         self.core.close()
         Gtk.main_quit()
 
-    def on_btn_switch_clicked (self, widget):
+    def on_btn_switch_clicked(self, widget):
         debug("Cambio!", 2)
         self.switch_teams()
 
     def regenerate(self):
-        debug("Updating!",20)
+        debug("Updating!", 20)
         self.update_teams()
 
     def new_player_match(self, player_match):
@@ -261,6 +259,7 @@ class Subotto24GTK(object):
 
     def new_event(self, event):
         pass
+
 
 if __name__ == "__main__":
 
